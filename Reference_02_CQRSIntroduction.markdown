@@ -440,7 +440,11 @@ likely to see benefits from applying the CQRS pattern.
 
 In most systems, the majority of bounded contexts will probably not 
 benefit from using the CQRS pattern. You should only use the pattern 
-when you can identify clear business benefits from so doing. 
+when you can identify clear business benefits from so doing.
+
+> Most people using CQRS (and Event Sourcing too) shouldn’t have done
+> so.  
+> Udi Dahan: [When to avoid CQRS][dahanavoid]
 
 # Summary
 The CQRS pattern is an enabler for building individual portions (bounded 
@@ -468,6 +472,7 @@ read-side, and describing different options for storing data.
 [gregyoungcqrs]:  http://codebetter.com/gregyoung/2010/02/16/cqrs-task-based-uis-event-sourcing-agh/
 [dahaneverywhere]:http://www.udidahan.com/2011/10/02/why-you-should-be-using-cqrs-almost-everywhere%E2%80%A6/
 [dahanclarify]:   http://www.udidahan.com/2009/12/09/clarified-cqrs/
+[dahanavoid]:     http://www.udidahan.com/2011/04/22/when-to-avoid-cqrs/
 
 [fig1]:           images/Reference_02_Arch_01.png?raw=true
 [fig2]:           images/Reference_02_Messages.png?raw=true

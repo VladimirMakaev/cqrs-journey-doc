@@ -93,7 +93,7 @@ projects.
 
 # Domain-Driven Design: Concepts and Terminology 
 As previously stated, this guide is not intended to provide guidance on 
-using the DDD methodology. However, it is useful to understand some of 
+using the DDD approach. However, it is useful to understand some of 
 the concepts and terminology from DDD because they are useful when we 
 describe some aspects of CQRS pattern implementations. These are not 
 official or rigorous definitions; they are intended to be useful, 
@@ -324,7 +324,7 @@ complicated if you need to translate between the different definitions
 of the same thing that exist in the different domain models. In our 
 conference management system, we may need to move information about 
 attendees between the bounded contexts that deal with conference 
-bookings, badge printing, and hotel reservations. The DDD methodology 
+bookings, badge printing, and hotel reservations. The DDD approach 
 offers a number of approaches for handling the interactions between 
 multiple models in multiple bounded contexts such as using 
 anti-corruption layers, or using shared kernels. 

@@ -1,5 +1,9 @@
 # Ignore all Powershell scripts
 *.ps1
 
+# Ignore all Word docs
+*.doc
+*.docx
+
 # Ignore test Output file
 output.html

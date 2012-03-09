@@ -244,6 +244,22 @@ contains denormalized data that is optimized for the queries that are
 run against your data, for example to display information in your 
 application's UI. 
 
+> ES is a great pattern to use to implement the link between the thing 
+> that writes and the thing that reads. It's by no means the only possible 
+> way to create that link, but it's a reasonable one and there's plenty of 
+> prior art with various forms of logs and log shipping. The major tipping 
+> point for whether the link is "ES" seem to be whether the log is 
+> ephemeral or a permanent source of truth. The CQRS pattern itself merely 
+> mandates a split between the write and the read thing, so ES is strictly 
+> complementary.  
+> - Clemens Vasters
+
+> Event Sourcing is about the state of the domain model being persisted as 
+> a stream of events rather than as a single snapshot, not about how the 
+> command and query sides are kept in sync (usually with a 
+> publish/subscribe message-based approach).  
+> - Udi Dahan
+
 You can use the events that you persist in your event store to propagate 
 all the updates made on the write-side to the read-side. The read-side 
 can use the information contained in the events to maintain whatever 
