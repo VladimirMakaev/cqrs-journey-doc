@@ -1,22 +1,98 @@
 ## Chapter 3
-# Designing and Implementing BC #1 
+# Attendee Registrations Bounded Context 
 
-Our first stopping point.
+The first stopping point on our CQRS journey.
 
 # A Description of the Attendee Registrations Bounded Context
 
 Summary description of this Bounded Context. What is its relative 
 importance/significance in the domain - is it core, how does it relate 
-to the other bounded contexts? 
+to the other bounded contexts?
+
+The attendee registrations bounded context is responsible for the 
+booking processes for attendees planning to attend a conference. 
+Attendees register to attend a specific conference. As part of the 
+registration process, attendees book and pay for seats at the 
+conference. 
+
+The registration process must support wait listing, whereby attendees 
+are placed on a wait-list if there are not sufficient seats available. 
+The payments part of the process must enable the conference organizer to 
+set various types of discount for attendees. 
+
+This is the first stop on our CQRS journey, so the team decided to 
+implement a core, but self-contained part of the system. The 
+registrations process must be as painless as possible for attendees. The 
+process must enable the conference organizer to ensure that the maximum 
+possible number of seat can be booked, and give the conference organizer 
+the flexibility to define a set of custom pricing and discount scheme. 
 
 ## Working Definitions for this Chapter
 
-Outline any working definitions of CQRS/ES related concepts that were 
-adopted for this chapter. 
+The following definitions are used for the remainder of this chapter. 
+For more detail, and possible alternative definitions see [A CQRS/ES 
+Deep Dive][r_chapter4]. 
+
+### Command
+
+A command is a request for the system to perform a task or an action. 
+Commands are imperatives, for example **MakeRegistration**. In this 
+bounded context, commands originate from the UI as a result either of 
+the user initiating a request, or from a saga when the saga is directing 
+an aggregate to perform an action. 
+
+Commands are processed once, and once only by a single recipient. 
+Commands are transported using a command bus, and dispatched to 
+aggregate instances by command handlers. Sending a command is an 
+asynchronous operation with no return value. 
+
+### Event
+
+An event describes something that has happened in the system, typically 
+as a result of a command. Events are raised by aggregates in the domain 
+model. 
+
+Multiple subscribers can handle a specific event. Aggregates publish 
+events to an event bus, handlers register for specific types of event on 
+the event bus and then deliver the event to the subscriber. In this 
+bounded context, the only subscriber is a saga. 
+
+### Saga
+
+In this bounded context, a saga is a class that coordinates the behavior 
+of the aggregates in the domain. A saga subscribes to the events that 
+the aggregates raise, and then follow a simple set of rules to determine 
+which command or commands to send. The saga does not contain any 
+business logic, simply logic to determine the next command to send. The 
+saga is implemented as a state machine, so when the saga responds to an 
+event, it can change its internal state in addition to sending a new 
+command. 
+
+The saga in this bounded context can receive commands as well as 
+subscribe to events. 
 
 ## User Stories
 
-Introductory comments.
+This bounded context addresses the following two user stories.
+
+### Attendee Registration
+
+When an attendee registers to attend a conference, the system uses a 
+two-stage process: first, the registrant reserves one or more seats; 
+second, the registrant pays for the seats. 
+
+When a registrant reserves seats, the seats are not available for other 
+registrants to reserve or purchase, but they are only reserved for a 
+fixed period of time. After this time expires, the reserved seats are 
+available for reservation by any other registrant, and if the registrant 
+wishes to purchase them, she must reserve them again. A registrant can 
+reserve seats for fifteen minutes. 
+
+While the registrant has seats reserved, she can pay for them. After the 
+payment is confirmed and the details of the attendees submitted, the 
+seats are booked. 
+
+### wait listing
 
 ### Domain Definitions (Ubiquitous Language)
 
@@ -25,7 +101,7 @@ used during the development of this Attendee Registrations bounded
 context. 
 
 - Attendee. An attendee is someone who has paid to attend a conference.
-  An attendee can interact with the system to perform tasks such as:
+  An attendee can interact with the system to perform tasks such as
   manage his agenda, print his badge, and provide feedback after the
   conference.
 - Registrant. A registrant is a person who interacts with the system to
@@ -60,7 +136,7 @@ revisit this decision.
 
 One of the important discussions in the team was around the choice of 
 aggregates and entities that they would implement. The following images 
-from the team's whiteboard illustrate some of their initial thoughts, 
+from the team's white-board illustrate some of their initial thoughts, 
 and questions about the alternative approaches they could take with a 
 simple conference seat booking scenario to try and understand the
 alternative approaches.
@@ -223,9 +299,8 @@ it to the controller using a Data Transfer Object (DTO) class.
 
 The web application sends commands to the write model through a command 
 bus. This command bus is an infrastructure element that provides 
-reliable messaging. In this scenario, the bus is configured to operate 
-in point-to-point mode, so the messages sent from the web application 
-are delivered asynchronously to a single destination. 
+reliable messaging. In this scenario, the bus delivers messages 
+asynchronously and once only to a single recipient.
 
 The **RegistrationController** class can send a number of commands to 
 the write model in response to user interaction: 
@@ -315,7 +390,7 @@ aggregate on the command bus.
 To provide feedback to the user, the UI must have a way to check whether 
 the **RegisterToConference** command succeeded. Like all commands in the 
 system, this command is executed asynchronously and does not return a 
-result. The UI queries the read model to check whether or not the 
+result. The UI queries the read model to check whether the 
 command succeeded. The following code sample shows how the 
 **RegistrationController** class polls the read model until either the 
 order is created or a timeout occurs: 
@@ -371,14 +446,243 @@ private OrderDTO WaitUntilBooked(Registration registration)
 
 ## Inside the Write Model
 
+Figure 5 shows the entities that exist in the write-side model. There 
+are two aggregates, **Order** and **ConferenceSeatsAvailability**, each 
+one containing multiple entity types. There is also a 
+**ReservationProcessSaga** saga, that manages the interaction between 
+the aggregates. 
+
+The table in the figure 5 shows how the saga behaves given a current 
+state and a particular type of incoming message. 
+
 ![Figure 5][fig5]
 
 **Domain objects in the write model**
+
+The process of registering for a conference begins when the UI sends a 
+**RegisterToConference** command. The infrastructure delivers this 
+command to the **Order** aggregate. The result of this command is that 
+the system creates a new **Order** instance, and that the new **Order** 
+instance raises an **OrderPlaced** event. The following code sample from 
+the constructor in the **Order** class shows this happening. Notice how 
+the system uses GUIDs to identify the different entities. 
+
+```Cs
+public Order(Guid id, Guid userId, Guid conferenceId, IEnumerable<TicketOrderLine> lines)
+{
+    this.Id = id;
+    this.UserId = userId;
+    this.ConferenceId = conferenceId;
+    this.Lines = new ObservableCollection<TicketOrderLine>(lines);
+
+    this.events.Add(
+        new OrderPlaced
+        {
+            OrderId = this.Id,
+            ConferenceId = this.ConferenceId,
+            UserId = this.UserId,
+            Tickets = this.Lines.Select(x => new OrderPlaced.Ticket { TicketTypeId = x.TicketTypeId, Quantity = x.Quantity }).ToArray()
+        });
+}
+```
+
+> **Note:** To see how the infrastructure elements deliver commands and events, see figure 6.
+
+The system creates a new **ReservationProcessSaga** saga instance to 
+manage the new order. The following code sample from the 
+**ReservationProcessSaga** class shows how the saga handles the event. 
+
+```Cs
+public void Handle(OrderPlaced message)
+{
+    if (this.State == SagaState.NotStarted)
+    {
+        this.Id = message.OrderId;
+        this.State = SagaState.AwaitingReservationConfirmation;
+        this.commands.Add(
+            new MakeSeatReservation
+            {
+                Id = this.Id,
+                ConferenceId = message.ConferenceId,
+                ReservationId = message.OrderId,
+                NumberOfSeats = message.Tickets.Sum(x => x.Quantity)
+            });
+    }
+    else
+    {
+        throw new InvalidOperationException();
+    }
+}
+```
+
+The code sample shows how the saga changes its state and sends a new 
+**MakeSeatReservation** command that is handled by the 
+**ConferenceSeatsAvailability** aggregate. The code sample also 
+illustrates how the saga is implemented as a state machine that receives 
+messages, changes its state, and sends new messages. 
+
+When the **ConferenceSeatsAvailability** aggregate receives a 
+**MakeReservation** command, it makes a reservation if there are enough 
+available seats. The following code sample shows how the 
+**ConferenceSeatsAvailability** class raises different events depending 
+on whether or not there are sufficient seats. 
+
+```Cs
+public void MakeReservation(Guid reservationId, int numberOfSeats)
+{
+    if (numberOfSeats > this.RemainingSeats)
+    {
+        this.events.Add(new ReservationRejected { ReservationId = reservationId, ConferenceId = this.Id });
+    }
+    else
+    {
+        this.PendingReservations.Add(new Reservation(reservationId, numberOfSeats));
+        this.RemainingSeats -= numberOfSeats;
+        this.events.Add(new ReservationAccepted { ReservationId = reservationId, ConferenceId = this.Id });
+    }
+}
+```
+
+The **ReservationProcessSaga** saga handles the the 
+**ReservationAccepted** and **ReservationRejected** events. This 
+reservation is a temporary reservation for seats to give the user the 
+opportunity to make a payment. The saga is responsible for releasing the 
+reservation when either the purchase is complete, or the reservation 
+timeout period expires. The following code sample shows how the saga 
+handles these two messages. 
+
+```Cs
+public void Handle(ReservationAccepted message)
+{
+    if (this.State == SagaState.AwaitingReservationConfirmation)
+    {
+        this.State = SagaState.AwaitingPayment;
+        this.commands.Add(new MarkOrderAsBooked { OrderId = message.ReservationId });
+        this.commands.Add(
+            new Envelope<ICommand>(new ExpireReservation { Id = message.ReservationId, ConferenceId = message.ConferenceId })
+            {
+                Delay = TimeSpan.FromMinutes(15),
+            });
+    }
+    else
+    {
+        throw new InvalidOperationException();
+    }
+}
+
+public void Handle(ReservationRejected message)
+{
+    if (this.State == SagaState.AwaitingReservationConfirmation)
+    {
+        this.State = SagaState.Completed;
+        this.commands.Add(new RejectOrder { OrderId = message.ReservationId });
+    }
+    else
+    {
+        throw new InvalidOperationException();
+    }
+}
+```
+
+If the reservation is accepted, the saga starts a timer running by 
+sending an **ExpireReservation** command to itself, and sends a 
+**MarkOrderAsBooked** command to the **Order** aggregate. Otherwise, it 
+sends a **ReservationRejected** message back to the **Order** aggregate. 
+
+The following code sample shows how the saga sends the 
+**ExpireReservation** command. The infrastructure is responsible for 
+holding the message in a queue for the delay of fifteen minutes. 
+
+```Cs
+public void Handle(ReservationAccepted message)
+{
+    if (this.State == SagaState.AwaitingReservationConfirmation)
+    {
+        this.State = SagaState.AwaitingPayment;
+        this.commands.Add(new MarkOrderAsBooked { OrderId = message.ReservationId });
+        this.commands.Add(
+            new Envelope<ICommand>(new ExpireReservation { Id = message.ReservationId, ConferenceId = message.ConferenceId })
+            {
+                Delay = TimeSpan.FromMinutes(15),
+            });
+    }
+    else
+    {
+        throw new InvalidOperationException();
+    }
+}
+```
+
+You can examine the code in the **Order**, 
+*ConferenceSeatsAvailability**, and *ReservationProcessSaga** classes to 
+see how the other message handlers are implemented. They all follow the 
+same pattern: receive a message, perform some logic, and send a message. 
+
+The sequence diagram in figure 6 shows how the infrastructure elements 
+interact with the domain objects to deliver messages. 
 
 ![Figure 6][fig6]
 
 **Infrastructure sequence diagram**
 
+A typical interaction begins when an MVC controller in the UI sends a 
+message using the command bus. The system includes a number of command 
+handlers that register with the command bus to handle specific types of 
+command. For example, the **RegistrationCommandHandler** class defines 
+handler methods for the **RegisterToConference**, **MarkOrderAsBooked**, 
+and **RejectOrder** commands. The following code sample shows the 
+handler method for the **MarkOrderAsBooked** command. Handler methods 
+are responsible for locating the correct aggregate instance, calling 
+methods on that instance, and then saving that instance. 
+
+```Cs
+public void Handle(MarkOrderAsBooked command)
+{
+    var repository = this.repositoryFactory();
+
+    using (repository as IDisposable)
+    {
+        var order = repository.Find<Order>(command.OrderId);
+
+        if (order != null)
+        {
+            order.MarkAsBooked();
+            repository.Save(order);
+        }
+    }
+}
+```
+
+The class that implements the **IRepository** interface is responsible 
+for persisting the aggregate and adding publishing any events raised by 
+the aggregate on the event bus, all as part of a transaction. 
+
+The only event subscriber in the reservations bounded context is the 
+**ReservationProcessSaga**. Its handler subscribes to the event bus to 
+handle specific events as shown in the following code sample from the 
+**ReservationProcessSaga** class. 
+
+```Cs
+public void Handle(ReservationAccepted @event)
+{
+	var repo = this.repositoryFactory.Invoke();
+	using (repo as IDisposable)
+	{
+        lock (lockObject)
+        {
+            var saga = repo.Find<RegistrationProcessSaga>(@event.ReservationId);
+            saga.Handle(@event);
+
+            repo.Save(saga);
+        }
+	}
+}
+```
+Typically, an event handler method loads a saga instance, passes the 
+event to the saga, and then persists the saga instance. In this case, 
+the **IRepository** instance is responsible for persisting the saga 
+instance and sending any commands from the saga instance on the command 
+bus. 
 
 # Testing
 Describe any special considerations that relate to testing for this 
@@ -526,13 +830,15 @@ public class given_available_seats
 }
 ```
 
-The two tests shown here, test the state of the 
+The two tests shown here test the state of the 
 **ConferenceSeatsAvailability** aggregate after invoking the 
 **MakeReservation** method. The first test, tests the scenario where 
 there are enough seats available. The second test, tests the scenario 
 where there are not enough seats available. This second test makes use 
 of the behavior the **ConferenceSeatsAvailability** aggregate because it 
 raises an event if it rejects a reservation. 
+
+[r_chapter4]:     Reference_04_DeepDive.markdown
 
 [tddstyle]:		  http://martinfowler.com/articles/mocksArentStubs.html
 [repourl]:		  https://github.com/mspnp/cqrs-journey-code
