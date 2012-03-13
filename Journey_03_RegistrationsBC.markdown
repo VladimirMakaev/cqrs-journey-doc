@@ -1,18 +1,14 @@
 ## Chapter 3
 # Attendee Registrations Bounded Context 
 
-The first stopping point on our CQRS journey.
+_The first stopping point on our CQRS journey._
 
 # A Description of the Attendee Registrations Bounded Context
-
-Summary description of this Bounded Context. What is its relative 
-importance/significance in the domain - is it core, how does it relate 
-to the other bounded contexts?
 
 The attendee registrations bounded context is responsible for the 
 booking processes for attendees planning to attend a conference. 
 Attendees register to attend a specific conference. As part of the 
-registration process, attendees book and pay for seats at the 
+registration process, attendees reserve and pay for seats at the 
 conference. 
 
 The registration process must support wait listing, whereby attendees 
@@ -20,12 +16,17 @@ are placed on a wait-list if there are not sufficient seats available.
 The payments part of the process must enable the conference organizer to 
 set various types of discount for attendees. 
 
-This is the first stop on our CQRS journey, so the team decided to 
+This was the first stop on our CQRS journey, so we decided to 
 implement a core, but self-contained part of the system. The 
 registrations process must be as painless as possible for attendees. The 
 process must enable the conference organizer to ensure that the maximum 
 possible number of seat can be booked, and give the conference organizer 
-the flexibility to define a set of custom pricing and discount scheme. 
+the flexibility to define a set of custom pricing and discount scheme.
+
+Because this was the first bounded context addressed by the team, they 
+also implemented some infrastructure elements of the system to support 
+the domain's functionality. These included command and event message 
+buses and a persistence mechanism for aggregates. 
 
 ## Working Definitions for this Chapter
 
@@ -38,22 +39,21 @@ Deep Dive][r_chapter4].
 A command is a request for the system to perform a task or an action. 
 Commands are imperatives, for example **MakeRegistration**. In this 
 bounded context, commands originate from the UI as a result either of 
-the user initiating a request, or from a saga when the saga is directing 
+the user initiating a request or from a saga when the saga is directing 
 an aggregate to perform an action. 
 
-Commands are processed once, and once only by a single recipient. 
-Commands are transported using a command bus, and dispatched to 
-aggregate instances by command handlers. Sending a command is an 
-asynchronous operation with no return value. 
+Commands are processed once, and once only by a single recipient. A 
+command bus transports commands that command handlers then dispatch to 
+aggregates. Sending a command is an asynchronous operation with no 
+return value. 
 
 ### Event
 
 An event describes something that has happened in the system, typically 
-as a result of a command. Events are raised by aggregates in the domain 
-model. 
+as a result of a command. Aggregates in the domain model raise events. 
 
 Multiple subscribers can handle a specific event. Aggregates publish 
-events to an event bus, handlers register for specific types of event on 
+events to an event bus; handlers register for specific types of event on 
 the event bus and then deliver the event to the subscriber. In this 
 bounded context, the only subscriber is a saga. 
 
@@ -92,7 +92,14 @@ While the registrant has seats reserved, she can pay for them. After the
 payment is confirmed and the details of the attendees submitted, the 
 seats are booked. 
 
-### wait listing
+### Wait Listing
+
+<div style="margin-left:20px;margin-right:20px;">
+  <span style="background-color:yellow;">
+    <b>Comment [DRB]:</b>
+	To do
+  </span>
+</div> 
 
 ### Domain Definitions (Ubiquitous Language)
 
@@ -100,33 +107,72 @@ The following list defines the key domain related terms that the team
 used during the development of this Attendee Registrations bounded 
 context. 
 
-- Attendee. An attendee is someone who has paid to attend a conference.
-  An attendee can interact with the system to perform tasks such as
-  manage his agenda, print his badge, and provide feedback after the
-  conference.
-- Registrant. A registrant is a person who interacts with the system to
-  make registrations and to make payments for those registrations. A
-  registrant can register multiple attendees on a conference. A
-  registrant may also be an attendee.
-- Registration. Registration is the process...
-- Wait-list. A wait-list is...
-- Conference site. Every conference defined in the system can be
-  accessed using a unique URL.
-	
-### Registration Stories
+- **Attendee.** An attendee is someone who has paid to attend a 
+  conference. An attendee can interact with the system to perform tasks 
+  such as manage his agenda, print his badge, and provide feedback after 
+  the conference. 
+- **Registrant.** A registrant is a person who interacts with the 
+  system to make orders and to make payments for those orders. A 
+  registrant can create orders for multiple attendees at a conference. A 
+  registrant may also be an attendee. 
+- **Registration.** Registration is the process whereby a registrant 
+  can purchase one or more seats at a conference on behalf of attendees. 
+  If the reservation process completes successfully, a confirmed order 
+  that records the fact is created in the system. 
+- **Order.** When a registrant interacts with the system, the system 
+  creates an order to manage the registration. An order typically exists 
+  in one of three states: created, booked, and confirmed. Orders may 
+  also be in a rejected state. An order is in the booked state when the 
+  system has reserved the number of seats requested by the registrant. 
+  An order is in the confirmed state when the registrant has 
+  successfully paid for the reserved seats. An order is in the rejected 
+  state if the system cannot reserve the number of seats requested by 
+  the registrant or if the payment process fails. An order contains one 
+  of more ticket order lines that represent the type and quantity of 
+  seat requests that make up the order. 
+- **Seat.** A seat represents a space at a conference. Each conference
+  has a limited number of seats. A conference organizer can change the
+  number of seats for a conference.  
+- **Reservation.** A reservation is a temporary reservation of one or 
+  more seats. The registration process creates reservations. When a 
+  registrant begins the reservation process, the system makes 
+  reservations for the number of seats requested by the registrant. 
+  These seats are then not available for other registrants to reserve. 
+  The systems holds reservations for a fixed period of time during 
+  which the registrant can complete the registration process by making a 
+  payment for those seats. If the registrant does not pay for the 
+  tickets within the fifteen minutes, the system cancels the reservation 
+  and the seats become available to other registrants to reserve. 
+- **Conference Seats Availability.** Every conference tracks its seat 
+  availability. Initially, all of the conference seats are available to 
+  reserve and purchase. When a seat is reserved, the number of available 
+  seats is decremented. If the system cancels the reservation, the 
+  number of available seats is incremented. A conference organizer may 
+  adjust the number of available seats. 
+- **Conference site.** Every conference defined in the system can be 
+  accessed using a unique URL. Registrants can begin the registration 
+  process from this site. 
 
+- **Wait-list.** A wait-list is... 
+
+<div style="margin-left:20px;margin-right:20px;">
+  <span style="background-color:yellow;">
+    <b>Comment [DRB]:</b>
+	More to do here in relation to the wait-list story
+  </span>
+</div> 
+	
 ## Architecture
 
-What are the key architectural features? Server-side, UI, multi-tier, 
-cloud, etc. 
+<div style="margin-left:20px;margin-right:20px;">
+  <span style="background-color:yellow;">
+    <b>Comment [DRB]:</b>
+	What are the key architectural features? Server-side, UI, multi-tier, 
+    cloud, etc. 
+  </span>
+</div>
 
 # Patterns and Concepts
-- What are the primary patterns or approaches that have been adopted for
-  this bounded context? (CQRS, CQRS/ES, CRUD, ...)
-- What were the motivations for adopting these patterns or approaches
-  for this bounded context? 
-- What trade-offs did we evaluate?
-- What alternatives did we consider?
 
 The team decided that they would try to implement the first bounded 
 context without using event sourcing in order to keep things simple. 
@@ -138,20 +184,20 @@ One of the important discussions in the team was around the choice of
 aggregates and entities that they would implement. The following images 
 from the team's white-board illustrate some of their initial thoughts, 
 and questions about the alternative approaches they could take with a 
-simple conference seat booking scenario to try and understand the
-alternative approaches.
+simple conference seat reservation scenario to try and understand the
+pros and cons of alternative approaches.
 
 This scenario considers what happens when a registrant tries to book
 several seats at a conference. The system must:
 
 - Check that sufficient seats are available.
-- Record details of the booking.
+- Record details of the registration.
 - Update the total number of seats booked for the conference.
 
 > **Note:** The scenario is kept deliberately simple to avoid
   distractions while the team examines the alternatives.  
 
-The first possible approach, shown in figure 1, uses two separate 
+The first approach considered by the team, shown in figure 1, uses two separate 
 aggregates. 
 
 ![Figure 1][fig1]
@@ -160,34 +206,21 @@ aggregates.
 
 The numbers in the diagram correspond to the following steps:
 
-1. The UI sends a command to book X and Y onto conference #157. The 
-   command is routed to a new **Booking** aggregate.
-2. The **Booking** aggregate invokes a method on a **Conference**
-   aggregate.
-3. The **Conference** aggregate with an ID of 157 is re-hydrated from the
+1. The UI sends a command to register X and Y onto conference #157. The 
+   command is routed to a new **Order** aggregate.
+2. The **Order** aggregate invokes a method on a **Conference Seats
+   Availability** aggregate.
+3. The **Conference Seats Availability** aggregate with an ID of 157 is
+   re-hydrated from the data store.
+4. The **Conference Seats Availability** aggregate updates its total
+   number of seats booked.
+5. The updated version of the **Conference Seats Availability**
+   aggregate is persisted to the data store.
+6. The new **Order** aggregate, with an ID of 4239, is persisted to the
    data store.
-4. The **Conference** aggregate updates its total number of seats
-   booked.
-5. The updated version of the **Conference** aggregate is persisted to
-   the data store.
-6. The new **Booking** aggregate, with an ID of 4239, is persisted to the
-   data store.
 
-The team identified these questions about the approach:
-
-- If the **Booking** aggregate needs to know the total number of seats
-  booked so far in order to determine whether the new **Booking** can be
-  made: how does it get this information from the **Conference**
-  aggregate?
-- Should the **Booking** aggregate invoke a method on **Conference**
-  aggregate or send a command?
-- Where exactly is the transaction boundary?
-- What happens if several **Booking** aggregates invoke the method on
-  the **Conference** aggregate simultaneously?
-- Should we really have two aggregates?
-
-The second possible approach, shown in figure 2, uses a single 
-aggregate in place of two. 
+The second approach considered by the team, shown in figure 2, uses a 
+single aggregate in place of two. 
 
 ![Figure 2][fig2]
 
@@ -195,30 +228,22 @@ aggregate in place of two.
 
 The numbers in the diagram correspond to the following steps:
 
-1. The UI sends a command to book X and Y onto conference #157. The 
+1. The UI sends a command to register X and Y onto conference #157. The 
    command is routed to the **Conference** aggregate with an ID of
    157.
-2. The **Conference** aggregate with an ID of 157 is re-hydrated from the
-   data store.
-3. The **Booking** entity validates the booking (it queries the 
-   **Conference Capacity** entity to see if there are enough seats
-   left), and then invokes the method to update the number of seats
-   booked on the conference entity.
-4. The **Conference Capacity** entity updates its total number of seats
-   booked.
+2. The **Conference** aggregate with an ID of 157 is re-hydrated from
+   the data store.
+3. The **Order** entity validates the booking (it queries the 
+   **ConferenceSeatsAvailability** entity to see if there are enough
+   seats left), and then invokes the method to update the number of
+   seats booked on the conference entity.
+4. The **ConferenceSeatsAvailability** entity updates its total number
+   of seats booked.
 5. The updated version of the **Conference** aggregate is persisted to
    the data store.
 
-The team identified these questions about the approach:
-
-- Which entity should be the aggregate root within the **Conference**
-  aggregate?
-- What else will end up in the **Conference aggregate**? Will it become
-  too large.
-- How does this approach handle multiple simultaneous bookings?
-
-The third possible approach, shown in figure 3, uses a saga to 
-coordinate the interaction between two aggregates.
+The third approach considered by the team, shown in figure 3, uses a 
+saga to coordinate the interaction between two aggregates. 
 
 ![Figure 3][fig3]
 
@@ -226,37 +251,120 @@ coordinate the interaction between two aggregates.
 
 The numbers in the diagram correspond to the following steps:
 
-1. The UI sends a command to book X and Y onto conference #157. The 
-   command is routed to a new **Booking** aggregate.
-2. The new **Booking** aggregate, with and ID of 4239,  is persisted to
+1. The UI sends a command to register X and Y onto conference #157. The 
+   command is routed to a new **Order** aggregate.
+2. The new **Order** aggregate, with an ID of 4239,  is persisted to
    the data store.
-3. The **Booking** aggregate raises an event that is handled by the
-   **Booking** saga.
-4. The **Booking** saga determines that a command should be sent to the
-   **Conference** aggregate with an ID of 157.
-5. The **Conference** aggregate is re-hydrated from the data store.
-6. The total number of seats booked is updated in the **Conference**
-   aggregate  and it is persisted to the data store.
+3. The **Order** aggregate raises an event that is handled by the
+   **ReservationProcess** saga.
+4. The **ReservationProcess** saga determines that a command should be
+   sent to the **ConferenceSeatsAvailability** aggregate with an ID of
+   157.
+5. The **ConferenceSeatsAvailability** aggregate is re-hydrated from the
+   data store.
+6. The total number of seats booked is updated in the
+   **ConferenceSeatsAvailability** aggregate and it is persisted to the
+   data store.
 
+The team identified these questions about these approaches:
 
-The team identified these questions about the approach:
+- Where does the validation that there are sufficient seats for the 
+  registration take place, in the **Order** or 
+  **ConferenceSeatsAvailability** aggregate? 
+- Where are the transaction boundaries? 
+- How does this model deal with concurrency issues when multiple 
+  registrants try to place orders simultaneously? 
+- What are the aggregate roots?
 
-- Is using a saga overkill in this scenario?
-- If the booking aggregate needs to know how many seats have been booked
-  so far to validate the booking, how does it get this information from
-  the conference aggregate?
-- How does this approach handle multiple users making simultaneous
-  bookings?
+The following sections discuss these questions in relation to the three
+approaches considered by the team.
+
+## Validation
+
+Before a registrant can reserve a seat, the system must check that there 
+are enough seats available. Although logic in the UI can attempt to 
+verify that there are sufficient seats available before it sends a 
+command, the business logic in the domain must also perform the check 
+because the state may change between the time the UI performs the 
+validation and the time the command is delivered to the aggregate in the 
+domain. 
+
+In the first model, the validation must take place in either the 
+**Order** or **ConferenceSeatsAvailability** aggregate. If it is the 
+former, the **Order** aggregate must discover the current seat 
+availability from the **ConferenceSeatsAvailability** aggregate before 
+the reservation is made. If it is the later, the 
+**ConferenceSeatsAvailability** aggregate must return a success or 
+failure code to the **Order** aggregate. 
+
+The second model behaves similarly, except that it is **Order** and 
+**ConferenceSeatsAvailability** entities cooperating within a 
+**Conference** aggregate. 
+
+In the third model, with the saga, the aggregates exchange messages
+through the saga about whether the registrant can make the reservation
+at the current time. 
+
+All three models require entities to communicate about the validation 
+process, but the third model with the saga appears more complex than the 
+other two. 
+
+## Transaction Boundaries
+
+An aggregate, in the DDD approach, represents a consistency boundary. 
+Therefore, the first model with two aggregates, and the third model with 
+two aggregates and a saga will involve two transactions: one when the 
+system persists the new **Order** aggregate, and one when the system 
+persists the updated **ConferenceSeatsAvailability** aggregate. 
+
+To ensure the consistency of the system when a registrant creates an 
+order, both transactions must succeed. To guarantee this, we must take 
+steps to ensure that the system is eventually consistent by ensuring 
+that infrastructure reliably delivers messages to aggregates. 
+
+The second approach that uses a single aggregate, we will only have a 
+single transaction when a registrant makes an order. This appears to be 
+the simplest approach of the three. 
+
+## Concurrency
+
+The registration process takes place in a multi-user environment where 
+many registrants could attempt to purchase seats simultaneously. The 
+team decided to use the [reservation pattern][res-pat] to address the 
+concurrency issues in the registration process. In this scenario, this 
+means that a registrant initially reserves seats (which are then 
+unavailable) for other registrants; if the registrant completes the 
+payment within a timeout period, the system keeps the reservations; 
+otherwise the system cancels the reservation. 
+
+This reservation system introduces the need for additional message 
+types, for example an event to report that a registrant has made a 
+payment, or report that a timeout has occurred. 
+
+This timeout also requires the system to incorporate a timer somewhere 
+to track when reservations expire. 
+
+Modeling this complex behavior with sequences of messages and the 
+requirement for a timer is best done using a saga. 
+
+## Aggregates and Aggregate Roots
+
+In the two models where there are the **Order** aggregate and the 
+**ConferenceSeatsAvailability** aggregate, the team easily identified 
+the entities that make up the aggregate, and the aggregate root. The 
+choice is not so clear in the model with a single aggregate: it does not 
+seem natural to access orders through a **ConferenceSeatsAvailability** 
+entity, or to access the seat availability through an **Order** entity. 
+Creating a new entity to act as an aggregate root seems unnecessary. 
+
+The team decided on the model that incorporated a saga because this 
+offers the best way to handle the concurrency requirements in this 
+bounded context. 
 	
 # Implementation Details
-Describe significant features of the implementation with references to 
-the code. Highlight any specific technologies (including any relevant 
-trade-offs and alternatives). Provide significantly more detail for 
-those BCs that use CQRS/ES. Significantly less detail for more 
-"traditional" implementations such as CRUD.
 
 This section describes some of the significant features of the 
-implementation of the reservations bounded context. You may find it 
+implementation of the registrations bounded context. You may find it 
 useful to have a copy of the code so you can follow along. You can 
 download a copy of the code from the repository on github: 
 [mspnp/cqrs-journey-code][repourl]. 
@@ -449,7 +557,7 @@ private OrderDTO WaitUntilBooked(Registration registration)
 Figure 5 shows the entities that exist in the write-side model. There 
 are two aggregates, **Order** and **ConferenceSeatsAvailability**, each 
 one containing multiple entity types. There is also a 
-**ReservationProcessSaga** saga, that manages the interaction between 
+**ReservationProcessSaga** saga that manages the interaction between 
 the aggregates. 
 
 The table in the figure 5 shows how the saga behaves given a current 
@@ -614,9 +722,10 @@ public void Handle(ReservationAccepted message)
 ```
 
 You can examine the code in the **Order**, 
-*ConferenceSeatsAvailability**, and *ReservationProcessSaga** classes to 
-see how the other message handlers are implemented. They all follow the 
-same pattern: receive a message, perform some logic, and send a message. 
+**ConferenceSeatsAvailability**, and **ReservationProcessSaga** classes 
+to see how the other message handlers are implemented. They all follow 
+the same pattern: receive a message, perform some logic, and send a 
+message. 
 
 The sequence diagram in figure 6 shows how the infrastructure elements 
 interact with the domain objects to deliver messages. 
@@ -678,6 +787,7 @@ public void Handle(ReservationAccepted @event)
 	}
 }
 ```
+
 Typically, an event handler method loads a saga instance, passes the 
 event to the saga, and then persists the saga instance. In this case, 
 the **IRepository** instance is responsible for persisting the saga 
@@ -842,6 +952,7 @@ raises an event if it rejects a reservation.
 
 [tddstyle]:		  http://martinfowler.com/articles/mocksArentStubs.html
 [repourl]:		  https://github.com/mspnp/cqrs-journey-code
+[res-pat]:        http://www.rgoarchitects.com/nblog/2009/09/08/SOAPatternsReservations.aspx
 
 [fig1]:           images/Journey_03_Aggregates_01.png?raw=true
 [fig2]:           images/Journey_03_Aggregates_02.png?raw=true
