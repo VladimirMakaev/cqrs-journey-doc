@@ -26,7 +26,7 @@ once, by a single recipient.
 > this way being almost certain that it will succeed.  
 > Julian Dominguez 
 
-> When a user issues a Command, it’ll give the best user experience if it 
+> When a user issues a Command, it'll give the best user experience if it 
 > rarely fails. However, from an architectural/implementation point of 
 > view, Commands will fail once in a while, and the application should be 
 > able to handle that.  
@@ -84,10 +84,10 @@ rule.
 > the reason of this is that they use the word consistent or consistency 
 > when talking with domain experts / business stakeholders. 
 > ...
-> Business users hear “Consistency” and they tend to think it means that 
+> Business users hear 'Consistency' and they tend to think it means that 
 > the data will be wrong. That the data will be incoherent and 
 > contradictory. This is not actually the case. Instead try using the 
-> word “stale” or “old”, in discussions when the word stale is used the 
+> word 'stale' or 'old', in discussions when the word stale is used the 
 > business people tend to realize that it just means that someone could 
 > have changed the data, that they may not have the latest copy of it.  
 > Greg Young: [Quick Thoughts on Eventual Consistency][youngeventual] 

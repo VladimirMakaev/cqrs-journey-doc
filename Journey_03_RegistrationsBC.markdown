@@ -1,11 +1,11 @@
 ## Chapter 3
-# Attendee Registrations Bounded Context 
+# Orders and Registrations Bounded Context 
 
 _The first stopping point on our CQRS journey._
 
-# A Description of the Attendee Registrations Bounded Context
+# A Description of the Orders and Registrations Bounded Context
 
-The attendee registrations bounded context is responsible for the 
+The **Orders and Registrations** bounded context is responsible for the 
 booking processes for attendees planning to attend a conference. 
 Attendees register to attend a specific conference. As part of the 
 registration process, attendees reserve and pay for seats at the 
@@ -75,22 +75,21 @@ subscribe to events.
 
 This bounded context addresses the following two user stories.
 
+### Seat Ordering
+
+A registrant is the person who reserves and pays for seats at a 
+conference. Ordering is a two-stage process: first the registrant 
+reserves a number of seats, and then the registrant pays for the seats 
+to confirm the reservation. If registrant does not complete the payment, 
+the seat reservations expire after a fixed period of time and the system 
+makes the seats availble to other registrants to reserve. 
+
 ### Attendee Registration
 
-When an attendee registers to attend a conference, the system uses a 
-two-stage process: first, the registrant reserves one or more seats; 
-second, the registrant pays for the seats. 
-
-When a registrant reserves seats, the seats are not available for other 
-registrants to reserve or purchase, but they are only reserved for a 
-fixed period of time. After this time expires, the reserved seats are 
-available for reservation by any other registrant, and if the registrant 
-wishes to purchase them, she must reserve them again. A registrant can 
-reserve seats for fifteen minutes. 
-
-While the registrant has seats reserved, she can pay for them. After the 
-payment is confirmed and the details of the attendees submitted, the 
-seats are booked. 
+The registrant is also responsible for assigning attendees to seats 
+after she has completed the order. For each seat in a confirmed order, 
+the registrant assigns an attendee. This requires the registrant to 
+enter the attendees details into the system. 
 
 ### Wait Listing
 
@@ -104,54 +103,87 @@ seats are booked.
 ### Domain Definitions (Ubiquitous Language)
 
 The following list defines the key domain related terms that the team 
-used during the development of this Attendee Registrations bounded 
+used during the development of this **Orders and Registrations** bounded 
 context. 
 
-- **Attendee.** An attendee is someone who has paid to attend a 
-  conference. An attendee can interact with the system to perform tasks 
+- **Attendee.** An Attendee is someone who is entitled to attend a 
+    conference. An Attendee can interact with the system to perform tasks 
   such as manage his agenda, print his badge, and provide feedback after 
-  the conference. 
-- **Registrant.** A registrant is a person who interacts with the 
-  system to make orders and to make payments for those orders. A 
-  registrant can create orders for multiple attendees at a conference. A 
-  registrant may also be an attendee. 
-- **Registration.** Registration is the process whereby a registrant 
-  can purchase one or more seats at a conference on behalf of attendees. 
-  If the reservation process completes successfully, a confirmed order 
-  that records the fact is created in the system. 
-- **Order.** When a registrant interacts with the system, the system 
-  creates an order to manage the registration. An order typically exists 
-  in one of three states: created, booked, and confirmed. Orders may 
-  also be in a rejected state. An order is in the booked state when the 
-  system has reserved the number of seats requested by the registrant. 
-  An order is in the confirmed state when the registrant has 
-  successfully paid for the reserved seats. An order is in the rejected 
-  state if the system cannot reserve the number of seats requested by 
-  the registrant or if the payment process fails. An order contains one 
-  of more ticket order lines that represent the type and quantity of 
-  seat requests that make up the order. 
-- **Seat.** A seat represents a space at a conference. Each conference
-  has a limited number of seats. A conference organizer can change the
-  number of seats for a conference.  
-- **Reservation.** A reservation is a temporary reservation of one or 
-  more seats. The registration process creates reservations. When a 
-  registrant begins the reservation process, the system makes 
-  reservations for the number of seats requested by the registrant. 
-  These seats are then not available for other registrants to reserve. 
-  The systems holds reservations for a fixed period of time during 
-  which the registrant can complete the registration process by making a 
-  payment for those seats. If the registrant does not pay for the 
-  tickets within the fifteen minutes, the system cancels the reservation 
-  and the seats become available to other registrants to reserve. 
-- **Conference Seats Availability.** Every conference tracks its seat 
-  availability. Initially, all of the conference seats are available to 
-  reserve and purchase. When a seat is reserved, the number of available 
-  seats is decremented. If the system cancels the reservation, the 
-  number of available seats is incremented. A conference organizer may 
-  adjust the number of available seats. 
+  the conference. An Attendee could also be a person who doesn't pay to 
+  attend a conference such as a volunteer, speaker, or someone with a 
+  100% discount. An Attendee may have multiple associated Attendee Types 
+  (speaker, student, volunteer, track chair, etc.) 
+
+- **Registrant.** A Registrant is a person who interacts with the 
+  system to make Orders and to make payments for those Orders. A 
+  Registrant also creates the Registrations associated with an Order. A 
+  Registrant may also be an Attendee.
+  
+- **User.** A User is a person such as an Attendee, Registrant, Speaker, 
+  Volunteer who is associated with a conference. Each User has a unique 
+  Record Locator code that the User can use to access User specific 
+  information in the system. For example, a Registrant can use a Record 
+  Locator code to access her Orders, an Attendee can use a Record 
+  Locator code to access his personalized conference agenda. 
+
+- **Registration.** A Registration associates an Attendee with a Seat 
+  in a confirmed Order. An Order may have one or more Registrations 
+  associated with it. 
+
+- **Order.** When a Registrant interacts with the system, the system
+  creates an Order to manage the Reservations, payment, and 
+  Registrations. An Order typically exists in one of four states: 
+  Created, ReservationsMade, Rejected, and Confirmed. An Order is 
+  initially in the Created state. An Order is in the ReservationsMade 
+  state when the system has reserved some of the Seats requested by the 
+  Registrant (one or more Order Items are in the Reserved state). An 
+  Order is in the confirmed state when the Registrant has successfully 
+  paid for the Order Items in the Reserved state. An Order is in the 
+  Rejected state if the system cannot reserve any of the Seats requested 
+  by the Registrant (all the Order Items are in the Rejected state) or 
+  if the payment process fails. An Order contains one of more Order 
+  Items.
+
+* **Order Item.** An Order Item represents a Seat Type and a Quantity
+  and is associated with an Order. An Order Item exists in one of three 
+  states: Created, Reserved, Rejected. An Order Item is initially in the 
+  Created state. An Order Item is in the Reserved state if the system 
+  has reserved the quantity of seats of the seat type requested by the 
+  Registrant. An Order Item is in the Rejected state if the system 
+  cannot reserve the quantity of seats of the seat type requested by the 
+  Registrant. 
+
+- **Seat.** A represents a space at a conference or access to a 
+  specific session at the conference such as a cocktail party, a 
+  tutorial, or a workshop. Each conference has a quota of Seats that may 
+  be changed by the Conference Owner. Each session has a quota of Seats 
+  that may be changed by the Conference Owner. 
+
+- **Reservation.** A Reservation is a temporary reservation of one or 
+  more seats. The ordering process creates Reservations. When a 
+  Registrant begins the ordering process, the system makes Reservations 
+  for the number of Seats requested by the Registrant. These Seats are 
+  then not available for other Registrants to reserve. The Reservations 
+  are held for n minutes (n is one of the properties of the conference 
+  defined by the Conference Owner) during which the Registrant can 
+  complete the ordering process by making a payment for those Seats. If 
+  the Registrant does not pay for the seats within n minutes, the 
+  system cancels the Reservation and the Seats become available to other 
+  Registrants to reserve. 
+
+- **Seats Availability.** Every conference tracks Seat availability 
+  for each type of Seat. Initially, all of the Seats are available to 
+  reserve and purchase. When a Seat is reserved, the number of available 
+  Seats of that type is decremented. If the system cancels the 
+  Reservation, the number of available Seats of that type is 
+  incremented. The initial quota of each seat type is an attribute of 
+  the conference and is defined by the Conference Owner. A Conference 
+  Owner may adjust the quotas for the individual seat types. 
+
 - **Conference site.** Every conference defined in the system can be 
-  accessed using a unique URL. Registrants can begin the registration 
+  accessed using a unique URL. Registrants can begin the ordering 
   process from this site. 
+
 
 - **Wait-list.** A wait-list is... 
 
@@ -168,7 +200,8 @@ context.
   <span style="background-color:yellow;">
     <b>Comment [DRB]:</b>
 	What are the key architectural features? Server-side, UI, multi-tier, 
-    cloud, etc. 
+    cloud, etc. <br/>
+	MVC, Windows Azure Service Bus
   </span>
 </div>
 
@@ -197,8 +230,8 @@ several seats at a conference. The system must:
 > **Note:** The scenario is kept deliberately simple to avoid
   distractions while the team examines the alternatives.  
 
-The first approach considered by the team, shown in figure 1, uses two separate 
-aggregates. 
+The first approach considered by the team, shown in figure 1, uses two 
+separate aggregates.
 
 ![Figure 1][fig1]
 
@@ -234,10 +267,10 @@ The numbers in the diagram correspond to the following steps:
 2. The **Conference** aggregate with an ID of 157 is re-hydrated from
    the data store.
 3. The **Order** entity validates the booking (it queries the 
-   **ConferenceSeatsAvailability** entity to see if there are enough
+   **SeatsAvailability** entity to see if there are enough
    seats left), and then invokes the method to update the number of
    seats booked on the conference entity.
-4. The **ConferenceSeatsAvailability** entity updates its total number
+4. The **SeatsAvailability** entity updates its total number
    of seats booked.
 5. The updated version of the **Conference** aggregate is persisted to
    the data store.
@@ -258,19 +291,19 @@ The numbers in the diagram correspond to the following steps:
 3. The **Order** aggregate raises an event that is handled by the
    **ReservationProcess** saga.
 4. The **ReservationProcess** saga determines that a command should be
-   sent to the **ConferenceSeatsAvailability** aggregate with an ID of
+   sent to the **SeatsAvailability** aggregate with an ID of
    157.
-5. The **ConferenceSeatsAvailability** aggregate is re-hydrated from the
+5. The **SeatsAvailability** aggregate is re-hydrated from the
    data store.
 6. The total number of seats booked is updated in the
-   **ConferenceSeatsAvailability** aggregate and it is persisted to the
+   **SeatsAvailability** aggregate and it is persisted to the
    data store.
 
 The team identified these questions about these approaches:
 
 - Where does the validation that there are sufficient seats for the 
   registration take place, in the **Order** or 
-  **ConferenceSeatsAvailability** aggregate? 
+  **SeatsAvailability** aggregate? 
 - Where are the transaction boundaries? 
 - How does this model deal with concurrency issues when multiple 
   registrants try to place orders simultaneously? 
@@ -290,15 +323,15 @@ validation and the time the command is delivered to the aggregate in the
 domain. 
 
 In the first model, the validation must take place in either the 
-**Order** or **ConferenceSeatsAvailability** aggregate. If it is the 
+**Order** or **SeatsAvailability** aggregate. If it is the 
 former, the **Order** aggregate must discover the current seat 
-availability from the **ConferenceSeatsAvailability** aggregate before 
+availability from the **SeatsAvailability** aggregate before 
 the reservation is made. If it is the later, the 
-**ConferenceSeatsAvailability** aggregate must return a success or 
+**SeatsAvailability** aggregate must return a success or 
 failure code to the **Order** aggregate. 
 
 The second model behaves similarly, except that it is **Order** and 
-**ConferenceSeatsAvailability** entities cooperating within a 
+**SeatsAvailability** entities cooperating within a 
 **Conference** aggregate. 
 
 In the third model, with the saga, the aggregates exchange messages
@@ -315,7 +348,7 @@ An aggregate, in the DDD approach, represents a consistency boundary.
 Therefore, the first model with two aggregates, and the third model with 
 two aggregates and a saga will involve two transactions: one when the 
 system persists the new **Order** aggregate, and one when the system 
-persists the updated **ConferenceSeatsAvailability** aggregate. 
+persists the updated **SeatsAvailability** aggregate. 
 
 To ensure the consistency of the system when a registrant creates an 
 order, both transactions must succeed. To guarantee this, we must take 
@@ -350,10 +383,10 @@ requirement for a timer is best done using a saga.
 ## Aggregates and Aggregate Roots
 
 In the two models where there are the **Order** aggregate and the 
-**ConferenceSeatsAvailability** aggregate, the team easily identified 
+**SeatsAvailability** aggregate, the team easily identified 
 the entities that make up the aggregate, and the aggregate root. The 
 choice is not so clear in the model with a single aggregate: it does not 
-seem natural to access orders through a **ConferenceSeatsAvailability** 
+seem natural to access orders through a **SeatsAvailability** 
 entity, or to access the seat availability through an **Order** entity. 
 Creating a new entity to act as an aggregate root seems unnecessary. 
 
@@ -418,21 +451,21 @@ or more seats at the conference. The **RegistrationController** class
 then polls the read model to discover whether the registration request 
 succeeded. See the section "6. Polling the Read Model" below for more 
 details. 
-* **SetRegistrationPaymentDetails:** This command sends payment details 
+* **SetOrderPaymentDetails:** This command sends payment details 
 to the write model. 
 
 The following code sample shows how the **RegistrationController** sends
 a **RegisterToConference** command:
 
 ```Cs
-var registration = UpdateRegistration(conferenceName, contentModel);
+var viewModel = this.UpdateViewModel(conferenceCode, contentModel);
 
 var command =
     new RegisterToConference
     {
-        RegistrationId = registration.Id,
-        ConferenceId = registration.ConferenceId,
-        Tickets = registration.Seats.Select(x => new RegisterToConference.Ticket { TicketTypeId = x.SeatId, Quantity = x.Quantity }).ToList()
+        OrderId = viewModel.Id,
+        ConferenceId = viewModel.ConferenceId,
+        Seats = viewModel.Items.Select(x => new RegisterToConference.Seat { SeatTypeId = x.SeatId, Quantity = x.Quantity }).ToList()
     };
 
 this.commandBus.Send(command);
@@ -446,20 +479,20 @@ expect return values.
 Command handlers register with the command bus; the command bus can then 
 forward commands to the correct handler. 
 
-The **RegistrationCommandHandler** class handles the 
-**RegisterToConference** and **SetRegistrationPaymentDetails** commands. 
+The **OrderCommandHandler** class handles the 
+**RegisterToConference** and **SetOrderPaymentDetails** commands. 
 Typically, the handler is responsible for initiating any business logic 
 in the domain and persisting any state changes to the data store. 
 
 <div style="margin-left:20px;margin-right:20px;">
   <span style="background-color:yellow;">
     <b>Comment [DRB]:</b>
-	Check that this is correct re. SetRegistrationPaymentDetails!<br/>
+	Check that this is correct re. SetOrderPaymentDetails!<br/>
 	Also check any other responsibilities of the handler such as verifying the command structure.
   </span>
 </div>
 
-The following code sample shows how the **RegistrationCommandHandler** 
+The following code sample shows how the **OrderCommandHandler** 
 class handles the **RegisterToConference** command: 
 
 ```Cs
@@ -469,9 +502,9 @@ public void Handle(RegisterToConference command)
 
     using (repository as IDisposable)
     {
-        var tickets = command.Tickets.Select(t => new TicketOrderLine(t.TicketTypeId, t.Quantity)).ToList();
+        var seats = command.Seats.Select(t => new OrderItem(t.SeatTypeId, t.Quantity)).ToList();
 
-        var order = new Order(command.RegistrationId, Guid.NewGuid(), command.ConferenceId, tickets);
+        var order = new Order(command.OrderId, Guid.NewGuid(), command.ConferenceId, seats);
 
         repository.Save(order);
     }
@@ -480,7 +513,7 @@ public void Handle(RegisterToConference command)
 
 ### 4. Initiating Business Logic in the Domain
 
-In the previous code sample, the **RegistrationCommandHandler** class 
+In the previous code sample, the **OrderCommandHandler** class 
 creates a new **Order** instance. The **Order** entity is an aggregate 
 root, and its constructor contains code to initiate the domain logic. 
 See the section "Inside the Write Model" below for more details of what 
@@ -555,7 +588,7 @@ private OrderDTO WaitUntilBooked(Registration registration)
 ## Inside the Write Model
 
 Figure 5 shows the entities that exist in the write-side model. There 
-are two aggregates, **Order** and **ConferenceSeatsAvailability**, each 
+are two aggregates, **Order** and **SeatsAvailability**, each 
 one containing multiple entity types. There is also a 
 **ReservationProcessSaga** saga that manages the interaction between 
 the aggregates. 
@@ -576,12 +609,12 @@ the constructor in the **Order** class shows this happening. Notice how
 the system uses GUIDs to identify the different entities. 
 
 ```Cs
-public Order(Guid id, Guid userId, Guid conferenceId, IEnumerable<TicketOrderLine> lines)
+public Order(Guid id, Guid userId, Guid conferenceId, IEnumerable<OrderItem> lines)
 {
     this.Id = id;
     this.UserId = userId;
     this.ConferenceId = conferenceId;
-    this.Lines = new ObservableCollection<TicketOrderLine>(lines);
+    this.Lines = new ObservableCollection<OrderItem>(items);
 
     this.events.Add(
         new OrderPlaced
@@ -589,12 +622,13 @@ public Order(Guid id, Guid userId, Guid conferenceId, IEnumerable<TicketOrderLin
             OrderId = this.Id,
             ConferenceId = this.ConferenceId,
             UserId = this.UserId,
-            Tickets = this.Lines.Select(x => new OrderPlaced.Ticket { TicketTypeId = x.TicketTypeId, Quantity = x.Quantity }).ToArray()
+            Seats = this.Lines.Select(x => new OrderPlaced.Seat { SeatTypeId = x.SeatTypeId, Quantity = x.Quantity }).ToArray()
         });
 }
 ```
 
-> **Note:** To see how the infrastructure elements deliver commands and events, see figure 6.
+> **Note:** To see how the infrastructure elements deliver commands and
+  events, see figure 6.
 
 The system creates a new **ReservationProcessSaga** saga instance to 
 manage the new order. The following code sample from the 
@@ -613,7 +647,7 @@ public void Handle(OrderPlaced message)
                 Id = this.Id,
                 ConferenceId = message.ConferenceId,
                 ReservationId = message.OrderId,
-                NumberOfSeats = message.Tickets.Sum(x => x.Quantity)
+                NumberOfSeats = message.Seats.Sum(x => x.Quantity)
             });
     }
     else
@@ -625,14 +659,14 @@ public void Handle(OrderPlaced message)
 
 The code sample shows how the saga changes its state and sends a new 
 **MakeSeatReservation** command that is handled by the 
-**ConferenceSeatsAvailability** aggregate. The code sample also 
+**SeatsAvailability** aggregate. The code sample also 
 illustrates how the saga is implemented as a state machine that receives 
 messages, changes its state, and sends new messages. 
 
-When the **ConferenceSeatsAvailability** aggregate receives a 
+When the **SeatsAvailability** aggregate receives a 
 **MakeReservation** command, it makes a reservation if there are enough 
 available seats. The following code sample shows how the 
-**ConferenceSeatsAvailability** class raises different events depending 
+**SeatsAvailability** class raises different events depending 
 on whether or not there are sufficient seats. 
 
 ```Cs
@@ -667,7 +701,7 @@ public void Handle(ReservationAccepted message)
         this.State = SagaState.AwaitingPayment;
         this.commands.Add(new MarkOrderAsBooked { OrderId = message.ReservationId });
         this.commands.Add(
-            new Envelope<ICommand>(new ExpireReservation { Id = message.ReservationId, ConferenceId = message.ConferenceId })
+            new Envelope<ICommand>(new ExpireOrder { Id = message.ReservationId, ConferenceId = message.ConferenceId })
             {
                 Delay = TimeSpan.FromMinutes(15),
             });
@@ -693,12 +727,12 @@ public void Handle(ReservationRejected message)
 ```
 
 If the reservation is accepted, the saga starts a timer running by 
-sending an **ExpireReservation** command to itself, and sends a 
+sending an **ExpireOrder** command to itself, and sends a 
 **MarkOrderAsBooked** command to the **Order** aggregate. Otherwise, it 
 sends a **ReservationRejected** message back to the **Order** aggregate. 
 
 The following code sample shows how the saga sends the 
-**ExpireReservation** command. The infrastructure is responsible for 
+**ExpireOrder** command. The infrastructure is responsible for 
 holding the message in a queue for the delay of fifteen minutes. 
 
 ```Cs
@@ -709,7 +743,7 @@ public void Handle(ReservationAccepted message)
         this.State = SagaState.AwaitingPayment;
         this.commands.Add(new MarkOrderAsBooked { OrderId = message.ReservationId });
         this.commands.Add(
-            new Envelope<ICommand>(new ExpireReservation { Id = message.ReservationId, ConferenceId = message.ConferenceId })
+            new Envelope<ICommand>(new ExpireOrder { Id = message.ReservationId, ConferenceId = message.ConferenceId })
             {
                 Delay = TimeSpan.FromMinutes(15),
             });
@@ -722,7 +756,7 @@ public void Handle(ReservationAccepted message)
 ```
 
 You can examine the code in the **Order**, 
-**ConferenceSeatsAvailability**, and **ReservationProcessSaga** classes 
+**SeatsAvailability**, and **ReservationProcessSaga** classes 
 to see how the other message handlers are implemented. They all follow 
 the same pattern: receive a message, perform some logic, and send a 
 message. 
@@ -737,7 +771,7 @@ interact with the domain objects to deliver messages.
 A typical interaction begins when an MVC controller in the UI sends a 
 message using the command bus. The system includes a number of command 
 handlers that register with the command bus to handle specific types of 
-command. For example, the **RegistrationCommandHandler** class defines 
+command. For example, the **OrderCommandHandler** class defines 
 handler methods for the **RegisterToConference**, **MarkOrderAsBooked**, 
 and **RejectOrder** commands. The following code sample shows the 
 handler method for the **MarkOrderAsBooked** command. Handler methods 
@@ -794,10 +828,195 @@ the **IRepository** instance is responsible for persisting the saga
 instance and sending any commands from the saga instance on the command 
 bus. 
 
-# Testing
-Describe any special considerations that relate to testing for this 
-bounded context. 
+## Using the Windows Azure Service Bus
 
+To transport Command and Event messages, the team decided to use the 
+Windows Azure Service Bus to provide the basic, low-level messaging 
+infrastructure. This section describes how the team decided to use the 
+Windows Azure Service Bus within the system and some of the alternatives 
+and trade-offs they considered. 
+
+Figure 7 shows how messages, both commands and events, flow through the 
+system. Objects in the UI and domain objects use **CommandBus** and 
+**EventBus** instances to send **BrokeredMessage** messages to a topic 
+in the Windows Azure Service Bus. Command and event handler classes 
+register use a **SubscriptionReceiver** instance to receive messages 
+from subscriptions within a topic. The command and event handler classes 
+then deliver the message to a domain object. 
+
+> **Note:** A Windows Azure Service Bus topic can have multiple 
+> subscribers. The Windows Azure Service Bus delivers messages sent to a 
+> topic to all its subscribers. Therefore one message can have multiple 
+> recipients. 
+
+![Figure 7][fig7]
+
+**Message flows through a Windows Azure Service Bus topic.**
+
+In the intial implementation, the **CommandBus** and **EventBus** 
+classes are very similar. The only difference between the **Send** 
+method and the **Publish** method is that the **Send** method expects 
+the message to be wrapped in an **Envelope** class. The **Envelope** 
+class enables the sender to specify a time delay for the message 
+delivery. 
+
+Because an event may be processed by multiple subscribers, the topic 
+that the **TopicSender** class sends events to can have multiple 
+subscriptions. Each subscription is associated with a particular handler 
+type so that events reach all of their subscribers. In the example shown 
+in figure 7, the **ReservationRejected** event is sent to the 
+**RegistrationProcessSaga**, the **WaitListSaga**, and one other 
+destination. 
+
+A command has only one recipient. In figure 7, the 
+**MakeSeatReservation** is sent to the **SeatsAvaialbility** aggregate. 
+There is just a single handler registered for this subscription. 
+
+There are a number of questions that arise from this implementation:
+
+1. How do you limit delivering a command to a single recipient?
+2. Why have separate **CommandBus** and **EventBus** classes if they are
+   so similar?
+3. How scalable is this approach?
+4. How robust is this approch?
+5. What is the granularity of a topic and a subscription?
+
+These questions are discussed in the following sections.
+
+### How do you limit delivering a command to a single recipient?
+
+This discussion assumes you that you have a basic understanding of the 
+differences between Windows Azure Service Bus queues and topics. For an 
+introduction to Windows Azure Service Bus, see [Technologies Used in the 
+Reference Implementation][r_chapter9]. 
+
+With the implementation shown in figure 7, the only way to ensure that a 
+command is delivered to a single recipient is to ensure that a topic has 
+only one subscription. After an instance of the **SubscriptionReceiver** 
+class has received a message, then it is deleted from the subscription. 
+There is no way in Windows Azure Service Bus to restrict a topic to a 
+single subscription, therefore the developers must be careful to create 
+just a single subscription on a topic that is delivering commands. 
+
+> **Note:** It is possible to have multiple **SubscriptionReceiver** 
+> instances running, perhaps in multiple worker role instances. If 
+> multiple **SubscriptionReceiver** instances can receive messages from 
+> the same topic subscription, then the first one call the **Receive** 
+> method on the **SubscriptionClient** object will get and handle the 
+> command. 
+
+An alternative approach is to use a Windows Azure Service Bus queue in 
+place of a topic for delivering command messages. Windows Azure Service 
+Bus queues differ from topics in that they are designed to deliver 
+messages to a single recipient instead of to multiple recipients through 
+multiple subscriptions. The developers plan to evaluate this option in 
+more detail with a view to implementing this approach later in the 
+project. 
+
+The following code sample from the **SubscriptionReceiver** class shows 
+how it receives a message from the topic subscription. 
+
+```Cs
+private SubscriptionClient client;
+
+...
+
+private void ReceiveMessages()
+{
+    while (true)
+    {
+        var message = this.client.Receive(TimeSpan.Zero);
+
+        if (message == null)
+        {
+            Thread.Sleep(10);
+            continue;
+        }
+
+        this.MessageReceived(this, new BrokeredMessageEventArgs(message));
+    }
+}
+```
+
+The Windows Azure Service Bus **SubscriptionClient** class uses a 
+peek/lock technique to retrieve a message from a subscription. In the 
+code sample, the **Receive** method locks the message on the 
+subscription. If the client calls the **Complete** method, the message 
+is deleted from the subscription. Otherwise, if the client calls the 
+**Abandon** method or a timeout occurs, the lock on the message is 
+released and it can be received again by the same, or a different, 
+client. 
+
+> **Note:** The **MessageReceived** event passes a reference to the 
+> **SubscriptionReceiver** instance so that the handler can call either 
+> the **Complete** or **Abandon** methods when it processes the message. 
+
+### Why have separate **CommandBus** and **EventBus** classes if they are so similar?
+
+Although at this early stage in the development of the Conference 
+Management system the implementations of the **CommandBus** and 
+**EventBus** classes are very similar, the team anticipates that they 
+will diverge in the future. 
+
+> **DeveloperPersona:** There may be differences in how we invoke 
+> handlers and what context we capture for them: commands may want to 
+> capture additional runtime state, whereas events typically don't need 
+> to. Because of these potential future differences, I didn't want to 
+> unify the implementations. I've been there before and ended up 
+> splitting them when further requirements came in. 
+
+### How scalable is this approach?
+
+With this approach you can run multiple instances of the 
+**SubscriptionReceiver** class and the various handlers in different 
+Windows Azure worker role instances, which enables you to scale-out your 
+solution. You can also have multiple instances of the **CommandBus**, 
+**EventBus**, and **TopicSender** classes in different Windows Azure 
+worker role instances. 
+
+For information about scaling the Windows Azure Service Bus 
+infrastructure, see [Best Practices for Performance Improvements Using 
+Service Bus Brokered Messaging][sbperf] on MSDN. 
+
+### How robust is this approch?
+
+This approach uses the brokered messaging option of the Windows Azure 
+Service Bus to provided asynchronous messaging. The Service Bus reliably 
+stores messages until consumers connect and retrieve their messages. 
+
+Also, the peek/lock approach to retrieving messages from a queue or 
+topic subscription adds reliability in the scenario that a message 
+consumer fails while it is processing the message. If a consumer fails 
+before it calls the **Complete** method, the message is still available 
+for processing when the consumer restarts. 
+
+### What is the granularity of a topic and a subscription?
+
+As stated previously, a subscription should be associated with a single 
+event handler type, although an event may be handled by multiple handler 
+types. For example, the **ReservationRejected** event may be handled by 
+both the **RegistrationProcessSagaHnadler** and **WaitListSagaHandler** 
+handler classes because it must be delivered to the two sagas. 
+
+Figure 7 suggests that Topic B is only reponsible for delivering 
+**ReservationRejected** events. However, it could also deliver 
+additional event types such as **ReservationAccepted** events. In this 
+scenario, the handler classes might need to include some additional 
+logic: if the **ReservationAccepted** event only needs to go to the 
+**RegistrationProcessSaga** saga, then the **WaitListSagaHandler** would 
+need to discard any **ReservationAccepted** events that it retrieved 
+from its subscription. 
+
+In practice, it may be simpler to use one topic per event type. For 
+example a topic for **ReservationAccepted** events and another topic for 
+**ReservationRejected** events. 
+
+> **ArchitectPersona:** There are no costs associated with having 
+> multiple topics, subscriptions, or queues. Windows Azure Service Bus 
+> usage is billed based on the number of messages sent and the amount of 
+> data transfered out of Windows Azure sub-region. 
+
+# Testing
 Because this was the first bounded context the team tackled, one of the 
 key concerns was how to approach testing given that the team wanted to 
 adopt a Test-Driven Development approach. The following conversation 
@@ -857,9 +1076,9 @@ The following code sample shows two examples of tests written using the
 behavioural approach discussed above. 
 
 ```Cs
-public ConferenceSeatsAvailability given_available_seats()
+public SeatsAvailability given_available_seats()
 {
-	var sut = new ConferenceSeatsAvailability(TicketTypeId);
+	var sut = new SeatsAvailability(SeatTypeId);
 	sut.AddSeats(10);
 	return sut;
 }
@@ -881,7 +1100,7 @@ public void when_reserving_more_seats_than_total_then_fails()
 ```
 
 This two tests work together to verify the behavior of the 
-**ConferenceSeatsAvailability** attribute. In the first test, the 
+**SeatsAvailability** attribute. In the first test, the 
 expected behavior is that the **MakeReservation** method succeeds and 
 does not throw an exception. In the second test, the expected behavior 
 is for the **MakeReservation** method to throw an exception because 
@@ -900,15 +1119,15 @@ state of the objects being tested.
 ```Cs
 public class given_available_seats
 {
-	private static readonly Guid TicketTypeId = Guid.NewGuid();
+	private static readonly Guid SeatTypeId = Guid.NewGuid();
 
-	private ConferenceSeatsAvailability sut;
+	private SeatsAvailability sut;
 	private IPersistenceProvider sutProvider;
 
 	protected given_available_seats(IPersistenceProvider sutProvider)
 	{
 		this.sutProvider = sutProvider;
-		this.sut = new ConferenceSeatsAvailability(TicketTypeId);
+		this.sut = new SeatsAvailability(SeatTypeId);
 		this.sut.AddSeats(10);
 
 		this.sut = this.sutProvider.PersistReload(this.sut);
@@ -941,18 +1160,20 @@ public class given_available_seats
 ```
 
 The two tests shown here test the state of the 
-**ConferenceSeatsAvailability** aggregate after invoking the 
+**SeatsAvailability** aggregate after invoking the 
 **MakeReservation** method. The first test, tests the scenario where 
 there are enough seats available. The second test, tests the scenario 
 where there are not enough seats available. This second test makes use 
-of the behavior the **ConferenceSeatsAvailability** aggregate because it 
+of the behavior the **SeatsAvailability** aggregate because it 
 raises an event if it rejects a reservation. 
 
 [r_chapter4]:     Reference_04_DeepDive.markdown
+[r_chapter9]:     Reference_09_Technologies.markdown
 
 [tddstyle]:		  http://martinfowler.com/articles/mocksArentStubs.html
 [repourl]:		  https://github.com/mspnp/cqrs-journey-code
 [res-pat]:        http://www.rgoarchitects.com/nblog/2009/09/08/SOAPatternsReservations.aspx
+[sbperf]:         http://msdn.microsoft.com/en-us/library/hh528527.aspx
 
 [fig1]:           images/Journey_03_Aggregates_01.png?raw=true
 [fig2]:           images/Journey_03_Aggregates_02.png?raw=true
@@ -960,3 +1181,4 @@ raises an event if it rejects a reservation.
 [fig4]:           images/Journey_03_Architecture_01.png?raw=true
 [fig5]:           images/Journey_03_Architecture_02.png?raw=true
 [fig6]:           images/Journey_03_Sequence_01.png?raw=true
+[fig7]:           images/Journey_03_ServiceBus_01.png?raw=true

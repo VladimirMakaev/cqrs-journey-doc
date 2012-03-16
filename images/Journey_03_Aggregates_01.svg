@@ -37,7 +37,7 @@
      showgrid="false"
      inkscape:window-width="1600"
      inkscape:window-height="1178"
-     inkscape:window-x="-8"
+     inkscape:window-x="3512"
      inkscape:window-y="-8"
      inkscape:window-maximized="1" />
   <metadata
@@ -191,20 +191,16 @@
        id="text3081"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
-         id="tspan3083"
          x="343.58917"
-         y="241.57584">Conference Seats</tspan><tspan
+         y="241.57584"
+         id="tspan3129">SeatsAvailability</tspan><tspan
          sodipodi:role="line"
          x="343.58917"
          y="261.57584"
-         id="tspan3129">Availability</tspan><tspan
-         sodipodi:role="line"
-         x="343.58917"
-         y="281.57584"
          id="tspan3085">Aggregate for</tspan><tspan
          sodipodi:role="line"
          x="343.58917"
-         y="301.57584"
+         y="281.57584"
          id="tspan3087">Conference ID: <tspan
    style="font-weight:bold"
    id="tspan3064">157</tspan></tspan></text>
