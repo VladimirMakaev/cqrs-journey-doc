@@ -1,27 +1,28 @@
 ## Chapter 3
-# Orders and Registrations Bounded Context 
+# Orders and Registrations Bounded Contexts 
 
 _The first stopping point on our CQRS journey._
 
-# A Description of the Orders and Registrations Bounded Context
+# A Description of the Orders and Registrations Bounded Contexts
 
-The **Orders and Registrations** bounded context is responsible for the 
-booking processes for attendees planning to attend a conference. 
-Attendees register to attend a specific conference. As part of the 
-registration process, attendees reserve and pay for seats at the 
-conference. 
+The **Orders and Registrations** bounded contexts are responsible for 
+the booking processes for attendees planning to attend a conference. In 
+the **Orders** bounded context, a person (the registrant) purchases 
+seats at a particular conference. In the **Registrations** bounded 
+context, the registrant assigns names of attendees to the purchased 
+seats. 
 
-The registration process must support wait listing, whereby attendees 
-are placed on a wait-list if there are not sufficient seats available. 
-The payments part of the process must enable the conference organizer to 
-set various types of discount for attendees. 
+The ordering process must support wait listing, whereby requests for 
+seats are placed on a wait-list if there are not sufficient seats 
+available. The ordering process must enable the conference owner to set 
+various types of discount for attendees. 
 
-This was the first stop on our CQRS journey, so we decided to 
+This was the first stop on our CQRS journey, so the team decided to 
 implement a core, but self-contained part of the system. The 
 registrations process must be as painless as possible for attendees. The 
-process must enable the conference organizer to ensure that the maximum 
-possible number of seat can be booked, and give the conference organizer 
-the flexibility to define a set of custom pricing and discount scheme.
+process must enable the conference owner to ensure that the maximum 
+possible number of seat can be booked, and give the conference owner the 
+flexibility to define a set of custom pricing and discount scheme. 
 
 Because this was the first bounded context addressed by the team, they 
 also implemented some infrastructure elements of the system to support 
@@ -84,6 +85,12 @@ to confirm the reservation. If registrant does not complete the payment,
 the seat reservations expire after a fixed period of time and the system 
 makes the seats availble to other registrants to reserve. 
 
+Figure 1 shows some of the early UI mockups that the team used to explore the seat ordering story.
+
+![Figure 1][fig1]
+
+**Ordering UI mockups**
+
 ### Attendee Registration
 
 The registrant is also responsible for assigning attendees to seats 
@@ -103,11 +110,11 @@ enter the attendees details into the system.
 ### Domain Definitions (Ubiquitous Language)
 
 The following list defines the key domain related terms that the team 
-used during the development of this **Orders and Registrations** bounded 
-context. 
+used during the development of these **Orders and Registrations** 
+bounded contexts. 
 
 - **Attendee.** An Attendee is someone who is entitled to attend a 
-    conference. An Attendee can interact with the system to perform tasks 
+  conference. An Attendee can interact with the system to perform tasks 
   such as manage his agenda, print his badge, and provide feedback after 
   the conference. An Attendee could also be a person who doesn't pay to 
   attend a conference such as a volunteer, speaker, or someone with a 
@@ -192,8 +199,46 @@ context.
     <b>Comment [DRB]:</b>
 	More to do here in relation to the wait-list story
   </span>
-</div> 
-	
+</div>
+
+The following conversation including developers and domain experts illustrates how the team arrived at a definition of the term **Attendee**.
+
+> *Developer #1:* Here's an initial stab at a definition for 
+> **Attendee**. "An attendee is someone who has paid to attend a 
+> conference. An attendee can interact with the system to perform tasks 
+> such as manage his agenda, print his badge, and provide feedback after 
+> the conference." 
+
+> *Domain Expert #1:* Not all attendees will pay to attend the 
+> conference. For example, some conferences will have volunteer helpers, 
+> also speakers typically don't pay. Also, there may be some cases where 
+> an attendee gets a 100% discount. 
+
+> *Domain Expert #1:* Don't forget that it's not the attendee who 
+> pays; that's done by the registrant. 
+
+> *Developer #1:* So we need to say that attendees are people who are 
+> authorized to attend a conference? 
+
+> *Developer #2:* We need to be careful about the choice of words 
+> here. The term *authorized* will make some people think of security 
+> and authentication and authorization. 
+
+> *Developer #1:* How about *entitled*?
+
+> *Domain Expert #1:* When the system performs tasks such as printing 
+> badges, it will need to know what type of attendee the badge is for. 
+> For example, speaker, volunteer, paid attendee, and so on. 
+
+> *Developer #1:* Now we have this is a definition that captures 
+> everything we've discussed. An Attendee is someone who is entitled to 
+> attend a conference. An Attendee can interact with the system to 
+> perform tasks such as manage his agenda, print his badge, and provide 
+> feedback after the conference. An Attendee could also be a person who 
+> doesn't pay to attend a conference such as a volunteer, speaker, or 
+> someone with a 100% discount. An Attendee may have multiple associated 
+> Attendee Types (speaker, student, volunteer, track chair, etc.) 
+
 ## Architecture
 
 <div style="margin-left:20px;margin-right:20px;">
@@ -230,10 +275,10 @@ several seats at a conference. The system must:
 > **Note:** The scenario is kept deliberately simple to avoid
   distractions while the team examines the alternatives.  
 
-The first approach considered by the team, shown in figure 1, uses two 
+The first approach considered by the team, shown in figure 2, uses two 
 separate aggregates.
 
-![Figure 1][fig1]
+![Figure 2][fig2]
 
 **Approach #1, two separate aggregates**
 
@@ -252,10 +297,10 @@ The numbers in the diagram correspond to the following steps:
 6. The new **Order** aggregate, with an ID of 4239, is persisted to the
    data store.
 
-The second approach considered by the team, shown in figure 2, uses a 
+The second approach considered by the team, shown in figure 3, uses a 
 single aggregate in place of two. 
 
-![Figure 2][fig2]
+![Figure 3][fig3]
 
 **Approach #2, a single aggregate**
 
@@ -275,10 +320,10 @@ The numbers in the diagram correspond to the following steps:
 5. The updated version of the **Conference** aggregate is persisted to
    the data store.
 
-The third approach considered by the team, shown in figure 3, uses a 
+The third approach considered by the team, shown in figure 4, uses a 
 saga to coordinate the interaction between two aggregates. 
 
-![Figure 3][fig3]
+![Figure 4][fig4]
 
 **Approach #3, using a saga**
 
@@ -406,7 +451,7 @@ download a copy of the code from the repository on github:
 
 As we described in the previous section, the team initially decided to 
 implement the reservations story in the Conference Management System 
-using the CQRS pattern but without using event sourcing. Figure 4 shows 
+using the CQRS pattern but without using event sourcing. Figure 5 shows 
 the key elements of the implementation: an MVC web application, a data 
 store implemented using a SQL database, the read and write models, and 
 some infrastructure components. 
@@ -414,11 +459,11 @@ some infrastructure components.
 > **Note:** We'll describe what goes on inside the read and write models 
 > later in this section. 
 
-![Figure 4][fig4]
+![Figure 5][fig5]
 
 **High-level architecture of the registrations bounded context**
 
-The following sections relate to the numbers in figure 4 and provide 
+The following sections relate to the numbers in figure 5 and provide 
 more detail about these elements of the architecture. 
 
 ### 1. Querying the Read Model
@@ -430,7 +475,26 @@ following code:
 
 
 ```Cs
-var conferenceDTO = this.repositoryFactory().Query<ConferenceDTO>().First(c => c.Code == conferenceCode);
+public ActionResult Display(string conferenceCode)
+{
+	var conference = this.GetConference(conferenceCode);
+
+	return View(conference);
+}
+
+private Conference.Web.Public.Models.Conference GetConference(string conferenceCode)
+{
+	var repo = this.repositoryFactory();
+	using (repo as IDisposable)
+	{
+		var conferenceDTO = repo.Query<ConferenceDTO>().First(c => c.Code == conferenceCode);
+
+		var conference =
+			new Conference.Web.Public.Models.Conference { Code = conferenceDTO.Code, Name = conferenceDTO.Name, Description = conferenceDTO.Description };
+
+		return conference;
+	}
+}
 ```
 
 The read model retrieves the information from the data store and returns 
@@ -443,16 +507,12 @@ bus. This command bus is an infrastructure element that provides
 reliable messaging. In this scenario, the bus delivers messages 
 asynchronously and once only to a single recipient.
 
-The **RegistrationController** class can send a number of commands to 
-the write model in response to user interaction: 
-
-* **RegisterToConference:** This command sends a request to register one 
-or more seats at the conference. The **RegistrationController** class 
-then polls the read model to discover whether the registration request 
-succeeded. See the section "6. Polling the Read Model" below for more 
-details. 
-* **SetOrderPaymentDetails:** This command sends payment details 
-to the write model. 
+The **RegistrationController** class can send a **RegisterToConference** 
+command to the write model in response to user interaction. This command 
+sends a request to register one or more seats at the conference. The 
+**RegistrationController** class then polls the read model to discover 
+whether the registration request succeeded. See the section "6. Polling 
+the Read Model" below for more details 
 
 The following code sample shows how the **RegistrationController** sends
 a **RegisterToConference** command:
@@ -461,12 +521,12 @@ a **RegisterToConference** command:
 var viewModel = this.UpdateViewModel(conferenceCode, contentModel);
 
 var command =
-    new RegisterToConference
-    {
-        OrderId = viewModel.Id,
-        ConferenceId = viewModel.ConferenceId,
-        Seats = viewModel.Items.Select(x => new RegisterToConference.Seat { SeatTypeId = x.SeatId, Quantity = x.Quantity }).ToList()
-    };
+	new RegisterToConference
+	{
+		OrderId = viewModel.Id,
+		ConferenceId = viewModel.ConferenceId,
+		Seats = viewModel.Items.Select(x => new RegisterToConference.Seat { SeatTypeId = x.SeatTypeId, Quantity = x.Quantity }).ToList()
+	};
 
 this.commandBus.Send(command);
 ```
@@ -479,18 +539,10 @@ expect return values.
 Command handlers register with the command bus; the command bus can then 
 forward commands to the correct handler. 
 
-The **OrderCommandHandler** class handles the 
-**RegisterToConference** and **SetOrderPaymentDetails** commands. 
-Typically, the handler is responsible for initiating any business logic 
-in the domain and persisting any state changes to the data store. 
-
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	Check that this is correct re. SetOrderPaymentDetails!<br/>
-	Also check any other responsibilities of the handler such as verifying the command structure.
-  </span>
-</div>
+The **OrderCommandHandler** class handles the **RegisterToConference** 
+command sent from the UI. Typically, the handler is responsible for 
+initiating any business logic in the domain and persisting any state 
+changes to the data store. 
 
 The following code sample shows how the **OrderCommandHandler** 
 class handles the **RegisterToConference** command: 
@@ -539,64 +591,147 @@ order is created or a timeout occurs:
 
 ```Cs
 [HttpPost]
-public ActionResult ChoosePayment(string conferenceName, Registration contentModel)
+public ActionResult StartRegistration(string conferenceCode, OrderViewModel contentModel)
 {
     ...
 
-    var orderDTO = this.WaitUntilBooked(registration);
+    var orderDTO = this.WaitUntilUpdated(viewModel.Id);
 
     if (orderDTO != null)
     {
         if (orderDTO.State == "Booked")
         {
-            return View(registration);
+            return RedirectToAction("SpecifyPaymentDetails", new { conferenceCode = conferenceCode, orderId = viewModel.Id });
         }
         else if (orderDTO.State == "Rejected")
         {
-            return View("RegistrationRejected", registration);
+            return View("ReservationRejected", viewModel);
         }
     }
 
-    return Content("Invalid registration");
-
-}
-
-private OrderDTO WaitUntilBooked(Registration registration)
-{
-    var deadline = DateTime.Now.AddSeconds(WaitTimeoutInSeconds);
-
-    while (DateTime.Now < deadline)
-    {
-        var repo = this.repositoryFactory();
-        using (repo as IDisposable)
-        {
-            var orderDTO = repo.Find<OrderDTO>(registration.Id);
-
-            if (orderDTO != null && orderDTO.State != "Created")
-            {
-                return orderDTO;
-            }
-        }
-
-        Thread.Sleep(500);
-    }
-
-    return null;
+    return View("ReservationUnknown", viewModel);
 }
 ```
 
 ## Inside the Write Model
 
-Figure 5 shows the entities that exist in the write-side model. There 
+### Aggregates
+
+The following code sample shows the **Order** aggregate.
+
+```Cs
+public class Order : IAggregateRoot, IEventPublisher
+{
+    public static class States
+    {
+        public const int Created = 0;
+        public const int Booked = 1;
+        public const int Rejected = 2;
+        public const int Confirmed = 3;
+    }
+
+    private List<IEvent> events = new List<IEvent>();
+
+    ...
+
+    public virtual Guid Id { get; private set; }
+
+    public virtual Guid UserId { get; private set; }
+
+    public virtual Guid ConferenceId { get; private set; }
+
+    public virtual ObservableCollection<TicketOrderLine> Lines { get; private set; }
+
+    public virtual int State { get; private set; }
+
+    public IEnumerable<IEvent> Events
+    {
+        get { return this.events; }
+    }
+
+    public void MarkAsBooked()
+    {
+        if (this.State != States.Created)
+            throw new InvalidOperationException();
+
+        this.State = States.Booked;
+    }
+
+    public void Reject()
+    {
+        if (this.State != States.Created)
+            throw new InvalidOperationException();
+
+        this.State = States.Rejected;
+    }
+}
+```
+
+Notice how the properties of the class are virtual. The following 
+conversation between two developers explores this decision. 
+
+> *Developer #1:* I'm really convinced you should not make the 
+> property virtual, except if required by the ORM. If this is just for 
+> testing purpose, entities and aggregate roots should never be tested 
+> using mocking. If you need mocking to test your entities, this is a 
+> clear smell that something is wrong in the design. 
+
+> *Developer #2:* I prefer to be open and extensible by default.You 
+> never know what needs may arise in the future, and making things 
+> virtual is hardly a cost. This is certainly controversial and a bit 
+> non-standard in .NET, but I think it's OK. We may only need virtuals 
+> on lazy-loaded collections. 
+
+> *Developer #1:* Since CQRS usually make the nead for lazy load 
+> vanish you should not need it either. This leads to even simpler code. 
+
+> *Developer #2:* CQRS does not dictate usage of ES, so if you're 
+> using an aggregate root that contains an object graph, you'd need that 
+> anyway, right? 
+
+> *Developer #1:* This is not about ES, it's about DDD. When your 
+> aggregate boundaries are right, you don't need delay load. 
+
+> *Developer #2:* To be clear, the aggregate boundary is here to group 
+> things that should change together for reasons of consitency. A lazy 
+> load would indicate that things that have been grouped together don't 
+> really need this grouping? 
+
+> *Developer #1:* I agree. I have found that lazy-loading in the 
+> command side means I have it modeled wrong. If I don't need the value 
+> in the command side, then it shouldn't be there. In addition, I 
+> dislike virtuals unless they have an intended purpose (or some 
+> artificial requirement from an ORM). In my opinion, it violates the 
+> Open-Closed principle: you have opened yourself up for modification in 
+> a variety of ways that may or may not be intended and where the 
+> repercussions might not be immediately discoverable, if at all. 
+
+> *Developer #2:* Our **Order** aggregate in the model has a list of 
+> **Order Items**. Surely we don't need to load the lines to mark it as 
+> Booked? Do we have it modeled wrong there? 
+
+> *Developer #1:* Is the list of **Order Items** that long ? If it is, 
+> the modeling is maybe wrong because you don't necesserily need 
+> transactionality at that level. Often, doing a late roundtrip to get 
+> and update **Order Items** can be more costly that loading them 
+> upfront: you should evaluate the usual size of the collection and do 
+> some performance measurement. Make it simple first, optimize if 
+> needed. 
+
+> *Thanks to J&eacute;r&eacute;mie Chassaing and Craig Wilson*
+
+### Aggregates and Sagas
+
+Figure 6 shows the entities that exist in the write-side model. There 
 are two aggregates, **Order** and **SeatsAvailability**, each 
 one containing multiple entity types. There is also a 
 **ReservationProcessSaga** saga that manages the interaction between 
 the aggregates. 
 
-The table in the figure 5 shows how the saga behaves given a current 
+The table in the figure 6 shows how the saga behaves given a current 
 state and a particular type of incoming message. 
 
-![Figure 5][fig5]
+![Figure 6][fig6]
 
 **Domain objects in the write model**
 
@@ -628,7 +763,7 @@ public Order(Guid id, Guid userId, Guid conferenceId, IEnumerable<OrderItem> lin
 ```
 
 > **Note:** To see how the infrastructure elements deliver commands and
-  events, see figure 6.
+  events, see figure 7.
 
 The system creates a new **ReservationProcessSaga** saga instance to 
 manage the new order. The following code sample from the 
@@ -731,29 +866,9 @@ sending an **ExpireOrder** command to itself, and sends a
 **MarkOrderAsBooked** command to the **Order** aggregate. Otherwise, it 
 sends a **ReservationRejected** message back to the **Order** aggregate. 
 
-The following code sample shows how the saga sends the 
+The previous code sample shows how the saga sends the 
 **ExpireOrder** command. The infrastructure is responsible for 
 holding the message in a queue for the delay of fifteen minutes. 
-
-```Cs
-public void Handle(ReservationAccepted message)
-{
-    if (this.State == SagaState.AwaitingReservationConfirmation)
-    {
-        this.State = SagaState.AwaitingPayment;
-        this.commands.Add(new MarkOrderAsBooked { OrderId = message.ReservationId });
-        this.commands.Add(
-            new Envelope<ICommand>(new ExpireOrder { Id = message.ReservationId, ConferenceId = message.ConferenceId })
-            {
-                Delay = TimeSpan.FromMinutes(15),
-            });
-    }
-    else
-    {
-        throw new InvalidOperationException();
-    }
-}
-```
 
 You can examine the code in the **Order**, 
 **SeatsAvailability**, and **ReservationProcessSaga** classes 
@@ -761,17 +876,22 @@ to see how the other message handlers are implemented. They all follow
 the same pattern: receive a message, perform some logic, and send a 
 message. 
 
-The sequence diagram in figure 6 shows how the infrastructure elements 
+### Infrastructure
+
+The sequence diagram in figure 7shows how the infrastructure elements 
 interact with the domain objects to deliver messages. 
 
-![Figure 6][fig6]
+![Figure 7][fig7]
 
 **Infrastructure sequence diagram**
 
 A typical interaction begins when an MVC controller in the UI sends a 
-message using the command bus. The system includes a number of command 
-handlers that register with the command bus to handle specific types of 
-command. For example, the **OrderCommandHandler** class defines 
+message using the command bus. The message sender invokes the **Send** 
+method on the command bus asynchronously. The command bus then stores 
+the message until the message recipient retrieves the message and 
+forwards it to the appropriate handler. The system includes a number of 
+command handlers that register with the command bus to handle specific 
+types of command. For example, the **OrderCommandHandler** class defines 
 handler methods for the **RegisterToConference**, **MarkOrderAsBooked**, 
 and **RejectOrder** commands. The following code sample shows the 
 handler method for the **MarkOrderAsBooked** command. Handler methods 
@@ -797,8 +917,8 @@ public void Handle(MarkOrderAsBooked command)
 ```
 
 The class that implements the **IRepository** interface is responsible 
-for persisting the aggregate and adding publishing any events raised by 
-the aggregate on the event bus, all as part of a transaction. 
+for persisting the aggregate and publishing any events raised by the 
+aggregate on the event bus, all as part of a transaction. 
 
 The only event subscriber in the reservations bounded context is the 
 **ReservationProcessSaga**. Its handler subscribes to the event bus to 
@@ -825,7 +945,7 @@ public void Handle(ReservationAccepted @event)
 Typically, an event handler method loads a saga instance, passes the 
 event to the saga, and then persists the saga instance. In this case, 
 the **IRepository** instance is responsible for persisting the saga 
-instance and sending any commands from the saga instance on the command 
+instance and sending any commands from the saga instance to the command 
 bus. 
 
 ## Using the Windows Azure Service Bus
@@ -836,7 +956,7 @@ infrastructure. This section describes how the team decided to use the
 Windows Azure Service Bus within the system and some of the alternatives 
 and trade-offs they considered. 
 
-Figure 7 shows how messages, both commands and events, flow through the 
+Figure 8 shows how messages, both commands and events, flow through the 
 system. Objects in the UI and domain objects use **CommandBus** and 
 **EventBus** instances to send **BrokeredMessage** messages to a topic 
 in the Windows Azure Service Bus. Command and event handler classes 
@@ -849,7 +969,7 @@ then deliver the message to a domain object.
 > topic to all its subscribers. Therefore one message can have multiple 
 > recipients. 
 
-![Figure 7][fig7]
+![Figure 8][fig8]
 
 **Message flows through a Windows Azure Service Bus topic.**
 
@@ -864,11 +984,11 @@ Because an event may be processed by multiple subscribers, the topic
 that the **TopicSender** class sends events to can have multiple 
 subscriptions. Each subscription is associated with a particular handler 
 type so that events reach all of their subscribers. In the example shown 
-in figure 7, the **ReservationRejected** event is sent to the 
+in figure 8, the **ReservationRejected** event is sent to the 
 **RegistrationProcessSaga**, the **WaitListSaga**, and one other 
 destination. 
 
-A command has only one recipient. In figure 7, the 
+A command has only one recipient. In figure 8, the 
 **MakeSeatReservation** is sent to the **SeatsAvaialbility** aggregate. 
 There is just a single handler registered for this subscription. 
 
@@ -890,7 +1010,7 @@ differences between Windows Azure Service Bus queues and topics. For an
 introduction to Windows Azure Service Bus, see [Technologies Used in the 
 Reference Implementation][r_chapter9]. 
 
-With the implementation shown in figure 7, the only way to ensure that a 
+With the implementation shown in figure 8, the only way to ensure that a 
 command is delivered to a single recipient is to ensure that a topic has 
 only one subscription. After an instance of the **SubscriptionReceiver** 
 class has received a message, then it is deleted from the subscription. 
@@ -949,7 +1069,39 @@ client.
 
 > **Note:** The **MessageReceived** event passes a reference to the 
 > **SubscriptionReceiver** instance so that the handler can call either 
-> the **Complete** or **Abandon** methods when it processes the message. 
+> the **Complete** or **Abandon** methods when it processes the message.
+
+The following code sample from the **MessageProcessor** class shows how 
+to call the **Complete** method asynchronously using the 
+**BrokeredMessage** instance passed as a parameter to the 
+**MessageReceived** event. 
+
+```Cs
+private void OnMessageReceived(object sender, BrokeredMessageEventArgs args)
+{
+    var message = args.Message;
+
+    using (var stream = message.GetBody<Stream>())
+    {
+        var payload = this.serializer.Deserialize(stream);
+        
+		...
+		
+        try
+        {
+            ProcessMessage(payload);
+            message.Async(message.BeginComplete, message.EndComplete);
+        }
+        catch (Exception)
+        {
+            ...
+			
+            args.Message.Async(args.Message.BeginDeadLetter, args.Message.EndDeadLetter);
+        }
+    }
+}
+``` 
+> **Note:** This example uses an extension method to invoke the **BeginComplete** and **EndComplete** methods.
 
 ### Why have separate **CommandBus** and **EventBus** classes if they are so similar?
 
@@ -998,7 +1150,7 @@ types. For example, the **ReservationRejected** event may be handled by
 both the **RegistrationProcessSagaHnadler** and **WaitListSagaHandler** 
 handler classes because it must be delivered to the two sagas. 
 
-Figure 7 suggests that Topic B is only reponsible for delivering 
+Figure 8 suggests that Topic B is only reponsible for delivering 
 **ReservationRejected** events. However, it could also deliver 
 additional event types such as **ReservationAccepted** events. In this 
 scenario, the handler classes might need to include some additional 
@@ -1175,10 +1327,11 @@ raises an event if it rejects a reservation.
 [res-pat]:        http://www.rgoarchitects.com/nblog/2009/09/08/SOAPatternsReservations.aspx
 [sbperf]:         http://msdn.microsoft.com/en-us/library/hh528527.aspx
 
-[fig1]:           images/Journey_03_Aggregates_01.png?raw=true
-[fig2]:           images/Journey_03_Aggregates_02.png?raw=true
-[fig3]:           images/Journey_03_Aggregates_03.png?raw=true
-[fig4]:           images/Journey_03_Architecture_01.png?raw=true
-[fig5]:           images/Journey_03_Architecture_02.png?raw=true
-[fig6]:           images/Journey_03_Sequence_01.png?raw=true
-[fig7]:           images/Journey_03_ServiceBus_01.png?raw=true
+[fig1]:           images/OrderMockup.png?raw=true
+[fig2]:           images/Journey_03_Aggregates_01.png?raw=true
+[fig3]:           images/Journey_03_Aggregates_02.png?raw=true
+[fig4]:           images/Journey_03_Aggregates_03.png?raw=true
+[fig5]:           images/Journey_03_Architecture_01.png?raw=true
+[fig6]:           images/Journey_03_Architecture_02.png?raw=true
+[fig7]:           images/Journey_03_Sequence_01.png?raw=true
+[fig8]:           images/Journey_03_ServiceBus_01.png?raw=true
