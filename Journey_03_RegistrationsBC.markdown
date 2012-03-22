@@ -634,15 +634,15 @@ public class Order : IAggregateRoot, IEventPublisher
 
     ...
 
-    public virtual Guid Id { get; private set; }
+    public Guid Id { get; private set; }
 
-    public virtual Guid UserId { get; private set; }
+    public Guid UserId { get; private set; }
 
-    public virtual Guid ConferenceId { get; private set; }
+    public Guid ConferenceId { get; private set; }
 
     public virtual ObservableCollection<TicketOrderLine> Lines { get; private set; }
 
-    public virtual int State { get; private set; }
+    public int State { get; private set; }
 
     public IEnumerable<IEvent> Events
     {
@@ -667,8 +667,10 @@ public class Order : IAggregateRoot, IEventPublisher
 }
 ```
 
-Notice how the properties of the class are virtual. The following 
-conversation between two developers explores this decision. 
+Notice how the properties of the class are not virtual. In the original 
+version of this class, the properties **Id**, **UserId**, 
+**ConferenceId**, and **State** were all marked as virtual. The 
+following conversation between two developers explores this decision. 
 
 > *Developer #1:* I'm really convinced you should not make the 
 > property virtual, except if required by the ORM. If this is just for 
@@ -774,15 +776,16 @@ public void Handle(OrderPlaced message)
 {
     if (this.State == SagaState.NotStarted)
     {
-        this.Id = message.OrderId;
+        this.OrderId = message.OrderId;
+        this.ReservationId = Guid.NewGuid();
         this.State = SagaState.AwaitingReservationConfirmation;
-        this.commands.Add(
+
+        this.AddCommand(
             new MakeSeatReservation
             {
-                Id = this.Id,
                 ConferenceId = message.ConferenceId,
-                ReservationId = message.OrderId,
-                NumberOfSeats = message.Seats.Sum(x => x.Quantity)
+                ReservationId = this.ReservationId,
+                NumberOfSeats = message.Items.Sum(x => x.Quantity)
             });
     }
     else
@@ -797,6 +800,10 @@ The code sample shows how the saga changes its state and sends a new
 **SeatsAvailability** aggregate. The code sample also 
 illustrates how the saga is implemented as a state machine that receives 
 messages, changes its state, and sends new messages. 
+
+> **DeveloperPersona:** Notice how we generate a new Guid to identify 
+> the new reservation. We use these Guids to correlate messages to the 
+> correct saga and aggregate instances. 
 
 When the **SeatsAvailability** aggregate receives a 
 **MakeReservation** command, it makes a reservation if there are enough 
@@ -834,9 +841,10 @@ public void Handle(ReservationAccepted message)
     if (this.State == SagaState.AwaitingReservationConfirmation)
     {
         this.State = SagaState.AwaitingPayment;
-        this.commands.Add(new MarkOrderAsBooked { OrderId = message.ReservationId });
+
+        this.AddCommand(new MarkOrderAsBooked { OrderId = this.OrderId });
         this.commands.Add(
-            new Envelope<ICommand>(new ExpireOrder { Id = message.ReservationId, ConferenceId = message.ConferenceId })
+            new Envelope<ICommand>(new ExpireOrder { OrderId = this.OrderId, ConferenceId = message.ConferenceId })
             {
                 Delay = TimeSpan.FromMinutes(15),
             });
@@ -852,7 +860,7 @@ public void Handle(ReservationRejected message)
     if (this.State == SagaState.AwaitingReservationConfirmation)
     {
         this.State = SagaState.Completed;
-        this.commands.Add(new RejectOrder { OrderId = message.ReservationId });
+        this.AddCommand(new RejectOrder { OrderId = this.OrderId });
     }
     else
     {
@@ -921,9 +929,14 @@ for persisting the aggregate and publishing any events raised by the
 aggregate on the event bus, all as part of a transaction. 
 
 The only event subscriber in the reservations bounded context is the 
-**ReservationProcessSaga**. Its handler subscribes to the event bus to 
+**ReservationProcessSaga**. Its router subscribes to the event bus to 
 handle specific events as shown in the following code sample from the 
 **ReservationProcessSaga** class. 
+
+> **Note:* We use the term handler to refer to the classes that handle 
+> commands and forward them to aggregate instances, and the term router 
+> to refer to the classes that handle events and commands and forward 
+> them to saga instances. 
 
 ```Cs
 public void Handle(ReservationAccepted @event)
@@ -1038,22 +1051,24 @@ how it receives a message from the topic subscription.
 
 ```Cs
 private SubscriptionClient client;
+private CancellationTokenSource cancellationSource;
 
 ...
 
-private void ReceiveMessages()
+private void ReceiveMessages(CancellationToken cancellationToken)
 {
-    while (true)
+    while (!cancellationToken.IsCancellationRequested)
     {
-        var message = this.client.Receive(TimeSpan.Zero);
+        var message = this.client.Receive(TimeSpan.FromSeconds(10));
 
         if (message == null)
         {
-            Thread.Sleep(10);
+            Thread.Sleep(100);
             continue;
         }
 
-        this.MessageReceived(this, new BrokeredMessageEventArgs(message));
+        if (!cancellationToken.IsCancellationRequested)
+            this.MessageReceived(this, new BrokeredMessageEventArgs(message));
     }
 }
 ```

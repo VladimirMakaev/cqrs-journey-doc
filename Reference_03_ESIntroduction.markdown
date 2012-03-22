@@ -73,6 +73,8 @@ ways:
   conference and then calculate the current number of bookings by
   replaying the events associated with the conference for which you
   wanted to check the current total number of bookings. 
+  
+## Comparing Using an ORM and Event Sourcing
 
 ![Figure 1][fig1]
 
@@ -82,20 +84,22 @@ Figure 1 illustrates the first approach to storing the total number of
 reservations. The following list of steps corresponds to the numbers in 
 the diagram: 
 
-
-1. A command is issued, probably from the UI, to book two attendees onto
-   a conference with an ID of 157. 
-2. A booking aggregate executes some domain logic and then issues a
-   command to the aggregate for conference 157. 
-3. If necessary, the aggregate is populated with data through the ORM
-   layer that issues a query against the table (or tables) that hold the
-   required data. This includes the existing number of reservations for
-   the conference. 
-4. The conference aggregate performs its domain logic, which includes
-   calculating the new number of reservations for the conference. 
-5. The information in the conference aggregate is persisted to the data
-   store. The ORM layer constructs the necessary update (or updates)
-   that must be executed. 
+1. A command is issued, from the UI or from a saga, to reserve seats 
+   for two attendees on a conference with an ID of 157. The command is 
+   handled by the command handler for the **SeatsAvailability** 
+   aggregate type. 
+2. If necessary, the ORM layer populates an aggregate instance with 
+   data. The ORM retrieves the data by issuing a query against the table 
+   (or tables) in the data store. This includes the existing number of 
+   reservations for the conference. 
+3. The command handler invokes the business method on the aggregate
+   instance to make the reservations. 
+4. The **SeatsAvailability** aggregate performs its domain logic. In 
+   this example, this includes calculating the new number of
+   reservations for the conference. 
+5. The ORM persists the information in the aggregate instance to 
+   the data store. The ORM layer constructs the necessary update (or 
+   updates) that must be executed. 
 
 This diagram provides a deliberately simplified view of the process. In 
 practice, the mapping performed by the ORM will be significantly more 
@@ -120,15 +124,19 @@ The following list of steps corresponds to the numbers in the diagram.
 Note that steps one, two, and four are the same. 
 
 
-1. A command is issued, probably from the UI, to book two attendees
-   onto a conference with an ID of 157. 
-2. A booking aggregate executes some domain logic and then issues a
-   command to the aggregate for conference 157. 
-3. If necessary, the aggregate is populated by querying for all of the
-   events belonging to conference aggregate 157. 
-4. The conference aggregate performs its domain logic, which includes
-   calculating the new number of reservations for the conference. 
-5. The aggregate appends the event that records making two new bookings
+1. A command is issued, from the UI or from a saga, to reserve seats 
+   for two attendees on a conference with an ID of 157. The command is 
+   handled by the command handler for the **SeatsAvailability** 
+   aggregate type. 
+2. An aggregate instance is populated by querying for all of the
+   events that belong to **SeatsAvailability** aggregate 157. 
+3. The command handler invokes the business method on the aggregate
+   instance to make the reservations. 
+4. The **SeatsAvailability** aggregate performs its domain logic. In 
+   this example, this includes calculating the new number of
+   reservations for the conference. The aggregate creates an event to
+   record the effects of the command.
+5. The system appends the event that records making two new reservations
    to the list of events associated with the aggregate in the event
    store. 
 
@@ -215,6 +223,21 @@ The chapter "[A CQRS/ES Deep Dive][r_chapter4]" discusses these benefits
 in more detail. There are also many illustrations of these benefits in 
 these chapters in the section "A CQRS Journey." 
 
+> From experience, ORMs lead you down the path of a structural model
+> while ES leads you down the path of a behavioral model. Sometimes one 
+> just makes more sense than the other. For example, in my own domain 
+> (not model) I get to integrate with other parties that send a lot of 
+> really non-interesting information that I need to send out again later 
+> on when something interesting happens on my end. It's inherently 
+> structural. Putting those things into events would be a waste of time, 
+> effort, space. Contrast this with another part of the domain that 
+> benefits a lot from knowing what happened, why it happened, when it 
+> did or didn't happen, where time and historical data are important to 
+> make the next business decision. Putting that into a structural model 
+> is asking for a world of pain. It depends, get over it, choose wisely, 
+> and above all: make your own mistakes. 
+> - Yves Reynhout (CQRS Advisors Mail List)
+
 # Event Sourcing Concerns 
 
 The previous section described some of the benefits that you might 
@@ -234,7 +257,7 @@ to use event sourcing in your system:
   a particular event type or aggregate at some point in the future. You
   must consider how your system will be able to handle multiple versions
   of an event type and aggregates. 
-
+  
 # CQRS/ES
 The chapter "Introducing Command Query Responsibility Segregation" 
 suggested that events can form the basis of the push synchronization of 
@@ -252,13 +275,13 @@ application's UI.
 > ephemeral or a permanent source of truth. The CQRS pattern itself merely 
 > mandates a split between the write and the read thing, so ES is strictly 
 > complementary.  
-> - Clemens Vasters
+> - Clemens Vasters  (CQRS Advisors Mail List)
 
 > Event Sourcing is about the state of the domain model being persisted as 
 > a stream of events rather than as a single snapshot, not about how the 
 > command and query sides are kept in sync (usually with a 
 > publish/subscribe message-based approach).  
-> - Udi Dahan
+> - Udi Dahan  (CQRS Advisors Mail List)
 
 You can use the events that you persist in your event store to propagate 
 all the updates made on the write-side to the read-side. The read-side 

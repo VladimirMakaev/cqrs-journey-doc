@@ -182,7 +182,7 @@
          id="tspan5502">Bus</tspan></text>
     <text
        xml:space="preserve"
-       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print Bold"
+       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print Bold"
        x="709.354"
        y="20.955776"
        id="text5394-77"
@@ -191,12 +191,12 @@
          x="709.354"
          y="20.955776"
          id="tspan5398-3"
-         style="font-size:14px;font-weight:bold;text-align:center;text-anchor:middle;-inkscape-font-specification:Segoe Print Bold;font-family:Segoe Print;font-style:normal;font-stretch:normal;font-variant:normal;writing-mode:lr;line-height:125%">Saga</tspan><tspan
+         style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;text-anchor:middle;font-family:Segoe Print;-inkscape-font-specification:Segoe Print Bold">Saga</tspan><tspan
          sodipodi:role="line"
          x="709.354"
-         y="35.955776"
-         style="font-size:14px;font-weight:bold;text-align:center;text-anchor:middle;-inkscape-font-specification:Segoe Print Bold;font-family:Segoe Print;font-style:normal;font-stretch:normal;font-variant:normal;writing-mode:lr;line-height:125%"
-         id="tspan5506">Handler</tspan></text>
+         y="38.455776"
+         style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;text-anchor:middle;font-family:Segoe Print;-inkscape-font-specification:Segoe Print Bold"
+         id="tspan5506">Router</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print Bold"

@@ -30,18 +30,32 @@ system.
 CQRS takes this principal a step further to define a simple pattern: 
 
 > "CQRS is simply the creation of two objects where there was previously 
-  only one. The separation occurs based upon whether the methods are a 
-  command or a query (the same definition that is used by Meyer in
-  Command and Query Separation, a command is any method that mutates 
-  state and a query is any method that returns a value)."  
-  Greg Young,
-  [CQRS, Task Based UIs, Event Sourcing agh!][gregyoungcqrs] 
+>  only one. The separation occurs based upon whether the methods are a 
+>  command or a query (the same definition that is used by Meyer in
+>  Command and Query Separation, a command is any method that mutates 
+>  state and a query is any method that returns a value)."  
+>  Greg Young,
+>  [CQRS, Task Based UIs, Event Sourcing agh!][gregyoungcqrs] 
 
 What is important and interesting about this simple pattern is the "how, 
 where, and why" of using it when you build enterprise systems. Using 
 this simple pattern enables you to meet a wide range of architectural 
 challenges such as achieving scalability, managing complexity, and 
 managing changing business rules in some portions of your system. 
+
+> CQRS is a simple pattern that strictly segregates the responsibility 
+> of handling command input into an autonomous system from the 
+> responsibility of handling side-effect-free query/read access on the 
+> same system. Consequently, the decoupling allows for any number of 
+> homogeneous or heterogeneous query/read modules to be paired with a 
+> command processor and this principle presents a very suitable 
+> foundation for event sourcing, eventual-consistency state 
+> replication/fan-out and, thus, high-scale read access. In simple 
+> terms: You don’t service queries via the same module of a service 
+> that you process commands through. In REST terminology: GET requests 
+> wire up to a different thing from what PUT/POST/DELETE requests wire 
+> up to.  
+> - Greg Young (CQRS Advisors Mail List)
 
 ## Read and Write Sides
 Figure 1 shows a typical application of the CQRS pattern to a portion of 
@@ -83,7 +97,7 @@ There are several motivations for this segregation including:
   event store. You should view CQRS as a pattern that facilitates 
   splitting the data store and enabling you to select from a range of 
   storage mechanisms.
-
+  
 There are some questions that might occur to you about the 
 practicalities of adopting architecture such as the one shown in 
 figure 1.
