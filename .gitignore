@@ -7,3 +7,6 @@
 
 # Ignore test Output file
 output.html
+
+# Ignore markdown templpate
+*.template
