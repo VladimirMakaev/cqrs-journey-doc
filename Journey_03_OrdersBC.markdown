@@ -1,21 +1,30 @@
 ## Chapter 3
-# Orders and Registrations Bounded Contexts 
+# Orders and Reservations Bounded Context 
 
 _The first stopping point on our CQRS journey._
 
-# A Description of the Orders and Registrations Bounded Contexts
+# A Description of the Orders and Reservations Bounded Context
 
-The **Orders and Registrations** bounded contexts are responsible for 
-the booking processes for attendees planning to attend a conference. In 
-the **Orders** bounded context, a person (the registrant) purchases 
-seats at a particular conference. In the **Registrations** bounded 
-context, the registrant assigns names of attendees to the purchased 
-seats. 
+The **Orders and Reservations** bounded context is partially responsible 
+for the booking process for attendees planning to attend a conference. 
+In the **Orders and Reservations** bounded context, a person (the 
+registrant) purchases seats at a particular conference. In the 
+**Registrations** bounded context, described in [To Do Identify 
+Chapter][todo1], the registrant assigns names of attendees to the 
+purchased seats. 
 
-The ordering process must support wait listing, whereby requests for 
-seats are placed on a wait-list if there are not sufficient seats 
-available. The ordering process must enable the conference owner to set 
-various types of discount for attendees. 
+The ordering process must support wait listing, [To Do Identify 
+Chapter][todo2], whereby requests for seats are placed on a wait-list if 
+there are not sufficient seats available. The ordering process must 
+enable the conference owner to set various types of discount, [To Do 
+Identify Chapter][todo3], for attendees. 
+
+<div style="margin-left:20px;margin-right:20px;">
+  <span style="background-color:yellow;">
+    <b>Comment [DRB]:</b>
+	Revise the following paragraph.
+  </span>
+</div> 
 
 This was the first stop on our CQRS journey, so the team decided to 
 implement a core, but self-contained part of the system. The 
@@ -33,7 +42,7 @@ buses and a persistence mechanism for aggregates.
 
 The following definitions are used for the remainder of this chapter. 
 For more detail, and possible alternative definitions see [A CQRS/ES 
-Deep Dive][r_chapter4]. 
+Deep Dive][r_chapter4] in the Reference Guide. 
 
 ### Command
 
@@ -74,7 +83,8 @@ subscribe to events.
 
 ## User Stories
 
-This bounded context addresses the following two user stories.
+The bounded context descibed in this chapter addresses the following 
+user story. 
 
 ### Seat Ordering
 
@@ -83,29 +93,14 @@ conference. Ordering is a two-stage process: first the registrant
 reserves a number of seats, and then the registrant pays for the seats 
 to confirm the reservation. If registrant does not complete the payment, 
 the seat reservations expire after a fixed period of time and the system 
-makes the seats availble to other registrants to reserve. 
+makes the seats available to other registrants to reserve. 
 
-Figure 1 shows some of the early UI mockups that the team used to explore the seat ordering story.
+Figure 1 shows some of the early UI mockups that the team used to 
+explore the seat ordering story. 
 
 ![Figure 1][fig1]
 
 **Ordering UI mockups**
-
-### Attendee Registration
-
-The registrant is also responsible for assigning attendees to seats 
-after she has completed the order. For each seat in a confirmed order, 
-the registrant assigns an attendee. This requires the registrant to 
-enter the attendees details into the system. 
-
-### Wait Listing
-
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	To do
-  </span>
-</div> 
 
 ### Domain Definitions (Ubiquitous Language)
 
@@ -144,7 +139,7 @@ bounded contexts.
   initially in the Created state. An Order is in the ReservationsMade 
   state when the system has reserved some of the Seats requested by the 
   Registrant (one or more Order Items are in the Reserved state). An 
-  Order is in the confirmed state when the Registrant has successfully 
+  Order is in the Confirmed state when the Registrant has successfully 
   paid for the Order Items in the Reserved state. An Order is in the 
   Rejected state if the system cannot reserve any of the Seats requested 
   by the Registrant (all the Order Items are in the Rejected state) or 
@@ -191,17 +186,9 @@ bounded contexts.
   accessed using a unique URL. Registrants can begin the ordering 
   process from this site. 
 
-
-- **Wait-list.** A wait-list is... 
-
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	More to do here in relation to the wait-list story
-  </span>
-</div>
-
-The following conversation including developers and domain experts illustrates how the team arrived at a definition of the term **Attendee**.
+The following conversation between developers and domain experts 
+illustrates how the team arrived at a definition of the term 
+**Attendee**. 
 
 > *Developer #1:* Here's an initial stab at a definition for 
 > **Attendee**. "An attendee is someone who has paid to attend a 
@@ -273,7 +260,8 @@ several seats at a conference. The system must:
 - Update the total number of seats booked for the conference.
 
 > **Note:** The scenario is kept deliberately simple to avoid
-  distractions while the team examines the alternatives.  
+  distractions while the team examines the alternatives. These examples
+  do not illustrate the final implementation of this bounded context. 
 
 The first approach considered by the team, shown in figure 2, uses two 
 separate aggregates.
@@ -1021,7 +1009,7 @@ These questions are discussed in the following sections.
 This discussion assumes you that you have a basic understanding of the 
 differences between Windows Azure Service Bus queues and topics. For an 
 introduction to Windows Azure Service Bus, see [Technologies Used in the 
-Reference Implementation][r_chapter9]. 
+Reference Implementation][r_chapter9] in the Reference Guide. 
 
 With the implementation shown in figure 8, the only way to ensure that a 
 command is delivered to a single recipient is to ensure that a topic has 
@@ -1116,7 +1104,8 @@ private void OnMessageReceived(object sender, BrokeredMessageEventArgs args)
     }
 }
 ``` 
-> **Note:** This example uses an extension method to invoke the **BeginComplete** and **EndComplete** methods.
+> **Note:** This example uses an extension method to invoke the
+  **BeginComplete** and **EndComplete** methods.
 
 ### Why have separate **CommandBus** and **EventBus** classes if they are so similar?
 
