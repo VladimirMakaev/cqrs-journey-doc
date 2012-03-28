@@ -52,64 +52,82 @@ once, by a single recipient.
 
 As previously mentioned events in event sourcing should capture the business intent, in addition to the change in state of the aggregate. The concept of intent is hard to pin down, as shown in the following conversation:
 
-> *Developer #1*: One of the claims that I often hear for using event sourcing is that it enables
-> you to capture the user's intent, and that this is valuable data. It may not be valuable right now, but
-> if we capture it, it may turn out to have business value at some point in the future.
-
-> *Developer #2*: Sure. For example, rather than saving a just a customer's latest address, we might
-> want to store a history of the addresses the customer has had in the past. It may also be useful to know
-> why a customer's address was changed: they moved house or you discovered a mistake with the existing address
-> that you have on file.
-
-> *Developer #1*: So in this example, the intent might help you to understand why the customer hadn't
-> responded to offers that you sent, or might indicate that now might be a good time to contact the customer
-> about a particular product. But isn't the information about intent, in the end, just data that you should
-> store. If you do your analysis right, you'd capture the fact that the reason an address changes is an
-> important piece of information to store?
-
-> *Developer #2*: By storing events, we can automatically capture all intent. If we miss something
-> during our analysis, but we have the event history, we can make use of that information later. If we capture 
-> events we don't lose any potentially valuable data.
-
-> *Developer #1*: But what if the event that you stored was just, "the customer address was changed"?
-> That doesn't tell me why the address was changed.
-
-> *Developer #2*: OK. You still need to make sure that you store useful events that capture what is
-> meaningful from the perspective of the business.
-
-> *Developer #1*: So what do events and event sourcing give me that I can't get with a well
-> designed relational database that captures everything that I may need?
-
-> *Developer #2*: It really simplifies things. The schema is simple. With a 
-> relational database you have all the problems of versioning if you need to start storing new or
-> different data. With an event sourcing, you just need to define a new event type. 
-
-> *Developer #1*: So what do events and event sourcing give me that I can't get with a 
-> standard database transaction log?
-
-> *Developer #2*: Using events as your primary data model makes it very easy and natural to do time 
-> related analysis of data in your system, for example:
-> "what was the balance on the account at a particular point in time?" or, "what would the customer's
-> status be if we'd introduced the reward program six months earlier?" The transactional data is not
-> hidden away and inaccessible on a tape somewhere, it's there in your system.
-
-> *Developer #1*: So back to this idea of intent. Is it something special that you can
-> capture using events, or is it just some additional data that you save?
-
-> *Developer #2*: I guess in the end, the intent is really there in the commands that orginate
-> from the users of the system. The events record the consequences of those commands. If those events
-> record the consequences in business terms then it makes it easier for you to infer the original intent of
-> user.
+> *Developer #1*: One of the claims that I often hear for using event 
+> sourcing is that it enables you to capture the user's intent, and that 
+> this is valuable data. It may not be valuable right now, but if we 
+> capture it, it may turn out to have business value at some point in 
+> the future. 
+> 
+> *Developer #2*: Sure. For example, rather than saving a just a 
+> customer's latest address, we might want to store a history of the 
+> addresses the customer has had in the past. It may also be useful to 
+> know why a customer's address was changed: they moved house or you 
+> discovered a mistake with the existing address that you have on file. 
+> 
+> *Developer #1*: So in this example, the intent might help you to 
+> understand why the customer hadn't responded to offers that you sent, 
+> or might indicate that now might be a good time to contact the 
+> customer about a particular product. But isn't the information about 
+> intent, in the end, just data that you should store. If you do your 
+> analysis right, you'd capture the fact that the reason an address 
+> changes is an important piece of information to store? 
+> 
+> *Developer #2*: By storing events, we can automatically capture all 
+> intent. If we miss something during our analysis, but we have the 
+> event history, we can make use of that information later. If we 
+> capture events we don't lose any potentially valuable data. 
+> 
+> *Developer #1*: But what if the event that you stored was just, "the 
+> customer address was changed"? That doesn't tell me why the address 
+> was changed. 
+> 
+> *Developer #2*: OK. You still need to make sure that you store useful 
+> events that capture what is meaningful from the perspective of the 
+> business. 
+> 
+> *Developer #1*: So what do events and event sourcing give me that I 
+> can't get with a well designed relational database that captures 
+> everything that I may need? 
+> 
+> *Developer #2*: It really simplifies things. The schema is simple. 
+> With a relational database you have all the problems of versioning if 
+> you need to start storing new or different data. With an event 
+> sourcing, you just need to define a new event type. 
+> 
+> *Developer #1*: So what do events and event sourcing give me that I 
+> can't get with a standard database transaction log? 
+> 
+> *Developer #2*: Using events as your primary data model makes it very 
+> easy and natural to do time related analysis of data in your system, 
+> for example: "what was the balance on the account at a particular 
+> point in time?" or, "what would the customer's status be if we'd 
+> introduced the reward program six months earlier?" The transactional 
+> data is not hidden away and inaccessible on a tape somewhere, it's 
+> there in your system. 
+> 
+> *Developer #1*: So back to this idea of intent. Is it something 
+> special that you can capture using events, or is it just some 
+> additional data that you save? 
+> 
+> *Developer #2*: I guess in the end, the intent is really there in the 
+> commands that originate from the users of the system. The events 
+> record the consequences of those commands. If those events record the 
+> consequences in business terms then it makes it easier for you to 
+> infer the original intent of user. 
 
 > Thanks to Clemens Vasters and Adam Dymitruk
 
 ### How to Model Intent
 
-This section examines two alternatives for modeling intent with reference to SOAP and REST style interfaces to help highlight the differences.
+This section examines two alternatives for modeling intent with 
+reference to SOAP and REST style interfaces to help highlight the 
+differences. 
 
-> **Note:** We are using SOAP and REST here as an analogy to help explain the differences between the approaches.
+> **Note:** We are using SOAP and REST here as an analogy to help 
+explain the differences between the approaches. 
 
-The following two code samples illustrate two, slightly different approaches to modeling intent alongside the event data:
+The following two code samples illustrate two, slightly different 
+approaches to modeling intent alongside the event data: 
 
 **Example 1. The Event log or SOAP-style approach.**
 ```
@@ -132,9 +150,13 @@ The following two code samples illustrate two, slightly different approaches to 
 ]
 ```
 
-The first approach uses an action-based contract that couples the events to a particular aggregate type. The second approach uses a uniform contract, that uses a **resource** field as a hint to associate the event with an aggregate type.
+The first approach uses an action-based contract that couples the events 
+to a particular aggregate type. The second approach uses a uniform 
+contract, that uses a **resource** field as a hint to associate the 
+event with an aggregate type. 
 
-> **Note:** How the events are actually stored is a separate issue. This discussion is focusing on how to model your events.
+> **Note:** How the events are actually stored is a separate issue. This 
+discussion is focusing on how to model your events. 
 
 The advantages of the first approach are:
 
@@ -146,9 +168,12 @@ The advantages of the second approach are:
 
 * Simplicity and a generic approach.
 * Makes it easier to use existing internet infrastructure.
-* Easier to use with dynamic languages and with changing schamas.
+* Easier to use with dynamic languages and with changing schemas.
 
-> **DeveloperPersona:** Variable environment state needs to be stored alongside events in order to have an accurate representation of the circumstances at the time when the command resulting in the event was executed, which means that we need to save everything!
+> **MarkusPersona:** Variable environment state needs to be stored 
+alongside events in order to have an accurate representation of the 
+circumstances at the time when the command resulting in the event 
+was executed, which means that we need to save everything! 
 
 # Embracing Eventual Consistency 
 
@@ -295,6 +320,121 @@ Queries
 
 # Optimizing the Read Side 
 
+This section discusses a number of issues that relate to the 
+implementation of the read-side of the CQRS pattern. 
+
+## Storing De-normalized Views in a Database
+
+One common option for storing the read-side data is to use a set of 
+relational database tables to hold the de-normalized views. The 
+read-side should be optimized for fast reads, so there is typically no 
+benefit in storing normalized data because this will require complex 
+queries to construct the data for the client. This implies that goals 
+for the read-side should be to keep the queries as simple as possible, 
+and to structure the tables in the database in such a way that they can 
+be read quickly and efficiently. 
+
+An important area for consideration is the interface whereby a client 
+such as an MVC controller action submits a query to the read-side model. 
+
+![Figure 4][fig4]
+
+**The Read-side storing data in a relational database**
+
+In figure 4, a client such as an MVC controller action invokes a method 
+on a **ViewRepository** class to request the data that it needs. The 
+**ViewRepository** class in turn runs a query against the denormalized 
+data in the database. 
+
+One approach to consider for the **ViewRepository** class is to have it 
+return an **IQueryable** instance that enables the client to use LINQ to 
+specify its query. It is very easy to return an **IQueryable** instance 
+from many ORMs such as Entity Framework or NHibernate. The following 
+code snippet illustrates how the client can submit such queries. 
+
+```Cs
+var ordersummaryDTO = repository.Query<OrderSummaryDTO>().Where(LINQ query to retrieve order summary);
+var orderdetailsDTO = repository.Query<OrderDetailsDTO>().Where(LINQ query to retrieve order details);
+```
+
+This approach has a number of advantages:
+
+* **Simplicity #1.** This approach uses a thin abstraction layer over 
+the underlying database. It is supported by multiple ORMs and minimizes 
+the amount of code that you must write. 
+* **Simplicity #2.** You only need to define a single repository and a 
+single **Query** method. 
+* **Simplicity #3.** You don't need a separate query object.On the 
+read-side the queries should be simple because you have already 
+de-normalized your data to support the read-side clients. 
+* **Simplicity #4.** You can make use of LINQ to provide support for 
+features such as filtering, paging, and sorting in the client. 
+* **Testability.** You can use LINQ to Objects for mocking. 
+
+> **MarkusPersona** In the RI, using Entity Framework, we didn't need to 
+write any code at all to expose the **IQueryable** instance. We also had 
+just a single **ViewRepository** class. 
+
+Possible objections to this approach include:
+
+* It is not easy to replace the data store with a non-relational 
+database. However, you can choose to implement the write-model 
+differently in each bounded context using an approach that is 
+appropriate to that bounded context. 
+* The client might abuse the **IQueryable** interface be performing 
+operations that can be done more efficiently as a part of the 
+de-normalization process. You should ensure that the de-normalized data 
+fully meets the requirements of the clients. 
+* Using the **IQueryable** interface hides the queries away. However, 
+since you can de-normalize the data on the write-side, the queries 
+against the relational database tables are unlikely to be complex. 
+
+An alternative approach is to have the **ViewRepository** expose custom 
+**Find** and **Get** methods as shown in the following code snippets. 
+
+```Cs
+var ordersummaryDTO = dao.FindAllSummarizedOrders(userId);
+var orderdetailsDTO = dao.GetOrderDetails(orderId);
+```
+
+You could also choose to use different DAO classes. This would make it 
+easier to access different data sources. 
+
+```Cs
+var ordersummaryDTO = OrderSummaryDAO.FindAll(userId);
+var orderdetailsDTO = OrderDetailsDAO.Get(orderId);
+```
+
+This approach has a number of advantages:
+
+* **Flexibility #1.** The **Get** and **Find** methods hide details such 
+as the partitioning of the data store and the data access methods such 
+as an ORM or executing SQL code explicitly. This makes it easier to 
+change these choices in the future. 
+* **Flexibility #2.** The **Get** and **Find** methods could use an ORM, 
+LINQ, and the *IQueryable** interface behind the scenes to get the data 
+from the data store. This is a choice that could be made on a method by 
+method basis. 
+* **Performance #1.** You can easily optimize the queries that the 
+**Find** and **Get** methods run. 
+* **Performance #2.** The data access layer executes all queries. There 
+is no risk that the client MVC controller action tries to run complex 
+and inefficient LINQ queries against the data source. 
+* **Testability.** It is easier to specify unit tests for the **Find** 
+and **Get** methods than to create suitable unit tests for the range of 
+possible LINQ queries that a client could specify. 
+* **Simplicity #1.** Dependencies are clearer for the client. For 
+example, the client receives an explicit **IOrderSummaryDAO** instance 
+rather than a generic **IViewRepository** instance. 
+* **Simplicity #2.** For the majority of queries, there are only one or 
+two predefined ways to access the object. Different queries typically 
+return different projections. 
+
+Possible objections to this approach include:
+
+* Using the **IQueryable** interface makes it much easier to use grids 
+that support features such as paging, filtering, and sorting in the UI. 
+
 # Optimizing the Write Side 
 
 <div style="margin-left:20px;margin-right:20px;">
@@ -307,18 +447,38 @@ Queries
 
 ## Concurrency and Aggregates
 
-A simple implemention of aggregates and command handlers will load an aggregate instance into memory for each command that the aggregate must process. For aggregates that must process a large number of commands, you may decide to cache the aggregate instance in memory to avoid the need to reload it for every command.
+A simple implementation of aggregates and command handlers will load an 
+aggregate instance into memory for each command that the aggregate must 
+process. For aggregates that must process a large number of commands, 
+you may decide to cache the aggregate instance in memory to avoid the 
+need to reload it for every command. 
 
-If your system only has a single instance of an aggregate loaded into memory, that aggregate may need to process commands that are sent from multiple clients. By arranging for the system to deliver commands to the aggregate instance through a queue, you can ensure that the aggregate processes the commands sequentially. Also, there is no requirement to make the aggregate thread-safe, because it will only process a single command at a time.
+If your system only has a single instance of an aggregate loaded into 
+memory, that aggregate may need to process commands that are sent from 
+multiple clients. By arranging for the system to deliver commands to the 
+aggregate instance through a queue, you can ensure that the aggregate 
+processes the commands sequentially. Also, there is no requirement to 
+make the aggregate thread-safe, because it will only process a single 
+command at a time. 
 
-In scenarios with an even higher throughput of commands, you may need to have multiple instances of the aggreagate loaded into memory, possibly in different processes. To handle the concurrency issues here, you can use event sourcing and versioning. Each aggregate instance must have a version number that is updated whenever the instance persists an event.
-There are two ways to make use of the version number in the aggregate instance:
+In scenarios with an even higher throughput of commands, you may need to 
+have multiple instances of the aggregate loaded into memory, possibly in 
+different processes. To handle the concurrency issues here, you can use 
+event sourcing and versioning. Each aggregate instance must have a 
+version number that is updated whenever the instance persists an event. 
 
-* **Optimistic:** Append the event to the event-stream if the the latest event in the event-stream is the same version as the current, in-memory, instance.
+There are two ways to make use of the version number in the aggregate 
+instance: 
 
-* **Pessimistic:** Load all the events from the event stream that have a version number greater than the version of the current, in-memory, instance.
+* **Optimistic:** Append the event to the event-stream if the the latest 
+event in the event-stream is the same version as the current, in-memory, 
+instance. 
+* **Pessimistic:** Load all the events from the event stream that have a 
+version number greater than the version of the current, in-memory, 
+instance. 
 
-> "These are technical performance optimizations that can be implemented on case-by-case basis."  
+> "These are technical performance optimizations that can be implemented 
+> on case-by-case basis." 
 > Rinat Abdullin (CQRS Advisors Mail List)
 
 # Messaging 
@@ -405,3 +565,4 @@ information about how to automatically scale roles in Windows Azure, see
 [fig1]:           images/Reference_04_Consistency_01.png?raw=true
 [fig2]:           images/Reference_04_Consistency_02.png?raw=true
 [fig3]:           images/Reference_04_Consistency_03.png?raw=true
+[fig4]:           images\Reference_09_ViewRepository.png?raw=true
