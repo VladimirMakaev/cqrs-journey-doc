@@ -5,13 +5,20 @@
 
 # A Description of the Orders and Reservations Bounded Context 
 
-The Orders and Reservations Bounded Context was discribed in some detail in the previous chapter. This chapter describes some changes that the team made in this bounded context during the second stage of their CQRS journey.
+The Orders and Reservations Bounded Context was discribed in some detail 
+in the previous chapter. This chapter describes some changes that the 
+team made in this bounded context during the second stage of their CQRS 
+journey. 
 
 The specific topics described in this chapter include:
 
-* Improvements to the way that message correlation works with the **ReservationProcessWorkflow**.
-* Implementing a record locator to enable a registrant to retrieve an order that was saved during a previous session.
-* Adding a countdown timer to the UI to enable a registrant to track how much longer tey have to complete an order.  
+* Improvements to the way that message correlation works with the 
+  **ReservationProcessWorkflow**. 
+* Implementing a record locator to enable a registrant to retrieve an 
+  order that was saved during a previous session. 
+* Adding a countdown timer to the UI to enable a registrant to track how 
+  much longer tey have to complete an order. 
+
 
 ## Working Definitions for this Chapter 
 
@@ -42,23 +49,33 @@ events to an event bus; handlers register for specific types of event on
 the event bus and then deliver the event to the subscriber. In this 
 bounded context, the only subscriber is a saga. 
 
-### Saga
+### Workflow
 
-In this bounded context, a saga is a class that coordinates the behavior 
-of the aggregates in the domain. A saga subscribes to the events that 
-the aggregates raise, and then follow a simple set of rules to determine 
-which command or commands to send. The saga does not contain any 
-business logic, simply logic to determine the next command to send. The 
-saga is implemented as a state machine, so when the saga responds to an 
-event, it can change its internal state in addition to sending a new 
-command. 
+In this bounded context, a workflow is a class that coordinates the 
+behavior of the aggregates in the domain. A workflow subscribes to the 
+events that the aggregates raise, and then follow a simple set of rules 
+to determine which command or commands to send. The workflow does not 
+contain any business logic, simply logic to determine the next command 
+to send. The workflow is implemented as a state machine, so when the 
+workflow responds to an event, it can change its internal state in 
+addition to sending a new command. 
 
-The saga in this bounded context can receive commands as well as 
+The workflow in this bounded context can receive commands as well as 
 subscribe to events. 
 
 ## User Stories 
 
-What were the key user stories addressed in this chapter?  
+This chapter discusses the implementation of two user stories in addition to describing some changes and enhancements to the **Orders and Reservations** bounded context.
+
+### Implement a Login using a Record Locator
+
+When a registrant creates an order for seats at a conference, the system generates a five character **order access code** and sends it to the registrant by email. The registrant can use her email address and the **order access code** on the conference web site to retrieve the order from the system at a later date. The registrant may wish retrieve the order to review it, or to complete the registration process by assigning attendees to seats.
+
+### Inform the Registrant How Much Time Remains to Complete an Order.
+
+When a registrant creates an order, the system reserves the seats requested by the registrant until the order is complete or the reservations expire. To complete an order, the registrant must submit her details, such as name and email address, and make a successful payment.
+
+To help the registrant, the system displays a count-down timer to inform the registrant how much time remains to complete the order before the reservations expire.
 
 ## Architecture 
 
@@ -73,6 +90,20 @@ What are the key architectural features? Server-side, UI, multi-tier, cloud, etc
 * What trade-offs did we evaluate? 
 
 * What alternatives did we consider? 
+
+The previous chapter focused on the write-side model and implementation, 
+in this chapter we'll explore the read-side implementation in more 
+detail. In particular you'll see how the team implemented the read model 
+and the querying mechanism from the MVC controllers. 
+
+In this initial exploration of the CQRS pattern, the team decided to use 
+SQL views in the database as the underlying source of the data queried 
+by the MVC controllers on the read-side. These views currently exist in 
+the same database as the normalized tables that the write model uses. 
+
+> **JanaPersona:** The team will split the database into two and explore
+  options for pushing changes from the normalized write-side to the
+  de-normalized read-side in a later stage of the journey.
 
 
 # Implementation Details 
