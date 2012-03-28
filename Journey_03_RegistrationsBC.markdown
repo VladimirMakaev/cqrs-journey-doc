@@ -346,7 +346,9 @@ The numbers in the diagram correspond to the following steps:
    **SeatsAvailability** aggregate and it is persisted to the
    data store.
 
-> **BharathPersona:** Workflow or saga? Initially ...
+> **BharathPersona:** Workflow or saga? Initially the team referred to the **ReservationProcess** workflow as a saga. However, after they reviewed the original definition of a saga from the paper [Sagas](sagapaper) by Hector Garcia-Molina and Kenneth Salem, they revised their decision. The key reasons for this are that reservation process does not include explicit compensation steps, and does not need to be represented as a long-lived transaction.
+
+For more information about sagas see the chapter [Sagas][r_chapter6] in the Reference Guide.
    
 The team identified these questions about these approaches:
 
@@ -1339,6 +1341,7 @@ of the behavior the **SeatsAvailability** aggregate because it
 raises an event if it rejects a reservation. 
 
 [r_chapter4]:     Reference_04_DeepDive.markdown
+[r_chapter6]:     Reference_06_Sagas.markdown
 [r_chapter9]:     Reference_09_Technologies.markdown
 
 [tddstyle]:		  http://martinfowler.com/articles/mocksArentStubs.html
