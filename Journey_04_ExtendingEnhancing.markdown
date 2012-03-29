@@ -105,6 +105,117 @@ the same database as the normalized tables that the write model uses.
   options for pushing changes from the normalized write-side to the
   de-normalized read-side in a later stage of the journey.
 
+## Storing De-normalized Views in a Database
+
+One common option for storing the read-side data is to use a set of 
+relational database tables to hold the de-normalized views. The 
+read-side should be optimized for fast reads, so there is typically no 
+benefit in storing normalized data because this will require complex 
+queries to construct the data for the client. This implies that goals 
+for the read-side should be to keep the queries as simple as possible, 
+and to structure the tables in the database in such a way that they can 
+be read quickly and efficiently. 
+
+An important area for consideration is the interface whereby a client 
+such as an MVC controller action submits a query to the read-side model. 
+
+![Figure 1][fig1]
+
+**The Read-side storing data in a relational database**
+
+In figure 4, a client such as an MVC controller action invokes a method 
+on a **ViewRepository** class to request the data that it needs. The 
+**ViewRepository** class in turn runs a query against the denormalized 
+data in the database. 
+
+One approach to consider for the **ViewRepository** class is to have it 
+return an **IQueryable** instance that enables the client to use LINQ to 
+specify its query. It is very easy to return an **IQueryable** instance 
+from many ORMs such as Entity Framework or NHibernate. The following 
+code snippet illustrates how the client can submit such queries. 
+
+```Cs
+var ordersummaryDTO = repository.Query<OrderSummaryDTO>().Where(LINQ query to retrieve order summary);
+var orderdetailsDTO = repository.Query<OrderDetailsDTO>().Where(LINQ query to retrieve order details);
+```
+
+This approach has a number of advantages:
+
+* **Simplicity #1.** This approach uses a thin abstraction layer over 
+the underlying database. It is supported by multiple ORMs and minimizes 
+the amount of code that you must write. 
+* **Simplicity #2.** You only need to define a single repository and a 
+single **Query** method. 
+* **Simplicity #3.** You don't need a separate query object.On the 
+read-side the queries should be simple because you have already 
+de-normalized your data to support the read-side clients. 
+* **Simplicity #4.** You can make use of LINQ to provide support for 
+features such as filtering, paging, and sorting in the client. 
+* **Testability.** You can use LINQ to Objects for mocking. 
+
+> **MarkusPersona** In the RI, using Entity Framework, we didn't need to 
+write any code at all to expose the **IQueryable** instance. We also had 
+just a single **ViewRepository** class. 
+
+Possible objections to this approach include:
+
+* It is not easy to replace the data store with a non-relational 
+database. However, you can choose to implement the write-model 
+differently in each bounded context using an approach that is 
+appropriate to that bounded context. 
+* The client might abuse the **IQueryable** interface be performing 
+operations that can be done more efficiently as a part of the 
+de-normalization process. You should ensure that the de-normalized data 
+fully meets the requirements of the clients. 
+* Using the **IQueryable** interface hides the queries away. However, 
+since you can de-normalize the data on the write-side, the queries 
+against the relational database tables are unlikely to be complex. 
+
+An alternative approach is to have the **ViewRepository** expose custom 
+**Find** and **Get** methods as shown in the following code snippets. 
+
+```Cs
+var ordersummaryDTO = dao.FindAllSummarizedOrders(userId);
+var orderdetailsDTO = dao.GetOrderDetails(orderId);
+```
+
+You could also choose to use different DAO classes. This would make it 
+easier to access different data sources. 
+
+```Cs
+var ordersummaryDTO = OrderSummaryDAO.FindAll(userId);
+var orderdetailsDTO = OrderDetailsDAO.Get(orderId);
+```
+
+This approach has a number of advantages:
+
+* **Flexibility #1.** The **Get** and **Find** methods hide details such 
+as the partitioning of the data store and the data access methods such 
+as an ORM or executing SQL code explicitly. This makes it easier to 
+change these choices in the future. 
+* **Flexibility #2.** The **Get** and **Find** methods could use an ORM, 
+LINQ, and the *IQueryable** interface behind the scenes to get the data 
+from the data store. This is a choice that could be made on a method by 
+method basis. 
+* **Performance #1.** You can easily optimize the queries that the 
+**Find** and **Get** methods run. 
+* **Performance #2.** The data access layer executes all queries. There 
+is no risk that the client MVC controller action tries to run complex 
+and inefficient LINQ queries against the data source. 
+* **Testability.** It is easier to specify unit tests for the **Find** 
+and **Get** methods than to create suitable unit tests for the range of 
+possible LINQ queries that a client could specify. 
+* **Simplicity #1.** Dependencies are clearer for the client. For 
+example, the client receives an explicit **IOrderSummaryDAO** instance 
+rather than a generic **IViewRepository** instance. 
+* **Simplicity #2.** For the majority of queries, there are only one or 
+two predefined ways to access the object. Different queries typically 
+return different projections. 
+
+Possible objections to this approach include:
+
+* Using the **IQueryable** interface makes it much easier to use grids 
+that support features such as paging, filtering, and sorting in the UI. 
 
 # Implementation Details 
 
@@ -115,3 +226,6 @@ Provide significantly more detail for those BCs that use CQRS/ES. Significantly 
 # Testing 
 
 Describe any special considerations that relate to testing for this bounded context.  
+
+
+[fig4]:           images/Journey_04_ViewRepository.png?raw=true
