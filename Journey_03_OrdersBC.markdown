@@ -49,7 +49,7 @@ Deep Dive][r_chapter4] in the Reference Guide.
 A command is a request for the system to perform a task or an action. 
 Commands are imperatives, for example **MakeRegistration**. In this 
 bounded context, commands originate from the UI as a result either of 
-the user initiating a request or from a saga when the saga is directing 
+the user initiating a request or from a workflow when the workflow is directing 
 an aggregate to perform an action. 
 
 Commands are processed once, and once only by a single recipient. A 
@@ -65,21 +65,23 @@ as a result of a command. Aggregates in the domain model raise events.
 Multiple subscribers can handle a specific event. Aggregates publish 
 events to an event bus; handlers register for specific types of event on 
 the event bus and then deliver the event to the subscriber. In this 
-bounded context, the only subscriber is a saga. 
+bounded context, the only subscriber is a workflow. 
 
-### Saga
+### Workflow
 
-In this bounded context, a saga is a class that coordinates the behavior 
-of the aggregates in the domain. A saga subscribes to the events that 
+In this bounded context, a workflow is a class that coordinates the behavior 
+of the aggregates in the domain. A workflow subscribes to the events that 
 the aggregates raise, and then follow a simple set of rules to determine 
-which command or commands to send. The saga does not contain any 
+which command or commands to send. The workflow does not contain any 
 business logic, simply logic to determine the next command to send. The 
-saga is implemented as a state machine, so when the saga responds to an 
+workflow is implemented as a state machine, so when the workflow responds to an 
 event, it can change its internal state in addition to sending a new 
 command. 
 
-The saga in this bounded context can receive commands as well as 
-subscribe to events. 
+The workflow in this bounded context can receive commands as well as 
+subscribe to events.
+
+> **BharathPersona:** The team initially referred to the workflow class in the **Orders** bounded context as a saga. To find out why they decided to change the terminology. See the section [Patterns and Concepts](#patternsandconcepts) later in this chapter.
 
 ## User Stories
 
@@ -237,7 +239,7 @@ illustrates how the team arrived at a definition of the term
   </span>
 </div>
 
-# Patterns and Concepts
+# Patterns and Concepts <a name="patternsandconcepts"/>
 
 The team decided that they would try to implement the first bounded 
 context without using event sourcing in order to keep things simple. 
@@ -309,11 +311,11 @@ The numbers in the diagram correspond to the following steps:
    the data store.
 
 The third approach considered by the team, shown in figure 4, uses a 
-saga to coordinate the interaction between two aggregates. 
+workflow to coordinate the interaction between two aggregates. 
 
 ![Figure 4][fig4]
 
-**Approach #3, using a saga**
+**Approach #3, using a workflow**
 
 The numbers in the diagram correspond to the following steps:
 
@@ -322,8 +324,8 @@ The numbers in the diagram correspond to the following steps:
 2. The new **Order** aggregate, with an ID of 4239,  is persisted to
    the data store.
 3. The **Order** aggregate raises an event that is handled by the
-   **ReservationProcess** saga.
-4. The **ReservationProcess** saga determines that a command should be
+   **ReservationProcess** workflow.
+4. The **ReservationProcess** workflow determines that a command should be
    sent to the **SeatsAvailability** aggregate with an ID of
    157.
 5. The **SeatsAvailability** aggregate is re-hydrated from the
@@ -332,6 +334,10 @@ The numbers in the diagram correspond to the following steps:
    **SeatsAvailability** aggregate and it is persisted to the
    data store.
 
+> **BharathPersona:** Workflow or saga? Initially the team referred to the **ReservationProcess** workflow as a saga. However, after they reviewed the original definition of a saga from the paper [Sagas](sagapaper) by Hector Garcia-Molina and Kenneth Salem, they revised their decision. The key reasons for this are that reservation process does not include explicit compensation steps, and does not need to be represented as a long-lived transaction.
+
+For more information about sagas see the chapter [Sagas][r_chapter6] in the Reference Guide.
+   
 The team identified these questions about these approaches:
 
 - Where does the validation that there are sufficient seats for the 
@@ -367,19 +373,19 @@ The second model behaves similarly, except that it is **Order** and
 **SeatsAvailability** entities cooperating within a 
 **Conference** aggregate. 
 
-In the third model, with the saga, the aggregates exchange messages
-through the saga about whether the registrant can make the reservation
+In the third model, with the workflow, the aggregates exchange messages
+through the workflow about whether the registrant can make the reservation
 at the current time. 
 
 All three models require entities to communicate about the validation 
-process, but the third model with the saga appears more complex than the 
+process, but the third model with the workflow appears more complex than the 
 other two. 
 
 ## Transaction Boundaries
 
 An aggregate, in the DDD approach, represents a consistency boundary. 
 Therefore, the first model with two aggregates, and the third model with 
-two aggregates and a saga will involve two transactions: one when the 
+two aggregates and a workflow will involve two transactions: one when the 
 system persists the new **Order** aggregate, and one when the system 
 persists the updated **SeatsAvailability** aggregate. 
 
@@ -411,7 +417,7 @@ This timeout also requires the system to incorporate a timer somewhere
 to track when reservations expire. 
 
 Modeling this complex behavior with sequences of messages and the 
-requirement for a timer is best done using a saga. 
+requirement for a timer is best done using a workflow. 
 
 ## Aggregates and Aggregate Roots
 
@@ -423,7 +429,7 @@ seem natural to access orders through a **SeatsAvailability**
 entity, or to access the seat availability through an **Order** entity. 
 Creating a new entity to act as an aggregate root seems unnecessary. 
 
-The team decided on the model that incorporated a saga because this 
+The team decided on the model that incorporated a workflow because this 
 offers the best way to handle the concurrency requirements in this 
 bounded context. 
 	
@@ -710,15 +716,15 @@ following conversation between two developers explores this decision.
 
 > *Thanks to J&eacute;r&eacute;mie Chassaing and Craig Wilson*
 
-### Aggregates and Sagas
+### Aggregates and Workflows
 
 Figure 6 shows the entities that exist in the write-side model. There 
 are two aggregates, **Order** and **SeatsAvailability**, each 
 one containing multiple entity types. There is also a 
-**ReservationProcessSaga** saga that manages the interaction between 
+**ReservationProcessSaga** workflow that manages the interaction between 
 the aggregates. 
 
-The table in the figure 6 shows how the saga behaves given a current 
+The table in the figure 6 shows how the workflow behaves given a current 
 state and a particular type of incoming message. 
 
 ![Figure 6][fig6]
@@ -755,9 +761,9 @@ public Order(Guid id, Guid userId, Guid conferenceId, IEnumerable<OrderItem> lin
 > **Note:** To see how the infrastructure elements deliver commands and
   events, see figure 7.
 
-The system creates a new **ReservationProcessSaga** saga instance to 
+The system creates a new **ReservationProcessSaga** workflow instance to 
 manage the new order. The following code sample from the 
-**ReservationProcessSaga** class shows how the saga handles the event. 
+**ReservationProcessSaga** class shows how the workflow handles the event. 
 
 ```Cs
 public void Handle(OrderPlaced message)
@@ -783,15 +789,15 @@ public void Handle(OrderPlaced message)
 }
 ```
 
-The code sample shows how the saga changes its state and sends a new 
+The code sample shows how the workflow changes its state and sends a new 
 **MakeSeatReservation** command that is handled by the 
 **SeatsAvailability** aggregate. The code sample also 
-illustrates how the saga is implemented as a state machine that receives 
+illustrates how the workflow is implemented as a state machine that receives 
 messages, changes its state, and sends new messages. 
 
 > **DeveloperPersona:** Notice how we generate a new Guid to identify 
 > the new reservation. We use these Guids to correlate messages to the 
-> correct saga and aggregate instances. 
+> correct workflow and aggregate instances. 
 
 When the **SeatsAvailability** aggregate receives a 
 **MakeReservation** command, it makes a reservation if there are enough 
@@ -815,12 +821,12 @@ public void MakeReservation(Guid reservationId, int numberOfSeats)
 }
 ```
 
-The **ReservationProcessSaga** saga handles the the 
+The **ReservationProcessSaga** workflow handles the the 
 **ReservationAccepted** and **ReservationRejected** events. This 
 reservation is a temporary reservation for seats to give the user the 
-opportunity to make a payment. The saga is responsible for releasing the 
+opportunity to make a payment. The workflow is responsible for releasing the 
 reservation when either the purchase is complete, or the reservation 
-timeout period expires. The following code sample shows how the saga 
+timeout period expires. The following code sample shows how the workflow 
 handles these two messages. 
 
 ```Cs
@@ -857,12 +863,12 @@ public void Handle(ReservationRejected message)
 }
 ```
 
-If the reservation is accepted, the saga starts a timer running by 
+If the reservation is accepted, the workflow starts a timer running by 
 sending an **ExpireOrder** command to itself, and sends a 
 **MarkOrderAsBooked** command to the **Order** aggregate. Otherwise, it 
 sends a **ReservationRejected** message back to the **Order** aggregate. 
 
-The previous code sample shows how the saga sends the 
+The previous code sample shows how the workflow sends the 
 **ExpireOrder** command. The infrastructure is responsible for 
 holding the message in a queue for the delay of fifteen minutes. 
 
@@ -924,7 +930,7 @@ handle specific events as shown in the following code sample from the
 > **Note:* We use the term handler to refer to the classes that handle 
 > commands and forward them to aggregate instances, and the term router 
 > to refer to the classes that handle events and commands and forward 
-> them to saga instances. 
+> them to workflow instances. 
 
 ```Cs
 public void Handle(ReservationAccepted @event)
@@ -943,10 +949,10 @@ public void Handle(ReservationAccepted @event)
 }
 ```
 
-Typically, an event handler method loads a saga instance, passes the 
-event to the saga, and then persists the saga instance. In this case, 
-the **IRepository** instance is responsible for persisting the saga 
-instance and sending any commands from the saga instance to the command 
+Typically, an event handler method loads a workflow instance, passes the 
+event to the workflow, and then persists the workflow instance. In this case, 
+the **IRepository** instance is responsible for persisting the workflow 
+instance and sending any commands from the workflow instance to the command 
 bus. 
 
 ## Using the Windows Azure Service Bus
@@ -1151,15 +1157,15 @@ for processing when the consumer restarts.
 As stated previously, a subscription should be associated with a single 
 event handler type, although an event may be handled by multiple handler 
 types. For example, the **ReservationRejected** event may be handled by 
-both the **RegistrationProcessSagaHnadler** and **WaitListSagaHandler** 
-handler classes because it must be delivered to the two sagas. 
+both the **RegistrationProcessSagaHandler** and **WaitListSagaHandler** 
+handler classes because it must be delivered to the two workflows. 
 
 Figure 8 suggests that Topic B is only reponsible for delivering 
 **ReservationRejected** events. However, it could also deliver 
 additional event types such as **ReservationAccepted** events. In this 
 scenario, the handler classes might need to include some additional 
 logic: if the **ReservationAccepted** event only needs to go to the 
-**RegistrationProcessSaga** saga, then the **WaitListSagaHandler** would 
+**RegistrationProcessSaga** workflow, then the **WaitListSagaHandler** would 
 need to discard any **ReservationAccepted** events that it retrieved 
 from its subscription. 
 
@@ -1324,6 +1330,7 @@ of the behavior the **SeatsAvailability** aggregate because it
 raises an event if it rejects a reservation. 
 
 [r_chapter4]:     Reference_04_DeepDive.markdown
+[r_chapter6]:     Reference_06_Sagas.markdown
 [r_chapter9]:     Reference_09_Technologies.markdown
 
 [tddstyle]:		  http://martinfowler.com/articles/mocksArentStubs.html
