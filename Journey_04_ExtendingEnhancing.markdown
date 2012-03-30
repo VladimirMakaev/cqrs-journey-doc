@@ -13,12 +13,21 @@ journey.
 The specific topics described in this chapter include:
 
 * Improvements to the way that message correlation works with the 
-  **ReservationProcessWorkflow**. 
+  **ReservationProcessWorkflow**. This illustrates how aggregate
+  instances within the bounded context can interact in a complex
+  manner.
 * Implementing a record locator to enable a registrant to retrieve an 
-  order that was saved during a previous session. 
+  order that was saved during a previous session. This illustrates
+  adding some additional logic to the write-side that enables you to
+  locate an aggregate instance without knowing its unique Id.
 * Adding a countdown timer to the UI to enable a registrant to track how 
-  much longer tey have to complete an order. 
-
+  much longer they have to complete an order. This illustrates
+  enhancements to the write-side to support displaying rich information
+  in the UI.
+* Supporting orders for multiple seat types simultaneously. For example
+  a registrant requests five seats for pre-conference event and eight
+  seats for the full conference. This adds more commplex buiness logic
+  into the write-side.
 
 ## Working Definitions for this Chapter 
 
@@ -65,17 +74,35 @@ subscribe to events.
 
 ## User Stories 
 
-This chapter discusses the implementation of two user stories in addition to describing some changes and enhancements to the **Orders and Reservations** bounded context.
+This chapter discusses the implementation of two user stories in 
+addition to describing some changes and enhancements to the **Orders and 
+Reservations** bounded context. 
 
 ### Implement a Login using a Record Locator
 
-When a registrant creates an order for seats at a conference, the system generates a five character **order access code** and sends it to the registrant by email. The registrant can use her email address and the **order access code** on the conference web site to retrieve the order from the system at a later date. The registrant may wish retrieve the order to review it, or to complete the registration process by assigning attendees to seats.
+When a registrant creates an order for seats at a conference, the system 
+generates a five character **order access code** and sends it to the 
+registrant by email. The registrant can use her email address and the 
+**order access code** on the conference web site to retrieve the order 
+from the system at a later date. The registrant may wish retrieve the 
+order to review it, or to complete the registration process by assigning 
+attendees to seats. 
 
 ### Inform the Registrant How Much Time Remains to Complete an Order.
 
-When a registrant creates an order, the system reserves the seats requested by the registrant until the order is complete or the reservations expire. To complete an order, the registrant must submit her details, such as name and email address, and make a successful payment.
+When a registrant creates an order, the system reserves the seats 
+requested by the registrant until the order is complete or the 
+reservations expire. To complete an order, the registrant must submit 
+her details, such as name and email address, and make a successful 
+payment. 
 
-To help the registrant, the system displays a count-down timer to inform the registrant how much time remains to complete the order before the reservations expire.
+To help the registrant, the system displays a count-down timer to inform 
+the registrant how much time remains to complete the order before the 
+seat reservations expire. 
+
+### Enabling a Registrant to Create an Order that Includes Multiple Seat Types.
+
+
 
 ## Architecture 
 
@@ -91,6 +118,21 @@ What are the key architectural features? Server-side, UI, multi-tier, cloud, etc
 
 * What alternatives did we consider? 
 
+## Record Locators
+
+The system uses **Access Codes** instead of passwords to avoid the 
+overhead for the registrant of setting up an account with the system. 
+Many registrants may use the system only once, so there is no need to 
+create a permanent account with a user ID and a password. 
+
+The system needs to be able to retrieve order information quickly based 
+on the registrant's email address and access code. To provide a minimum 
+level of security, the access codes that the system generates should not 
+be predictable, and the order information that registrants can retrieve 
+should not contain any sensitive information. 
+
+## Querying the Read-side
+
 The previous chapter focused on the write-side model and implementation, 
 in this chapter we'll explore the read-side implementation in more 
 detail. In particular you'll see how the team implemented the read model 
@@ -105,7 +147,7 @@ the same database as the normalized tables that the write model uses.
   options for pushing changes from the normalized write-side to the
   de-normalized read-side in a later stage of the journey.
 
-## Storing De-normalized Views in a Database
+### Storing De-normalized Views in a Database
 
 One common option for storing the read-side data is to use a set of 
 relational database tables to hold the de-normalized views. The 
@@ -221,7 +263,129 @@ that support features such as paging, filtering, and sorting in the UI.
 
 Describe significant features of the implementation with references to the code. Highlight any specific technologies (including any relevant trade-offs and alternatives). 
 
-Provide significantly more detail for those BCs that use CQRS/ES. Significantly less detail for more "traditional" implementations such as CRUD. 
+Provide significantly more detail for those BCs that use CQRS/ES. Significantly less detail for more "traditional" implementations such as CRUD.
+
+## The Order Access Code Record Locator 
+
+A registrant may need to retrieve an Order, either to view it, or to 
+complete registering attendees to seats. This may happen in a different 
+web session, so the registrant must supply some information to locate 
+the previously saved order. 
+
+The following code sample shows how the **Order** class generates an new 
+five character order access code that is persisted as part of the 
+**Order** instance. 
+
+```Cs
+public string AccessCode { get; set; }
+
+protected Order()
+{
+	...
+	this.AccessCode = HandleGenerator.Generate(5);
+}
+```
+
+To retrieve an **Order** instance, a registrant must provide her email 
+address and the order access code. The system will use these two items 
+to locate the correct order. This logic is part of the read-side. 
+
+The following code sample from the **OrderController** class in the web 
+application shows how the MVC controller submits the query to the 
+repository to discover the unique **OrderId** value. This **Find** 
+action passess the **OrderId** value to a **Display** action that 
+displays the order information to the registrant. 
+
+```Cs
+[HttpPost]
+public ActionResult Find(string conferenceCode, string email, string accessCode)
+{
+	var repo = this.repositoryFactory();
+	using (repo as IDisposable)
+	{
+		var order = repo.Query<OrderDTO>()
+			.Where(o => o.RegistrantEmail == email && o.AccessCode == accessCode)
+			.FirstOrDefault();
+
+		if (order == null)
+			return RedirectToAction("Find", new { conferenceCode = conferenceCode });
+
+		return RedirectToAction("Display", new { conferenceCode = conferenceCode, orderId = order.OrderId });
+	}
+}
+```
+
+This illustrates two ways of querying the read-side. The first, as shown 
+in the previous code sample, enables you to use a LINQ query against an 
+**IQueryable** instance. The second, as used in the MVC controller's 
+**Display** action, retrieves a single instance based on its unique Id. 
+The following code sample shows the **Find** and **Query** methods in 
+the **OrmViewRepository** class that the MVC controller uses. 
+
+```Cs
+public T Find<T>(Guid id) where T : class
+{
+	return this.Set<T>().Find(id);
+}
+
+public IQueryable<T> Query<T>() where T : class
+{
+	return this.Set<T>();
+}
+```
+
+## The Count-down Timer
+
+When a registrant creates and order and makes a seat reservation, those 
+seats are reserved for a fixed period of time. The 
+**ReservationWorkflow** instance, which forwards the reservation from 
+the **SeatsAvailability** aggregate, passes the time that the 
+reservation expires to the **Order** aggregate. The following code 
+sample shows how the **Order** aggregate receives and stores the 
+reservation expiry time. 
+
+```Cs
+public DateTime? BookingExpirationDate { get; private set; }
+
+public void MarkAsBooked(DateTime bookingExpirationDate)
+{
+	if (this.State != States.Created)
+		throw new InvalidOperationException();
+
+	this.State = States.Booked;
+	this.BookingExpirationDate = bookingExpirationDate;
+}
+
+```
+
+The MVC **RegistrationController** class retrieves the order information 
+on the read-side. The **OrderDTO** class includes the reservation expiry 
+time that is then passed to the view using the **ViewBag** class, as 
+shown in the following code sample. 
+
+```Cs
+[HttpGet]
+public ActionResult SpecifyRegistrantDetails(string conferenceCode, Guid orderId)
+{
+	var repo = this.repositoryFactory();
+	using (repo as IDisposable)
+	{
+		var orderDTO = repo.Find<OrderDTO>(orderId);
+		var conferenceDTO = repo.Query<ConferenceDTO>()
+			.Where(c => c.Code == conferenceCode)
+			.FirstOrDefault();
+
+		this.ViewBag.ConferenceName = conferenceDTO.Name;
+		this.ViewBag.ConferenceCode = conferenceDTO.Code;
+		this.ViewBag.ExpirationDateUTCMilliseconds = orderDTO.BookingExpirationDate.HasValue ? ((orderDTO.BookingExpirationDate.Value.Ticks - EpochTicks) / 10000L) : 0L;
+		this.ViewBag.OrderId = orderId;
+
+		return View(new AssignRegistrantDetails { OrderId = orderId });
+	}
+}
+```
+The MVC view then uses Javascript to display an animated count-down 
+timer. 
 
 # Testing 
 

@@ -31,4 +31,8 @@ other registrants to reserve.
 
 ## The Registrations Bounded Context
 
+## The Wait-listing Bounded Context
+
+## The Payments Bounded Context 
+
 #Why Did We Choose These Bounded Contexts? 
