@@ -436,9 +436,9 @@ bounded context.
 # Implementation Details
 
 This section describes some of the significant features of the 
-implementation of the registrations bounded context. You may find it 
-useful to have a copy of the code so you can follow along. You can 
-download a copy of the code from the repository on github: 
+implementation of the orders and reservations bounded context. You may 
+find it useful to have a copy of the code so you can follow along. You 
+can download a copy of the code from the repository on github: 
 [mspnp/cqrs-journey-code][repourl]. 
 
 ## High-level Architecture
@@ -578,9 +578,13 @@ To provide feedback to the user, the UI must have a way to check whether
 the **RegisterToConference** command succeeded. Like all commands in the 
 system, this command is executed asynchronously and does not return a 
 result. The UI queries the read model to check whether the 
-command succeeded. The following code sample shows how the 
+command succeeded. 
+
+The following code sample shows the first implementation where the 
 **RegistrationController** class polls the read model until either the 
-order is created or a timeout occurs: 
+order is created or a timeout occurs. The **WaitUntilUpdated** method
+polls the read-model until either it finds that the order has been 
+persisted or it times out.
 
 
 ```Cs
@@ -588,6 +592,8 @@ order is created or a timeout occurs:
 public ActionResult StartRegistration(string conferenceCode, OrderViewModel contentModel)
 {
     ...
+	
+	this.commandBus.Send(command);
 
     var orderDTO = this.WaitUntilUpdated(viewModel.Id);
 
@@ -606,6 +612,43 @@ public ActionResult StartRegistration(string conferenceCode, OrderViewModel cont
     return View("ReservationUnknown", viewModel);
 }
 ```
+
+The team later replaced this mechanism for checking whether the order 
+was saved with an implementation of the Post-Redirect-Get pattern. The 
+following code sample shows the new version of the **StartRegistration** 
+action method. 
+
+```Cs
+[HttpPost]
+public ActionResult StartRegistration(string conferenceCode, OrderViewModel contentModel)
+{
+    ...
+
+    this.commandBus.Send(command);
+
+    return RedirectToAction("SpecifyRegistrantDetails", new { conferenceCode = conferenceCode, orderId = viewModel.Id });
+}
+```
+
+The action method now redirects to the **SpecifyRegistrantDetails** view 
+immediately after it sends the command. The following code sample shows 
+how the **SpecifyRegistrantDetails** action polls for the order in the 
+repository before returning a view. 
+
+```Cs
+[HttpGet]
+public ActionResult SpecifyRegistrantDetails(string conferenceCode, Guid orderId)
+{
+    var orderDTO = this.WaitUntilUpdated(orderId);
+    
+	...
+}
+```
+The advantages of this second approach, using the Post-Redirect-Get 
+pattern instead of in the **StartRegistration** post action are that it 
+works better with the browser's forward and back navigation buttons, and 
+that it gives the infrastructure more time to process the command before 
+the MVC controller starts polling. 
 
 ## Inside the Write Model
 
