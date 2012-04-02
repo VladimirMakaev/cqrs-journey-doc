@@ -13,12 +13,16 @@
 
 # Commands and CommandHandlers 
 
+This section describes the role of commands and command handlers in a CQRS implementation and shows an outline of how they might be implemented in the C# language.
+
 ## Commands
 
-*Commands* are imperatives; they are requests for the system to 
+Commands are imperatives; they are requests for the system to 
 perform a task or action. For example, "book two places on conference X" 
 or "allocate speaker Y to room Z." Commands are usually processed just 
 once, by a single recipient.
+
+Both the sender and the receiver of a Command should be in the same bounded context. You should not send a Command to another bounded context because you would be instructing that other bounded context, which has separate responsibilities in another consistency boundary, to perform some work for you.
 
 > I think that in MOST circumstances (if not all), the command should 
 > succeed (and that makes the async story WAY easier and practical). You 
@@ -32,7 +36,49 @@ once, by a single recipient.
 > able to handle that.  
 > - Mark Seeman (CQRS Advisors Mail List)
 
+### Example Code
+
+The following code sample shows a command and the **ICommand** interface that it implements. Notice that a command is a simple *Data Transfer Object* and that every instance of a Command has a unique Id.
+
+```Cs
+using System;
+	
+public interface ICommand
+{
+	/// <summary>
+	/// Gets the command identifier.
+	/// </summary>
+	Guid Id { get; }
+}
+
+public class MakeSeatReservation : ICommand
+{
+	public MakeSeatReservation()
+	{
+		this.Id = Guid.NewGuid();
+	}
+
+	public Guid Id { get; set; }
+
+	public Guid ConferenceId { get; set; }
+	public Guid ReservationId { get; set; }
+	public int NumberOfSeats { get; set; }
+}
+```
+
 ## Command Handlers
+
+Commands are sent to a specific recipient, typically an aggregate 
+instance. The Command Handler performs the following tasks: 
+
+1. It receives a Command instance from the messaging infrastructure.
+2. It validates that the Command is a valid Command.
+3. It locates the aggregate instance that is the target of the Command.
+   This may involve creating a new aggregate instance or locating an
+   existing instance.
+4. It invokes the appropriate method on the aggregate instance passing
+   in any parameters from the command.
+5. It persists the new state of the aggregate to storage.
 
 > I don’t see the reason to retry the command here. When you see that 
 > a command could not always be fulfilled due to race conditions, 
@@ -42,7 +88,92 @@ once, by a single recipient.
 > transient failures, like accessing the state storage. 
 > - J&eacute;r&eacute;mie Chassaing (CQRS Advisors Mail List)
 
+Typically, you will organize your command handlers so that you have a 
+class that contains all of the handlers for a specific aggregate type. 
+The following sections show example command handler implementations for 
+bounded contexts that don't use event sourcing and for bounded contexts 
+that do use event sourcing. 
+
+You messaging infrastructure should ensure that it delivers just a 
+single copy of a command to single command handler. Commands should be 
+processed once, by a single recipient. 
+
 ### Command Handlers without Event Sourcing
+
+The following code sample shows a command handler class that handles 
+commands for **Order** instances in a bounded context that does not use 
+event sourcing. 
+
+```Cs
+using System;
+using System.Linq;
+using Common;
+using Registration.Commands;
+
+public class OrderCommandHandler :
+	ICommandHandler<RegisterToConference>,
+	ICommandHandler<MarkOrderAsBooked>,
+	ICommandHandler<RejectOrder>,
+	ICommandHandler<AssignRegistrantDetails>
+{
+	private Func<IRepository> repositoryFactory;
+
+	public OrderCommandHandler(Func<IRepository> repositoryFactory)
+	{
+		this.repositoryFactory = repositoryFactory;
+	}
+
+	public void Handle(RegisterToConference command)
+	{
+		var repository = this.repositoryFactory();
+
+		using (repository as IDisposable)
+		{
+			var tickets = command.Seats.Select(t => new OrderItem(t.SeatTypeId, t.Quantity)).ToList();
+
+			var order = new Order(command.OrderId, command.ConferenceId, tickets);
+
+			repository.Save(order);
+		}
+	}
+
+	public void Handle(MarkOrderAsBooked command)
+	{
+		var repository = this.repositoryFactory();
+
+            using (repository as IDisposable)
+            {
+                var order = repository.Find<Order>(command.OrderId);
+
+                if (order != null)
+                {
+                    order.MarkAsBooked(command.Expiration);
+                    repository.Save(order);
+                }
+            }
+	}
+
+	public void Handle(RejectOrder command)
+	{
+		...
+	}
+
+	public void Handle(AssignRegistrantDetails command)
+	{
+		...
+	}
+}
+```
+
+This handler handles four different commands for the **Order** 
+aggregate. The **RegisterToConference** command is an example of a 
+command that creates a new aggregate instance. The **MarkOrderAsBooked** 
+command is an example of a command that locates an existing aggregate 
+instance. Both examples use the **Save** method to persist the instance. 
+
+> **Note:** If the aggregate generated any events when it processed the
+> command, then these events are published when the repository saves the
+> aggregate instance.
 
 ### Command Handlers with Event Sourcing
 
@@ -50,7 +181,10 @@ once, by a single recipient.
 
 ## Events and Intent
 
-As previously mentioned events in event sourcing should capture the business intent, in addition to the change in state of the aggregate. The concept of intent is hard to pin down, as shown in the following conversation:
+As previously mentioned events in event sourcing should capture the 
+business intent, in addition to the change in state of the aggregate. 
+The concept of intent is hard to pin down, as shown in the following 
+conversation: 
 
 > *Developer #1*: One of the claims that I often hear for using event 
 > sourcing is that it enables you to capture the user's intent, and that 
@@ -174,6 +308,14 @@ The advantages of the second approach are:
 alongside events in order to have an accurate representation of the 
 circumstances at the time when the command resulting in the event 
 was executed, which means that we need to save everything! 
+
+## Events
+
+### Sample Code
+
+## EventHandlers
+
+### Sample Code
 
 # Embracing Eventual Consistency 
 
