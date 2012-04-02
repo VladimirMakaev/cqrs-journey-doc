@@ -28,6 +28,7 @@ The specific topics described in this chapter include:
   a registrant requests five seats for pre-conference event and eight
   seats for the full conference. This adds more commplex buiness logic
   into the write-side.
+* CQRS command validation using MVC.
 
 ## Working Definitions for this Chapter 
 
@@ -144,8 +145,8 @@ by the MVC controllers on the read-side. These views currently exist in
 the same database as the normalized tables that the write model uses. 
 
 > **JanaPersona:** The team will split the database into two and explore
-  options for pushing changes from the normalized write-side to the
-  de-normalized read-side in a later stage of the journey.
+> options for pushing changes from the normalized write-side to the
+> de-normalized read-side in a later stage of the journey.
 
 ### Storing De-normalized Views in a Database
 
@@ -184,34 +185,36 @@ var orderdetailsDTO = repository.Query<OrderDetailsDTO>().Where(LINQ query to re
 This approach has a number of advantages:
 
 * **Simplicity #1.** This approach uses a thin abstraction layer over 
-the underlying database. It is supported by multiple ORMs and minimizes 
-the amount of code that you must write. 
+  the underlying database. It is supported by multiple ORMs and
+  minimizes the amount of code that you must write. 
 * **Simplicity #2.** You only need to define a single repository and a 
-single **Query** method. 
+  single **Query** method. 
 * **Simplicity #3.** You don't need a separate query object.On the 
-read-side the queries should be simple because you have already 
-de-normalized your data to support the read-side clients. 
+  read-side the queries should be simple because you have already 
+  de-normalized your data to support the read-side clients. 
 * **Simplicity #4.** You can make use of LINQ to provide support for 
-features such as filtering, paging, and sorting in the client. 
+  features such as filtering, paging, and sorting in the client. 
 * **Testability.** You can use LINQ to Objects for mocking. 
 
-> **MarkusPersona** In the RI, using Entity Framework, we didn't need to 
-write any code at all to expose the **IQueryable** instance. We also had 
-just a single **ViewRepository** class. 
+> **MarkusPersona:** In the RI, using Entity Framework, we didn't need
+> to write any code at all to expose the **IQueryable** instance. We
+> also had just a single **ViewRepository** class. 
+
+ 
 
 Possible objections to this approach include:
 
 * It is not easy to replace the data store with a non-relational 
-database. However, you can choose to implement the write-model 
-differently in each bounded context using an approach that is 
-appropriate to that bounded context. 
+  database. However, you can choose to implement the write-model 
+  differently in each bounded context using an approach that is 
+  appropriate to that bounded context. 
 * The client might abuse the **IQueryable** interface be performing 
-operations that can be done more efficiently as a part of the 
-de-normalization process. You should ensure that the de-normalized data 
-fully meets the requirements of the clients. 
+  operations that can be done more efficiently as a part of the 
+  de-normalization process. You should ensure that the de-normalized
+  data fully meets the requirements of the clients. 
 * Using the **IQueryable** interface hides the queries away. However, 
-since you can de-normalize the data on the write-side, the queries 
-against the relational database tables are unlikely to be complex. 
+  since you can de-normalize the data on the write-side, the queries 
+  against the relational database tables are unlikely to be complex. 
 
 An alternative approach is to have the **ViewRepository** expose custom 
 **Find** and **Get** methods as shown in the following code snippets. 
@@ -232,38 +235,73 @@ var orderdetailsDTO = OrderDetailsDAO.Get(orderId);
 This approach has a number of advantages:
 
 * **Flexibility #1.** The **Get** and **Find** methods hide details such 
-as the partitioning of the data store and the data access methods such 
-as an ORM or executing SQL code explicitly. This makes it easier to 
-change these choices in the future. 
+  as the partitioning of the data store and the data access methods such 
+  as an ORM or executing SQL code explicitly. This makes it easier to 
+  change these choices in the future. 
 * **Flexibility #2.** The **Get** and **Find** methods could use an ORM, 
-LINQ, and the *IQueryable** interface behind the scenes to get the data 
-from the data store. This is a choice that could be made on a method by 
-method basis. 
+  LINQ, and the *IQueryable** interface behind the scenes to get the
+  data from the data store. This is a choice that could be made on a
+  method by method basis. 
 * **Performance #1.** You can easily optimize the queries that the 
-**Find** and **Get** methods run. 
+  **Find** and **Get** methods run. 
 * **Performance #2.** The data access layer executes all queries. There 
-is no risk that the client MVC controller action tries to run complex 
-and inefficient LINQ queries against the data source. 
+  is no risk that the client MVC controller action tries to run complex 
+  and inefficient LINQ queries against the data source. 
 * **Testability.** It is easier to specify unit tests for the **Find** 
-and **Get** methods than to create suitable unit tests for the range of 
-possible LINQ queries that a client could specify. 
+  and **Get** methods than to create suitable unit tests for the range
+  of possible LINQ queries that a client could specify. 
 * **Simplicity #1.** Dependencies are clearer for the client. For 
-example, the client receives an explicit **IOrderSummaryDAO** instance 
-rather than a generic **IViewRepository** instance. 
+  example, the client receives an explicit **IOrderSummaryDAO** instance 
+  rather than a generic **IViewRepository** instance. 
 * **Simplicity #2.** For the majority of queries, there are only one or 
-two predefined ways to access the object. Different queries typically 
-return different projections. 
+  two predefined ways to access the object. Different queries typically 
+  return different projections. 
 
 Possible objections to this approach include:
 
 * Using the **IQueryable** interface makes it much easier to use grids 
 that support features such as paging, filtering, and sorting in the UI. 
 
+## CQRS Command Validation
+
+When you implement the write-model, you should try to ensure that 
+commands very rarely fail. This gives the best user experience, and 
+makes it much easier to implement the asynchronous behavior in your 
+application. 
+
+One approach, adopted by the team, is to use the model validation 
+features in ASP.NET MVC 3. 
+
+You should be careful to distinguish between errors and business
+failures. Examples of errors include: 
+
+* A message not being delivered due to a failure in the messaging
+  infrastructure.
+* Data not being persisted due to a connectivity problem with the
+  database.
+
+In many cases, especially in the cloud, you can handle these errors by
+ retrying the operation.
+
+A business failure should have a predetermined business response. For
+ example:
+
+* If a seat cannot be reserved because there are no seats left, then the
+  system should add the request to a wait-list.
+* If a credit card payment fails, the user should be given the chance to
+  try a different card, or to set up payment by invoice.
+
+> **BharathPersona:** Your domain experts should help you to identify
+> possible businness failures and determine the way that you handle
+> them. 
+
 # Implementation Details 
 
-Describe significant features of the implementation with references to the code. Highlight any specific technologies (including any relevant trade-offs and alternatives). 
-
-Provide significantly more detail for those BCs that use CQRS/ES. Significantly less detail for more "traditional" implementations such as CRUD.
+This section describes some of the significant features of the 
+implementation of the orders and reservations bounded context that are 
+described in this chapter. You may find it useful to have a copy of the 
+code so you can follow along. You can download a copy of the code from 
+the repository on github: [mspnp/cqrs-journey-code][repourl]. 
 
 ## The Order Access Code Record Locator 
 
@@ -387,9 +425,105 @@ public ActionResult SpecifyRegistrantDetails(string conferenceCode, Guid orderId
 The MVC view then uses Javascript to display an animated count-down 
 timer. 
 
+## Using ASP.NET MVC 3 Validation for Commands
+
+You should try to ensure that any commands that the MVC controllers in 
+your application send to the write-model will succeed. As part of this, 
+you can use the features in MVC to validate the commands both 
+client-side and server-side before sending them to the write-model. 
+
+> **MarkusPersona:** Client-side validation is primarily a convenience
+> to the user that avoids the need to for round trips to the server to
+> help the user complete a form correctly. You still need server-side
+> validation to ensure that the data is validated before it is forwarded
+> to the write-model.
+
+The following code sample shows the AssignRegistrantDetails command 
+class that uses **DataAnnotations** to specify the validation 
+requirements; in this example, that the **FirstName**, **LastName**, and 
+**Email** fields are not empty. 
+
+```Cs
+using System;
+using System.ComponentModel.DataAnnotations;
+using Common;
+
+public class AssignRegistrantDetails : ICommand
+{
+	public AssignRegistrantDetails()
+	{
+		this.Id = Guid.NewGuid();
+	}
+
+	public Guid Id { get; private set; }
+
+	public Guid OrderId { get; set; }
+
+	[Required(AllowEmptyStrings = false)]
+	public string FirstName { get; set; }
+
+	[Required(AllowEmptyStrings = false)]
+	public string LastName { get; set; }
+
+	[Required(AllowEmptyStrings = false)]
+	public string Email { get; set; }
+}
+```
+
+The MVC view uses this command class as its model class. The following 
+code sample from the **SpecifyRegistrantDetails.cshtml** file shows how 
+the model is populated. 
+
+```HTML
+@model Registration.Commands.AssignRegistrantDetails
+
+...
+
+<div class="editor-label">@Html.LabelFor(model => model.FirstName)</div><div class="editor-field">@Html.EditorFor(model => model.FirstName)</div>
+<div class="editor-label">@Html.LabelFor(model => model.LastName)</div><div class="editor-field">@Html.EditorFor(model => model.LastName)</div>
+<div class="editor-label">@Html.LabelFor(model => model.Email)</div><div class="editor-field">@Html.EditorFor(model => model.Email)</div>
+
+```
+
+Client-side validation based on the **DataAnnotations** attributes is configured in the **Web.config** file as shown in the following snippet.
+
+```XML
+<appSettings>
+    ...
+    <add key="ClientValidationEnabled" value="true" />
+    <add key="UnobtrusiveJavaScriptEnabled" value="true" />
+</appSettings>
+```
+
+The server-side validation occurs in the controller before the command 
+is sent. The following code sample from the **RegistrationController** 
+class shows how the controller uses the **IsValid** property to validate 
+the command. Remember that this example uses an instance of the command 
+as the model. 
+
+```Cs
+[HttpPost]
+public ActionResult SpecifyRegistrantDetails(string conferenceCode, Guid orderId, AssignRegistrantDetails command)
+{
+    if (!ModelState.IsValid)
+    {
+        return SpecifyRegistrantDetails(conferenceCode, orderId);
+    }
+
+    this.commandBus.Send(command);
+
+    return RedirectToAction("SpecifyPaymentDetails", new { conferenceCode = conferenceCode, orderId = orderId });
+}
+```
+
+For more information, see [Models and Validation in ASP.NET 
+MVC][modelvalidation] on MSDN. 
+
 # Testing 
 
 Describe any special considerations that relate to testing for this bounded context.  
 
 
 [fig4]:           images/Journey_04_ViewRepository.png?raw=true
+
+[modelvalidation]: http://msdn.microsoft.com/en-us/library/dd410405(VS.98).aspx
