@@ -166,7 +166,7 @@ such as an MVC controller action submits a query to the read-side model.
 
 **The Read-side storing data in a relational database**
 
-In figure 4, a client such as an MVC controller action invokes a method 
+In figure 1, a client such as an MVC controller action invokes a method 
 on a **ViewRepository** class to request the data that it needs. The 
 **ViewRepository** class in turn runs a query against the denormalized 
 data in the database. 
@@ -524,6 +524,8 @@ MVC][modelvalidation] on MSDN.
 Describe any special considerations that relate to testing for this bounded context.  
 
 
-[fig4]:           images/Journey_04_ViewRepository.png?raw=true
+[r_chapter4]:     Reference_04_DeepDive.markdown
+
+[fig1]:           images/Journey_04_ViewRepository.png?raw=true
 
 [modelvalidation]: http://msdn.microsoft.com/en-us/library/dd410405(VS.98).aspx
