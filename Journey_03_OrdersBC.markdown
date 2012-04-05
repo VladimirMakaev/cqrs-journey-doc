@@ -49,8 +49,8 @@ Deep Dive][r_chapter4] in the Reference Guide.
 A command is a request for the system to perform a task or an action. 
 Commands are imperatives, for example **MakeRegistration**. In this 
 bounded context, commands originate from the UI as a result either of 
-the user initiating a request or from a workflow when the workflow is directing 
-an aggregate to perform an action. 
+the user initiating a request or from a workflow or a saga when the 
+workflow or saga is directing an aggregate to perform an action. 
 
 Commands are processed once, and once only by a single recipient. A 
 command bus transports commands that command handlers then dispatch to 
@@ -764,8 +764,8 @@ following conversation between two developers explores this decision.
 Figure 6 shows the entities that exist in the write-side model. There 
 are two aggregates, **Order** and **SeatsAvailability**, each 
 one containing multiple entity types. There is also a 
-**ReservationProcessSaga** workflow that manages the interaction between 
-the aggregates. 
+**ReservationWorkflow** class that manages the interaction between the
+aggregates. 
 
 The table in the figure 6 shows how the workflow behaves given a current 
 state and a particular type of incoming message. 
@@ -804,18 +804,18 @@ public Order(Guid id, Guid userId, Guid conferenceId, IEnumerable<OrderItem> lin
 > **Note:** To see how the infrastructure elements deliver commands and
   events, see figure 7.
 
-The system creates a new **ReservationProcessSaga** workflow instance to 
-manage the new order. The following code sample from the 
-**ReservationProcessSaga** class shows how the workflow handles the event. 
+The system creates a new **ReservationWorkflow** instance to manage the 
+new order. The following code sample from the **ReservationWorkflow** 
+class shows how the workflow handles the event. 
 
 ```Cs
 public void Handle(OrderPlaced message)
 {
-    if (this.State == SagaState.NotStarted)
+    if (this.State == WorkflowState.NotStarted)
     {
         this.OrderId = message.OrderId;
         this.ReservationId = Guid.NewGuid();
-        this.State = SagaState.AwaitingReservationConfirmation;
+        this.State = WorkflowState.AwaitingReservationConfirmation;
 
         this.AddCommand(
             new MakeSeatReservation
@@ -864,7 +864,7 @@ public void MakeReservation(Guid reservationId, int numberOfSeats)
 }
 ```
 
-The **ReservationProcessSaga** workflow handles the the 
+The **ReservationWorkflow** class handles the the 
 **ReservationAccepted** and **ReservationRejected** events. This 
 reservation is a temporary reservation for seats to give the user the 
 opportunity to make a payment. The workflow is responsible for releasing the 
@@ -875,9 +875,9 @@ handles these two messages.
 ```Cs
 public void Handle(ReservationAccepted message)
 {
-    if (this.State == SagaState.AwaitingReservationConfirmation)
+    if (this.State == WorkflowState.AwaitingReservationConfirmation)
     {
-        this.State = SagaState.AwaitingPayment;
+        this.State = WorkflowState.AwaitingPayment;
 
         this.AddCommand(new MarkOrderAsBooked { OrderId = this.OrderId });
         this.commands.Add(
@@ -894,9 +894,9 @@ public void Handle(ReservationAccepted message)
 
 public void Handle(ReservationRejected message)
 {
-    if (this.State == SagaState.AwaitingReservationConfirmation)
+    if (this.State == WorkflowState.AwaitingReservationConfirmation)
     {
-        this.State = SagaState.Completed;
+        this.State = WorkflowState.Completed;
         this.AddCommand(new RejectOrder { OrderId = this.OrderId });
     }
     else
@@ -916,10 +916,15 @@ The previous code sample shows how the workflow sends the
 holding the message in a queue for the delay of fifteen minutes. 
 
 You can examine the code in the **Order**, 
-**SeatsAvailability**, and **ReservationProcessSaga** classes 
+**SeatsAvailability**, and **ReservationWorkflow** classes 
 to see how the other message handlers are implemented. They all follow 
 the same pattern: receive a message, perform some logic, and send a 
 message. 
+
+> **JanaPersona:** The code samples shown in this chapter are from an
+> early version of the Conference Management System. The next chapter
+> shows how the design and implementation evolved as the team explored
+> the domain and and learned more about the CQRS pattern.
 
 ### Infrastructure
 
@@ -966,9 +971,9 @@ for persisting the aggregate and publishing any events raised by the
 aggregate on the event bus, all as part of a transaction. 
 
 The only event subscriber in the reservations bounded context is the 
-**ReservationProcessSaga**. Its router subscribes to the event bus to 
+**ReservationWorkflow** class. Its router subscribes to the event bus to 
 handle specific events as shown in the following code sample from the 
-**ReservationProcessSaga** class. 
+**ReservationWorkflow** class. 
 
 > **Note:* We use the term handler to refer to the classes that handle 
 > commands and forward them to aggregate instances, and the term router 
@@ -983,10 +988,10 @@ public void Handle(ReservationAccepted @event)
 	{
         lock (lockObject)
         {
-            var saga = repo.Find<RegistrationProcessSaga>(@event.ReservationId);
-            saga.Handle(@event);
+            var workflow = repo.Find<RegistrationWorkflow>(@event.ReservationId);
+            workflow.Handle(@event);
 
-            repo.Save(saga);
+            repo.Save(workflow);
         }
 	}
 }
@@ -1035,7 +1040,7 @@ that the **TopicSender** class sends events to can have multiple
 subscriptions. Each subscription is associated with a particular handler 
 type so that events reach all of their subscribers. In the example shown 
 in figure 8, the **ReservationRejected** event is sent to the 
-**RegistrationProcessSaga**, the **WaitListSaga**, and one other 
+**RegistrationWorkflow**, the **WaitListWorkflow**, and one other 
 destination. 
 
 A command has only one recipient. In figure 8, the 
@@ -1200,7 +1205,7 @@ for processing when the consumer restarts.
 As stated previously, a subscription should be associated with a single 
 event handler type, although an event may be handled by multiple handler 
 types. For example, the **ReservationRejected** event may be handled by 
-both the **RegistrationProcessSagaHandler** and **WaitListSagaHandler** 
+both the **RegistrationWorkflowHandler** and **WaitListWorkflowHandler** 
 handler classes because it must be delivered to the two workflows. 
 
 Figure 8 suggests that Topic B is only reponsible for delivering 
@@ -1208,7 +1213,7 @@ Figure 8 suggests that Topic B is only reponsible for delivering
 additional event types such as **ReservationAccepted** events. In this 
 scenario, the handler classes might need to include some additional 
 logic: if the **ReservationAccepted** event only needs to go to the 
-**RegistrationProcessSaga** workflow, then the **WaitListSagaHandler** would 
+**RegistrationWorkflow** workflow, then the **WaitListWorkflow** would 
 need to discard any **ReservationAccepted** events that it retrieved 
 from its subscription. 
 
@@ -1280,6 +1285,9 @@ see Martin Fowler's article [Mocks Aren't Stubs][tddstyle].
 The following code sample shows two examples of tests written using the 
 behavioural approach discussed above. 
 
+> **MarkusPersona:** These are the tests we started with, but we then
+  replaced them with state based tests.
+
 ```Cs
 public SeatsAvailability given_available_seats()
 {
@@ -1319,7 +1327,8 @@ implementation: if you want to change the data store implementation, you
 will need to change the tests on the aggregates in the domain model. 
 
 The following code sample shows an example of a test written using the 
-state of the objects being tested. 
+state of the objects being tested. This style of tests are the ones used
+in the project.
 
 ```Cs
 public class given_available_seats
@@ -1364,13 +1373,13 @@ public class given_available_seats
 }
 ```
 
-The two tests shown here test the state of the 
-**SeatsAvailability** aggregate after invoking the 
-**MakeReservation** method. The first test, tests the scenario where 
-there are enough seats available. The second test, tests the scenario 
-where there are not enough seats available. This second test makes use 
-of the behavior the **SeatsAvailability** aggregate because it 
-raises an event if it rejects a reservation. 
+The two tests shown here test the state of the **SeatsAvailability** 
+aggregate after invoking the **MakeReservation** method. The first test, 
+tests the scenario where there are enough seats available. The second 
+test, tests the scenario where there are not enough seats available. 
+This second test can make use of the behavior the **SeatsAvailability** 
+aggregate because the aggregate does raise an event if it rejects a 
+reservation. 
 
 [r_chapter4]:     Reference_04_DeepDive.markdown
 [r_chapter6]:     Reference_06_Sagas.markdown
