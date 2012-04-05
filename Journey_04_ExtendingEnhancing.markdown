@@ -5,7 +5,7 @@
 
 # A Description of the Orders and Reservations Bounded Context 
 
-The Orders and Reservations Bounded Context was discribed in some detail 
+The Orders and Reservations Bounded Context was described in some detail 
 in the previous chapter. This chapter describes some changes that the 
 team made in this bounded context during the second stage of their CQRS 
 journey. 
@@ -26,9 +26,15 @@ The specific topics described in this chapter include:
   in the UI.
 * Supporting orders for multiple seat types simultaneously. For example
   a registrant requests five seats for pre-conference event and eight
-  seats for the full conference. This adds more commplex buiness logic
+  seats for the full conference. This adds more complex business logic
   into the write-side.
-* CQRS command validation using MVC.
+* Supporting partially fulfilled orders where the only some of the
+  seats that the registrant requests are available. This adds more
+  complex business logic into the write-side.
+* CQRS command validation using MVC. This illustrates how to make use
+  of the model validation feature in MVC to validate your CQRS commands
+  before you send them to the domain.
+
 
 ## Working Definitions for this Chapter 
 
@@ -89,7 +95,7 @@ from the system at a later date. The registrant may wish retrieve the
 order to review it, or to complete the registration process by assigning 
 attendees to seats. 
 
-### Inform the Registrant How Much Time Remains to Complete an Order.
+### Inform the Registrant How Much Time Remains to Complete an Order
 
 When a registrant creates an order, the system reserves the seats 
 requested by the registrant until the order is complete or the 
@@ -101,9 +107,14 @@ To help the registrant, the system displays a count-down timer to inform
 the registrant how much time remains to complete the order before the 
 seat reservations expire. 
 
-### Enabling a Registrant to Create an Order that Includes Multiple Seat Types.
+### Enabling a Registrant to Create an Order that Includes Multiple Seat Types
 
+When a registrant creates an order, the registrant may request different 
+numbers of different seat types. For example, a registrant may request 
+five seats for the full conference and three seats for the 
+pre-conference workshop. 
 
+### Handling Partially Fulfilled Orders
 
 ## Architecture 
 
@@ -168,7 +179,7 @@ such as an MVC controller action submits a query to the read-side model.
 
 In figure 1, a client such as an MVC controller action invokes a method 
 on a **ViewRepository** class to request the data that it needs. The 
-**ViewRepository** class in turn runs a query against the denormalized 
+**ViewRepository** class in turn runs a query against the de-normalized 
 data in the database. 
 
 One approach to consider for the **ViewRepository** class is to have it 
@@ -292,7 +303,7 @@ A business failure should have a predetermined business response. For
   try a different card, or to set up payment by invoice.
 
 > **BharathPersona:** Your domain experts should help you to identify
-> possible businness failures and determine the way that you handle
+> possible business failures and determine the way that you handle
 > them. 
 
 # Implementation Details 
@@ -331,7 +342,7 @@ to locate the correct order. This logic is part of the read-side.
 The following code sample from the **OrderController** class in the web 
 application shows how the MVC controller submits the query to the 
 repository to discover the unique **OrderId** value. This **Find** 
-action passess the **OrderId** value to a **Display** action that 
+action passes the **OrderId** value to a **Display** action that 
 displays the order information to the registrant. 
 
 ```Cs
@@ -438,7 +449,7 @@ client-side and server-side before sending them to the write-model.
 > validation to ensure that the data is validated before it is forwarded
 > to the write-model.
 
-The following code sample shows the AssignRegistrantDetails command 
+The following code sample shows the **AssignRegistrantDetails** command 
 class that uses **DataAnnotations** to specify the validation 
 requirements; in this example, that the **FirstName**, **LastName**, and 
 **Email** fields are not empty. 
@@ -485,7 +496,8 @@ the model is populated.
 
 ```
 
-Client-side validation based on the **DataAnnotations** attributes is configured in the **Web.config** file as shown in the following snippet.
+Client-side validation based on the **DataAnnotations** attributes is 
+configured in the **Web.config** file as shown in the following snippet. 
 
 ```XML
 <appSettings>
@@ -518,6 +530,49 @@ public ActionResult SpecifyRegistrantDetails(string conferenceCode, Guid orderId
 
 For more information, see [Models and Validation in ASP.NET 
 MVC][modelvalidation] on MSDN. 
+
+## Refactoring the SeatsAvailability Aggregates
+
+In the first stage of our CQRS, the domain included a 
+**ConferenceSeatsAvailabilty** aggregate root class that modelled the 
+number of seats remaining for a conference. In this stage of the 
+journey, the team replaced the **ConferenceSeatsAvailabilty** aggregate 
+with a **SeatsAvailability** aggregate to reflect the fact that there 
+may be multiple seat types available at a particular conference; for 
+example, full conference seats, pre-conference workshop seats, and 
+cocktail party seats. Figure 2 shows the new **SeatsAvailability** 
+aggregate and its constituent classes. 
+
+![Figure 2][fig2]
+
+**The **SeatsAvailability** and its associated commands and events.
+
+This aggregate now models the following facts:
+
+* There may be multiple seat types at a conference.
+* There may be different numbers of seats available for each seat type.
+
+The domain now includes a **SeatQuantity** value type that you can use 
+to represent a quantity of a particular seat type. 
+
+Previously, the aggregate raised either a **ReservationAccepted** or 
+**ReservationRejected** event depending on whether there were sufficient 
+seats. Now the aggregate raises a **SeatsReserved** event that reports 
+how many seats of a particular type could be reserved. This means that 
+the number of seats reserved may not match the number of seats 
+requested; this information is passed back to the UI for the registrant 
+to make a decision on how to proceed with the registration. 
+
+### The AddSeats Method
+
+You may have noticed in Figure 2 that the **SeatsAvailability** 
+aggregate includes an **AddSeats** method with no corresponding command. 
+The **AddSeats** method adjusts the total number of available seats of a 
+given type. The conference owner is responsible for making any such 
+adjustments, and does this in the Conference Management bounded context. 
+The Conference Management bounded context raises an event whenever the 
+total number of available seats changes, the **SeatsAvailability** class 
+then handles the event when its handler invokes the **AddSeats** method. 
 
 # Testing 
 
