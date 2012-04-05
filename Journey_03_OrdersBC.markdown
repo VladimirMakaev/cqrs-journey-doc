@@ -1007,9 +1007,15 @@ bus.
 
 To transport Command and Event messages, the team decided to use the 
 Windows Azure Service Bus to provide the basic, low-level messaging 
-infrastructure. This section describes how the team decided to use the 
-Windows Azure Service Bus within the system and some of the alternatives 
-and trade-offs they considered. 
+infrastructure. This section describes how the system uses the Windows 
+Azure Service Busand some of the alternatives and trade-offs the team 
+considered considered during the design phase. 
+
+> **JanaPersona:** The team at Contoso desided to use the Windows Azure
+> Service Bus because it offers out-of-the-box support for the messaging
+> scenarios in the Conference Management System. This minimizes the
+> amount of code that the team needs to write, and provides for a
+> robust, scalable messaging infrastructure.
 
 Figure 8 shows how messages, both commands and events, flow through the 
 system. Objects in the UI and domain objects use **CommandBus** and 
