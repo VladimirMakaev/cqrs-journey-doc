@@ -311,20 +311,15 @@
     <text
        xml:space="preserve"
        style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print"
-       x="144.45515"
-       y="470.2316"
+       x="121.13167"
+       y="489.79324"
        id="text4115"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
-         id="tspan4117"
-         x="144.45515"
-         y="470.2316"
-         style="font-weight:bold">RegistrationProcess</tspan><tspan
-         sodipodi:role="line"
-         x="144.45515"
-         y="490.2316"
+         x="121.13167"
+         y="489.79324"
          id="tspan4119"
-         style="font-weight:bold">Saga</tspan></text>
+         style="font-weight:bold">RegistrationWorkflow</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print"
@@ -675,7 +670,7 @@
          sodipodi:role="line"
          id="tspan4464"
          x="589.10614"
-         y="32.351936">Incoming message to saga</tspan></text>
+         y="32.351936">Incoming message to workflow</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print"
@@ -687,7 +682,7 @@
          sodipodi:role="line"
          id="tspan4468"
          x="-314.79474"
-         y="398.16513">Current state of saga</tspan></text>
+         y="398.16513">Current state of workflow</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print"
@@ -1259,28 +1254,45 @@
     <text
        xml:space="preserve"
        style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print"
-       x="9.9022741"
-       y="466.20328"
+       x="1.6261981"
+       y="482.00308"
        id="text4199-14"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan4201-2"
-         x="9.9022741"
-         y="466.20328"
+         x="1.6261981"
+         y="482.00308"
          style="font-size:12px;font-weight:bold;fill:#800000;-inkscape-font-specification:Segoe Print Bold">PaymentReceived</tspan><tspan
          sodipodi:role="line"
-         x="9.9022741"
-         y="481.20328"
+         x="1.6261981"
+         y="497.00308"
          id="tspan4203-3"
          style="font-size:12px;font-weight:bold;fill:#800000;-inkscape-font-specification:Segoe Print Bold">(Event)</tspan><tspan
          sodipodi:role="line"
-         x="9.9022741"
-         y="496.20328"
+         x="1.6261981"
+         y="512.00305"
          style="font-size:12px;font-weight:bold;fill:#ff0000;-inkscape-font-specification:Segoe Print Bold"
-         id="tspan3341">To Do</tspan></text>
+         id="tspan3341" /></text>
     <path
        style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
        d="M 88.84375 502.03125 L 86.25 503.4375 C 86.995122 506.22815 88.059243 508.91936 88.875 511.6875 C 89.061161 512.45954 89.363478 513.20102 89.6875 513.9375 C 88.213298 513.45224 86.834901 512.71474 85.28125 512.5 C 83.399379 512.02837 81.523113 511.49482 79.65625 510.96875 C 77.524789 510.30926 75.353262 509.78525 73.125 509.59375 C 70.696896 509.3266 68.258691 509.1281 65.8125 509.1875 C 63.406413 509.12078 61.009432 509.03908 58.625 508.6875 C 56.318858 508.35928 53.987746 508.21836 51.6875 507.84375 C 48.723957 507.31132 45.730456 506.92993 42.78125 506.3125 C 39.393691 505.69321 36.096398 504.75266 32.875 503.53125 L 30.4375 505.1875 C 33.690799 506.37107 36.973224 507.35807 40.375 508 C 43.317823 508.62117 46.323467 508.99694 49.28125 509.53125 C 51.578855 509.93154 53.879805 510.05207 56.1875 510.375 C 58.578564 510.73215 60.992772 510.8641 63.40625 510.9375 C 65.845492 510.89796 68.265043 511.04554 70.6875 511.3125 C 72.903983 511.49752 75.093944 512.01836 77.21875 512.65625 C 79.082185 513.19919 80.933402 513.70013 82.8125 514.1875 C 84.459347 514.42212 85.963438 515.18509 87.53125 515.6875 C 88.513562 515.97513 89.514993 516.08913 90.53125 516.15625 C 90.627793 516.55735 90.687542 516.98335 90.6875 517.40625 C 89.945451 519.53702 88.092972 520.78234 86.40625 522.125 L 89.15625 521.03125 C 90.88205 519.66073 92.77596 518.28371 93.34375 516.03125 C 93.331575 515.78473 93.291796 515.55094 93.25 515.3125 L 94.375 514.5 C 93.928491 514.48845 93.478205 514.46078 93.03125 514.4375 C 92.607191 513.02349 91.853066 511.72184 91.46875 510.28125 C 90.640164 507.51589 89.555573 504.83273 88.84375 502.03125 z "
        id="path3343" />
+    <text
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print"
+       x="335.52115"
+       y="633.76508"
+       id="text4199-1-5-1-6"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4201-4-7-8-0"
+         x="335.52115"
+         y="633.76508"
+         style="font-size:12px;font-weight:bold;fill:#0000ff;-inkscape-font-specification:Segoe Print Bold">CancelSeatReservation</tspan><tspan
+         sodipodi:role="line"
+         x="335.52115"
+         y="648.76508"
+         id="tspan4203-2-6-9-2"
+         style="font-size:12px;font-weight:bold;fill:#0000ff;-inkscape-font-specification:Segoe Print Bold">(Command)</tspan></text>
   </g>
 </svg>
