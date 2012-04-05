@@ -47,8 +47,8 @@ Deep Dive][r_chapter4] in the Reference Guide.
 A command is a request for the system to perform a task or an action. 
 Commands are imperatives, for example **MakeRegistration**. In this 
 bounded context, commands originate from the UI as a result either of 
-the user initiating a request or from a saga when the saga is directing 
-an aggregate to perform an action. 
+the user initiating a request or from a saga or workflow when the saga 
+or workflow is directing an aggregate to perform an action. 
 
 Commands are processed once, and once only by a single recipient. A 
 command bus transports commands that command handlers then dispatch to 
@@ -62,8 +62,8 @@ as a result of a command. Aggregates in the domain model raise events.
 
 Multiple subscribers can handle a specific event. Aggregates publish 
 events to an event bus; handlers register for specific types of event on 
-the event bus and then deliver the event to the subscriber. In this 
-bounded context, the only subscriber is a saga. 
+the event bus and then deliver the events to the subscriber. In this 
+bounded context, the only subscriber is a workflow. 
 
 ### Workflow
 
@@ -91,7 +91,7 @@ When a registrant creates an order for seats at a conference, the system
 generates a five character **order access code** and sends it to the 
 registrant by email. The registrant can use her email address and the 
 **order access code** on the conference web site to retrieve the order 
-from the system at a later date. The registrant may wish retrieve the 
+from the system at a later date. The registrant may wish to retrieve the 
 order to review it, or to complete the registration process by assigning 
 attendees to seats. 
 
@@ -226,6 +226,8 @@ Possible objections to this approach include:
 * Using the **IQueryable** interface hides the queries away. However, 
   since you can de-normalize the data on the write-side, the queries 
   against the relational database tables are unlikely to be complex. 
+* It's hard to know if your integration tests cover all the different
+  uses of the **Query** method.
 
 An alternative approach is to have the **ViewRepository** expose custom 
 **Find** and **Get** methods as shown in the following code snippets. 
