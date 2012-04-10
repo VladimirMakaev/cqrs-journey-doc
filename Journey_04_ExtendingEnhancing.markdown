@@ -574,7 +574,7 @@ to make a decision on how to proceed with the registration.
 You may have noticed in Figure 2 that the **SeatsAvailability** 
 aggregate includes an **AddSeats** method with no corresponding command. 
 The **AddSeats** method adjusts the total number of available seats of a 
-given type. The conference owner is responsible for making any such 
+given type. The Business Customer is responsible for making any such 
 adjustments, and does this in the Conference Management bounded context. 
 The Conference Management bounded context raises an event whenever the 
 total number of available seats changes, the **SeatsAvailability** class 

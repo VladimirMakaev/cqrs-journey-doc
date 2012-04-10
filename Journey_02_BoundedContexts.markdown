@@ -23,7 +23,7 @@ number of seats at conference, the system creates **Reservations** for
 the number of seats requested by the registrant. These seats are then 
 not available for other registrants to reserve. The **Reservations** are 
 held for _n_ minutes (_n_ is one of the properties of the conference 
-defined by the **Conference Owner**) during which the registrant can 
+defined by the **Business Customer**) during which the registrant can 
 complete the ordering process by making a payment for those seats. If 
 the registrant does not pay for the tickets within _n_ minutes, the 
 system cancels the **Reservation** and the seats become available to 

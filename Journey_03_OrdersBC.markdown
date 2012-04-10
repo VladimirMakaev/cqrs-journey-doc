@@ -16,7 +16,7 @@ purchased seats.
 The ordering process must support wait listing, [To Do Identify 
 Chapter][todo2], whereby requests for seats are placed on a wait-list if 
 there are not sufficient seats available. The ordering process must 
-enable the conference owner to set various types of discount, [To Do 
+enable the Business Customer to set various types of discount, [To Do 
 Identify Chapter][todo3], for attendees. 
 
 <div style="margin-left:20px;margin-right:20px;">
@@ -29,9 +29,9 @@ Identify Chapter][todo3], for attendees.
 This was the first stop on our CQRS journey, so the team decided to 
 implement a core, but self-contained part of the system. The 
 registrations process must be as painless as possible for attendees. The 
-process must enable the conference owner to ensure that the maximum 
-possible number of seat can be booked, and give the conference owner the 
-flexibility to define a set of custom pricing and discount scheme. 
+process must enable the Business Customer to ensure that the maximum 
+possible number of seat can be booked, and give the Business Customer 
+the flexibility to define a set of custom pricing and discount scheme. 
 
 Because this was the first bounded context addressed by the team, they 
 also implemented some infrastructure elements of the system to support 
@@ -160,8 +160,8 @@ bounded contexts.
 - **Seat.** A represents a space at a conference or access to a 
   specific session at the conference such as a cocktail party, a 
   tutorial, or a workshop. Each conference has a quota of Seats that may 
-  be changed by the Conference Owner. Each session has a quota of Seats 
-  that may be changed by the Conference Owner. 
+  be changed by the Business Customer. Each session has a quota of Seats 
+  that may be changed by the Business Customer. 
 
 - **Reservation.** A Reservation is a temporary reservation of one or 
   more seats. The ordering process creates Reservations. When a 
@@ -181,7 +181,7 @@ bounded contexts.
   Seats of that type is decremented. If the system cancels the 
   Reservation, the number of available Seats of that type is 
   incremented. The initial quota of each seat type is an attribute of 
-  the conference and is defined by the Conference Owner. A Conference 
+  the conference and is defined by the Business Customer. A Conference 
   Owner may adjust the quotas for the individual seat types. 
 
 - **Conference site.** Every conference defined in the system can be 
