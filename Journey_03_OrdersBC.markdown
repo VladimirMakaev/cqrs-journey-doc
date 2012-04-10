@@ -580,7 +580,7 @@ system, this command is executed asynchronously and does not return a
 result. The UI queries the read model to check whether the 
 command succeeded. 
 
-The following code sample shows the first implementation where the 
+The following code sample shows the initial implementation where the 
 **RegistrationController** class polls the read model until either the 
 order is created or a timeout occurs. The **WaitUntilUpdated** method
 polls the read-model until either it finds that the order has been 
@@ -626,7 +626,7 @@ public ActionResult StartRegistration(string conferenceCode, OrderViewModel cont
 
     this.commandBus.Send(command);
 
-    return RedirectToAction("SpecifyRegistrantDetails", new { conferenceCode = conferenceCode, orderId = viewModel.Id });
+    return RedirectToAction("SpecifyRegistrantDetails", new { conferenceCode = conferenceCode, orderId = command.Id });
 }
 ```
 

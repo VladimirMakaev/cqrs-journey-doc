@@ -441,9 +441,9 @@ timer.
 ## Using ASP.NET MVC 3 Validation for Commands
 
 You should try to ensure that any commands that the MVC controllers in 
-your application send to the write-model will succeed. As part of this, 
-you can use the features in MVC to validate the commands both 
-client-side and server-side before sending them to the write-model. 
+your application send to the write-model will succeed. You can use the 
+features in MVC to validate the commands both client-side and 
+server-side before sending them to the write-model. 
 
 > **MarkusPersona:** Client-side validation is primarily a convenience
 > to the user that avoids the need to for round trips to the server to
@@ -529,6 +529,10 @@ public ActionResult SpecifyRegistrantDetails(string conferenceCode, Guid orderId
     return RedirectToAction("SpecifyPaymentDetails", new { conferenceCode = conferenceCode, orderId = orderId });
 }
 ```
+
+For an additional example, see the **RegisterToConference** command and 
+the **StartRegistration** action in the **RegistrationController** 
+class. 
 
 For more information, see [Models and Validation in ASP.NET 
 MVC][modelvalidation] on MSDN. 
