@@ -200,9 +200,10 @@ This approach has a number of advantages:
   minimizes the amount of code that you must write. 
 * **Simplicity #2.** You only need to define a single repository and a 
   single **Query** method. 
-* **Simplicity #3.** You don't need a separate query object.On the 
+* **Simplicity #3.** You don't need a separate query object. On the 
   read-side the queries should be simple because you have already 
-  de-normalized your data to support the read-side clients. 
+  de-normalized the data from the write-side to support the read-side
+  clients. 
 * **Simplicity #4.** You can make use of LINQ to provide support for 
   features such as filtering, paging, and sorting in the client. 
 * **Testability.** You can use LINQ to Objects for mocking. 
@@ -211,20 +212,18 @@ This approach has a number of advantages:
 > to write any code at all to expose the **IQueryable** instance. We
 > also had just a single **ViewRepository** class. 
 
- 
-
 Possible objections to this approach include:
 
 * It is not easy to replace the data store with a non-relational 
-  database. However, you can choose to implement the write-model 
-  differently in each bounded context using an approach that is 
-  appropriate to that bounded context. 
+  database (that does not expose an **IQueryable** object. However, you
+  can choose to implement the write-model differently in each bounded
+  context using an approach that is appropriate to that bounded context. 
 * The client might abuse the **IQueryable** interface be performing 
   operations that can be done more efficiently as a part of the 
   de-normalization process. You should ensure that the de-normalized
   data fully meets the requirements of the clients. 
 * Using the **IQueryable** interface hides the queries away. However, 
-  since you can de-normalize the data on the write-side, the queries 
+  since you de-normalize the data from the write-side, the queries 
   against the relational database tables are unlikely to be complex. 
 * It's hard to know if your integration tests cover all the different
   uses of the **Query** method.
@@ -252,8 +251,8 @@ This approach has a number of advantages:
   as an ORM or executing SQL code explicitly. This makes it easier to 
   change these choices in the future. 
 * **Flexibility #2.** The **Get** and **Find** methods could use an ORM, 
-  LINQ, and the *IQueryable** interface behind the scenes to get the
-  data from the data store. This is a choice that could be made on a
+  LINQ, and the **IQueryable** interface behind the scenes to get the
+  data from the data store. This is a choice that you could make on a
   method by method basis. 
 * **Performance #1.** You can easily optimize the queries that the 
   **Find** and **Get** methods run. 
@@ -264,8 +263,8 @@ This approach has a number of advantages:
   and **Get** methods than to create suitable unit tests for the range
   of possible LINQ queries that a client could specify. 
 * **Simplicity #1.** Dependencies are clearer for the client. For 
-  example, the client receives an explicit **IOrderSummaryDAO** instance 
-  rather than a generic **IViewRepository** instance. 
+  example, the client references an explicit **IOrderSummaryDAO**
+  instance rather than a generic **IViewRepository** instance. 
 * **Simplicity #2.** For the majority of queries, there are only one or 
   two predefined ways to access the object. Different queries typically 
   return different projections. 
@@ -273,7 +272,8 @@ This approach has a number of advantages:
 Possible objections to this approach include:
 
 * Using the **IQueryable** interface makes it much easier to use grids 
-that support features such as paging, filtering, and sorting in the UI. 
+  that support features such as paging, filtering, and sorting in the
+  UI. 
 
 ## CQRS Command Validation
 
@@ -307,6 +307,17 @@ A business failure should have a predetermined business response. For
 > **BharathPersona:** Your domain experts should help you to identify
 > possible business failures and determine the way that you handle
 > them. 
+
+## The Count-down Timer and the Read-model
+
+The count-down timer that displays how much time remains to complete the 
+order to the registrant is part of the business data in the system, and 
+not just a part of the infrastructure. When a registrant creates an 
+order and reserves seats, the count-down begins. The count-down 
+continues, even if the registrant leaves the conference web site. The UI 
+must be able to display the correct count-down value if the registrant 
+returns to the site, therefore the reservation expiry time is a part of 
+the data that is available from the read-model. 
 
 # Implementation Details 
 
