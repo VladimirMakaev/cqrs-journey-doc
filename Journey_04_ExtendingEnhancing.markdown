@@ -407,18 +407,25 @@ sample shows how the **Order** aggregate receives and stores the
 reservation expiry time. 
 
 ```Cs
-public DateTime? BookingExpirationDate { get; private set; }
+public DateTime? ReservationExpirationDate { get; private set; }
 
-public void MarkAsBooked(DateTime bookingExpirationDate)
+public void MarkAsReserved(DateTime expirationDate, IEnumerable<SeatQuantity> seats)
 {
-	if (this.State != States.Created)
-		throw new InvalidOperationException();
+    ...
 
-	this.State = States.Booked;
-	this.BookingExpirationDate = bookingExpirationDate;
+    this.ReservationExpirationDate = expirationDate;
+    this.Items.Clear();
+    this.Items.AddRange(seats.Select(seat => new OrderItem(seat.SeatType, seat.Quantity)));
 }
 
 ```
+
+> **MarkusPersona:** The **ReservationExpirationDate** is intially set
+> in the **Order** constructor to a time 15 minutes after the **Order**
+> is instantiated. This time may be revised by the
+> **ReservationProcessWorkflow** workflow based on when the reservations
+> are actually made. It is this time the workflow sends to the **Order**
+> aggregate in the **MarkSeatsAsReserved** command.
 
 The MVC **RegistrationController** class retrieves the order information 
 on the read-side. The **OrderDTO** class includes the reservation expiry 
