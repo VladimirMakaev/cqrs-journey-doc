@@ -182,6 +182,10 @@ on a **ViewRepository** class to request the data that it needs. The
 **ViewRepository** class in turn runs a query against the de-normalized 
 data in the database. 
 
+The team at Contoso evaluated two approaches to implementing the **ViewRepository** class: using the **IQueryable** interface and using custom data access objects (DAOs).
+
+#### Using the **IQueryable** Interface
+
 One approach to consider for the **ViewRepository** class is to have it 
 return an **IQueryable** instance that enables the client to use LINQ to 
 specify its query. It is very easy to return an **IQueryable** instance 
@@ -228,6 +232,8 @@ Possible objections to this approach include:
 * It's hard to know if your integration tests cover all the different
   uses of the **Query** method.
 
+#### Using Custom DAOs
+
 An alternative approach is to have the **ViewRepository** expose custom 
 **Find** and **Get** methods as shown in the following code snippets. 
 
@@ -246,6 +252,12 @@ var orderdetailsDTO = OrderDetailsDAO.Get(orderId);
 
 This approach has a number of advantages:
 
+* **Simplicity #1.** Dependencies are clearer for the client. For 
+  example, the client references an explicit **IOrderSummaryDAO**
+  instance rather than a generic **IViewRepository** instance. 
+* **Simplicity #2.** For the majority of queries, there are only one or 
+  two predefined ways to access the object. Different queries typically 
+  return different projections. 
 * **Flexibility #1.** The **Get** and **Find** methods hide details such 
   as the partitioning of the data store and the data access methods such 
   as an ORM or executing SQL code explicitly. This makes it easier to 
@@ -262,18 +274,67 @@ This approach has a number of advantages:
 * **Testability.** It is easier to specify unit tests for the **Find** 
   and **Get** methods than to create suitable unit tests for the range
   of possible LINQ queries that a client could specify. 
-* **Simplicity #1.** Dependencies are clearer for the client. For 
-  example, the client references an explicit **IOrderSummaryDAO**
-  instance rather than a generic **IViewRepository** instance. 
-* **Simplicity #2.** For the majority of queries, there are only one or 
-  two predefined ways to access the object. Different queries typically 
-  return different projections. 
 
 Possible objections to this approach include:
 
 * Using the **IQueryable** interface makes it much easier to use grids 
   that support features such as paging, filtering, and sorting in the
   UI. 
+  
+## Pushing Changes to the Read-side
+
+The UI displays data about orders that it obtains by querying the model 
+on the read-side. The system stores the de-normalized order data in two 
+tables in a SQL database: the **OrdersView** and **OrderItemsView** 
+tables. 
+
+<table border="1">
+	<tr><th>Column</th><th>Description</th><tr>
+	<tr><td>OrderId</td><td>A unique identifier for the Order</td><tr>
+	<tr><td>ReservationExpirationDate</td><td>The time when the seat reservations expire</td><tr>
+	<tr><td>StateValue</td><td>The state of the Order: Created, PartiallyReserved, ReservationCompleted, Rejected, Confirmed</td><tr>
+	<tr><td>RegistrantEmail</td><td>The email address of the Registrant</td><tr>
+	<tr><td>AccessCode</td><td>The Access Code that the Registrant can use to access the Order</td><tr>
+</table>
+
+**OrdersView Table**
+
+<table border="1">
+	<tr><th>Column</th><th>Description</th><tr>
+	<tr><td>OrderItemId</td><td>A unique identifier for the Order Item</td><tr>
+	<tr><td>SeatType</td><td>The type of Seat requested</td><tr>
+	<tr><td>RequestedSeats</td><td>The number of seats requested</td><tr>
+	<tr><td>ReservedSeats</td><td>The number of seats reserved</td><tr>
+	<tr><td>OrderID</td><td>The OrderId in the parent OrdersView table</td><tr>
+</table>
+
+**OrderItemsView Table**
+
+One interesting feature to note about these tables, is that the 
+**RequestedSeats** value is not persisted on the write-side when it 
+saves **OrderItem** aggregate instances. The **RequestedSeats** value is 
+only persisted on the read-side. This is because it used by the UI while 
+it is handling the order, but is not part of the information in that the 
+domain needs to preserve. 
+
+Figure 2 shows all the commands and events that the **Order** and 
+**SeatsAvailability** aggregates use and how the **Order** aggregate 
+pushes changes to the read-side by raising events. 
+
+![Figure 2][fig2]
+
+**The new architecture of the reservation process**
+
+The **OrderPlaced**, **OrderUpdated**, **OrderPartiallyReserved**, 
+**OrderRegistrantAssigned**, and **OrderReservationCompleted** events 
+are handled by the **OrderViewModelGenerator** class that uses 
+**OrderDTO** and **OrderItemDTO** instances to persist changes to the 
+view tables. 
+
+> **BharathPersona:** If you look ahead to the next chapter, [Preparing
+> for the V1 Release][j_chapter5], you'll see that the team extended the
+> use of events and migrated the **Orders and Reservations** bounded
+> context to use event sourcing. 
 
 ## CQRS Command Validation
 
@@ -453,6 +514,7 @@ public ActionResult SpecifyRegistrantDetails(string conferenceCode, Guid orderId
 	}
 }
 ```
+
 The MVC view then uses Javascript to display an animated count-down 
 timer. 
 
@@ -564,10 +626,10 @@ journey, the team replaced the **ConferenceSeatsAvailabilty** aggregate
 with a **SeatsAvailability** aggregate to reflect the fact that there 
 may be multiple seat types available at a particular conference; for 
 example, full conference seats, pre-conference workshop seats, and 
-cocktail party seats. Figure 2 shows the new **SeatsAvailability** 
+cocktail party seats. Figure 3 shows the new **SeatsAvailability** 
 aggregate and its constituent classes. 
 
-![Figure 2][fig2]
+![Figure 3][fig3]
 
 **The **SeatsAvailability** and its associated commands and events.
 
@@ -602,9 +664,10 @@ then handles the event when its handler invokes the **AddSeats** method.
 
 Describe any special considerations that relate to testing for this bounded context.  
 
-
+[j_chapter5]:	  Journey_05_PaymentsBC.markdown
 [r_chapter4]:     Reference_04_DeepDive.markdown
 
 [fig1]:           images/Journey_04_ViewRepository.png?raw=true
-
+[fig2]:           images/Journey_04_Architecture.png?raw=true
+[fig3]:           images/Journey_04_SeatsAvailability.png?raw=true
 [modelvalidation]: http://msdn.microsoft.com/en-us/library/dd410405(VS.98).aspx
