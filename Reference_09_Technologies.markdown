@@ -76,6 +76,42 @@ When you create a **BrokeredMessage** object, you can specify an expiry time usi
 
 In some scenarios, you may want to send the message now, but to delay delivery until some future time. You can do this by using the **ScheduleEnqueueTimeUtc** property of the **BrokeredMessage** instance.
 
+## Serializing Messages
+
+You must serialize your Command and Event objects if you are sending them over the Windows Azure Service Bus.
+
+The Contoso Conference Management System uses Json.NET serializer to serialize messages. The following code sample shows the adapter class in the **Common** project that wraps the Json.NET serializer.
+
+```Cs
+public class JsonSerializerAdapter : ISerializer
+{
+    private JsonSerializer serializer;
+
+    public JsonSerializerAdapter(JsonSerializer serializer)
+    {
+        this.serializer = serializer;
+    }
+
+    public void Serialize(Stream stream, object graph)
+    {
+        var writer = new JsonTextWriter(new StreamWriter(stream));
+
+        this.serializer.Serialize(writer, graph);
+
+        // We don't close the stream as it's owned by the message.
+        writer.Flush();
+    }
+
+    public object Deserialize(Stream stream)
+    {
+        var reader = new JsonTextReader(new StreamReader(stream));
+
+        return this.serializer.Deserialize(reader);
+    }
+}
+```
+
+
 ## Further Information
 
 For general information about the Windows Azure Service Bus, see 
@@ -88,6 +124,12 @@ For information about scaling the Windows Azure Service Bus
 infrastructure, see [Best Practices for Performance Improvements Using 
 Service Bus Brokered Messaging][sbperf] on MSDN. 
 
+For information about Json.NET, see [Json.NET][jsonnet].
+
+# JSON Serializer
+
+You must serialize your Command and Event objects if you are sending them over the Windows Azure Service Bus.
+
 
 [fig1]:           images/Reference_09_ServiceBusQueue.png?raw=true
 [fig2]:           images/Reference_09_ServiceBusTopic.png?raw=true
@@ -95,3 +137,4 @@ Service Bus Brokered Messaging][sbperf] on MSDN.
 [sb]:             http://msdn.microsoft.com/en-us/library/ee732537.aspx
 [sbperf]:         http://msdn.microsoft.com/en-us/library/hh528527.aspx
 [sbpatterns]:     http://msdn.microsoft.com/en-us/library/hh410103.aspx
+[jsonnet]:		  http://james.newtonking.com/pages/json-net.aspx
