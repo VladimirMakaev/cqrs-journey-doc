@@ -110,6 +110,38 @@ Describe significant features of the implementation with references to the code.
 
 Provide significantly more detail for those BCs that use CQRS/ES. Significantly less detail for more "traditional" implementations such as CRUD. 
 
+# Running the Applications
+
+You can run the Contoso Conference Management System in two modes: either deployed to Windows Azure, or running locally.
+
+If you deploy the V1 Release of the Contoso Conference Management System to Windows Azure, then the application uses Windows Azure Service Bus to provide its messaging infrastructure using brokered messages. If you run the application locally, then it runs using the Windows Azure Compute Emulator and uses the **MemoryEventBus** and **MemoryCommandBus** classes in the Common project to provide messaging services for events. The following code sample from the **Global.asax.cs** file in the web projects shows how the project uses conditional compilation to select between the implementations.
+
+```Cs
+#if LOCAL
+    var commandBus = new MemoryCommandBus();
+    var commandProcessor = commandBus;
+    var eventBus = new MemoryEventBus();
+    var eventProcessor = eventBus;
+#else
+    var serializer = new JsonSerializerAdapter(JsonSerializer.Create(new JsonSerializerSettings
+    {
+        // Allows deserializing to the actual runtime type
+        TypeNameHandling = TypeNameHandling.Objects,
+        // In a version resilient way
+        TypeNameAssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple
+    }));
+
+    var settings = MessagingSettings.Read(HttpContext.Current.Server.MapPath("bin\\Settings.xml"));
+    var commandBus = new CommandBus(new TopicSender(settings, "conference/commands"), new MetadataProvider(), serializer);
+    var eventBus = new EventBus(new TopicSender(settings, "conference/events"), new MetadataProvider(), serializer);
+
+    var commandProcessor = new CommandProcessor(new SubscriptionReceiver(settings, "conference/commands", "all"), serializer);
+    var eventProcessor = new EventProcessor(new SubscriptionReceiver(settings, "conference/events", "all"), serializer);
+#endif
+```
+
+
+
 # Testing 
 
 Describe any special considerations that relate to testing for this bounded context.  
