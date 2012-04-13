@@ -1061,6 +1061,7 @@ There are a number of questions that arise from this implementation:
 3. How scalable is this approach?
 4. How robust is this approch?
 5. What is the granularity of a topic and a subscription?
+6. How are commands and events serialized?
 
 These questions are discussed in the following sections.
 
@@ -1232,6 +1233,13 @@ example a topic for **ReservationAccepted** events and another topic for
 > usage is billed based on the number of messages sent and the amount of 
 > data transfered out of Windows Azure sub-region. 
 
+### How are commands and events serialized?
+
+The Contoso Conference Management System uses the [Json.NET][jsonnet] 
+serializer. For details of how this serializer is used within the 
+application, see [Technologies Used in the Reference 
+Implementation][r_chapter9] in the Reference Guide. 
+
 # Testing
 Because this was the first bounded context the team tackled, one of the 
 key concerns was how to approach testing given that the team wanted to 
@@ -1395,6 +1403,7 @@ reservation.
 [repourl]:		  https://github.com/mspnp/cqrs-journey-code
 [res-pat]:        http://www.rgoarchitects.com/nblog/2009/09/08/SOAPatternsReservations.aspx
 [sbperf]:         http://msdn.microsoft.com/en-us/library/hh528527.aspx
+[jsonnet]:		  http://james.newtonking.com/pages/json-net.aspx
 
 [fig1]:           images/OrderMockup.png?raw=true
 [fig2]:           images/Journey_03_Aggregates_01.png?raw=true
