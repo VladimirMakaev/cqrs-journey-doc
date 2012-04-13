@@ -38,6 +38,12 @@ also implemented some infrastructure elements of the system to support
 the domain's functionality. These included command and event message 
 buses and a persistence mechanism for aggregates. 
 
+> **Note:** The Contoso Conference Management System described in this
+> chapter is not the final version of the system. This guidance
+> describes a journey, so some of the design decisions and
+> implementation details change in later steps in the journey. These
+> changes are described in subsequent chapters.
+
 ## Working Definitions for this Chapter
 
 The following definitions are used for the remainder of this chapter. 
@@ -46,16 +52,16 @@ Deep Dive][r_chapter4] in the Reference Guide.
 
 ### Command
 
-A command is a request for the system to perform a task or an action. 
-Commands are imperatives, for example **MakeRegistration**. In this 
-bounded context, commands originate from the UI as a result either of 
-the user initiating a request or from a workflow or a saga when the 
-workflow or saga is directing an aggregate to perform an action. 
+A command is a request for the system to perform an action that changes 
+the state of the system. Commands are imperatives, for example 
+**MakeSeatReservation**. In this bounded context, commands originate 
+either from the UI as a result of a user initiating a request, or from 
+a workflow when the workflow is directing an aggregate to perform an 
+action. 
 
-Commands are processed once, and once only by a single recipient. A 
-command bus transports commands that command handlers then dispatch to 
-aggregates. Sending a command is an asynchronous operation with no 
-return value. 
+Commands are processed once by a single recipient. A command bus 
+transports commands that command handlers then dispatch to aggregates. 
+Sending a command is an asynchronous operation with no return value. 
 
 ### Event
 
@@ -81,7 +87,13 @@ command.
 The workflow in this bounded context can receive commands as well as 
 subscribe to events.
 
-> **BharathPersona:** The team initially referred to the workflow class in the **Orders** bounded context as a saga. To find out why they decided to change the terminology. See the section [Patterns and Concepts](#patternsandconcepts) later in this chapter.
+> **BharathPersona:** The team initially referred to the workflow class
+> in the **Orders** bounded context as a saga. To find out why they
+> decided to change the terminology. See the section [Patterns and
+> Concepts](#patternsandconcepts) later in this chapter.
+
+The Reference Guide contains additional definitions and explanations of 
+CQRS related terms.
 
 ## User Stories
 
@@ -247,6 +259,10 @@ However, they did agree that if they later decided that event sourcing
 would bring specific benefits to this bounded context, then they would 
 revisit this decision. 
 
+> **Note** For a description of how event sourcing relates to the CQRS
+> pattern, see [Introducing Event Sourcing][r_chapter3] in the Reference
+> Guide.
+
 One of the important discussions in the team was around the choice of 
 aggregates and entities that they would implement. The following images 
 from the team's white-board illustrate some of their initial thoughts, 
@@ -274,8 +290,8 @@ separate aggregates.
 
 The numbers in the diagram correspond to the following steps:
 
-1. The UI sends a command to register X and Y onto conference #157. The 
-   command is routed to a new **Order** aggregate.
+1. The UI sends a command to register attendees X and Y onto conference
+   #157. The command is routed to a new **Order** aggregate.
 2. The **Order** aggregate invokes a method on a **Conference Seats
    Availability** aggregate.
 3. The **Conference Seats Availability** aggregate with an ID of 157 is
@@ -296,9 +312,9 @@ single aggregate in place of two.
 
 The numbers in the diagram correspond to the following steps:
 
-1. The UI sends a command to register X and Y onto conference #157. The 
-   command is routed to the **Conference** aggregate with an ID of
-   157.
+1. The UI sends a command to register attendees X and Y onto conference
+   #157. The command is routed to the **Conference** aggregate with an
+   ID of 157.
 2. The **Conference** aggregate with an ID of 157 is re-hydrated from
    the data store.
 3. The **Order** entity validates the booking (it queries the 
@@ -319,8 +335,8 @@ workflow to coordinate the interaction between two aggregates.
 
 The numbers in the diagram correspond to the following steps:
 
-1. The UI sends a command to register X and Y onto conference #157. The 
-   command is routed to a new **Order** aggregate.
+1. The UI sends a command to register attendees X and Y onto conference
+   #157. The command is routed to a new **Order** aggregate.
 2. The new **Order** aggregate, with an ID of 4239,  is persisted to
    the data store.
 3. The **Order** aggregate raises an event that is handled by the
@@ -334,9 +350,16 @@ The numbers in the diagram correspond to the following steps:
    **SeatsAvailability** aggregate and it is persisted to the
    data store.
 
-> **BharathPersona:** Workflow or saga? Initially the team referred to the **ReservationProcess** workflow as a saga. However, after they reviewed the original definition of a saga from the paper [Sagas](sagapaper) by Hector Garcia-Molina and Kenneth Salem, they revised their decision. The key reasons for this are that reservation process does not include explicit compensation steps, and does not need to be represented as a long-lived transaction.
+> **BharathPersona:** Workflow or saga? Initially the team referred to
+> the **ReservationProcess** workflow as a saga. However, after they
+> reviewed the original definition of a saga from the paper
+> [Sagas](sagapaper) by Hector Garcia-Molina and Kenneth Salem, they
+> revised their decision. The key reasons for this are that reservation
+> process does not include explicit compensation steps, and does not
+> need to be represented as a long-lived transaction.
 
-For more information about sagas see the chapter [Sagas][r_chapter6] in the Reference Guide.
+For more information about sagas see the chapter [Sagas][r_chapter6] in
+the Reference Guide.
    
 The team identified these questions about these approaches:
 
@@ -440,6 +463,11 @@ implementation of the orders and reservations bounded context. You may
 find it useful to have a copy of the code so you can follow along. You 
 can download a copy of the code from the repository on github: 
 [mspnp/cqrs-journey-code][repourl]. 
+
+> **Note:** Do not expect the code samples to exactly match the code in
+> the reference implementation. This chapter describes a step in the
+> CQRS journey, the implementation may well change as we learn more and
+> refactor the code.
 
 ## High-level Architecture
 
@@ -1395,6 +1423,7 @@ This second test can make use of the behavior the **SeatsAvailability**
 aggregate because the aggregate does raise an event if it rejects a 
 reservation. 
 
+[r_chapter3]:     Reference_03_ESIntroduction.markdown
 [r_chapter4]:     Reference_04_DeepDive.markdown
 [r_chapter6]:     Reference_06_Sagas.markdown
 [r_chapter9]:     Reference_09_Technologies.markdown

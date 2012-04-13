@@ -35,6 +35,11 @@ The specific topics described in this chapter include:
   of the model validation feature in MVC to validate your CQRS commands
   before you send them to the domain.
 
+> **Note:** The Contoso Conference Management System described in this
+> chapter is not the final version of the system. This guidance
+> describes a journey, so some of the design decisions and
+> implementation details change in later steps in the journey. These
+> changes are described in subsequent chapters.
 
 ## Working Definitions for this Chapter 
 
@@ -44,16 +49,16 @@ Deep Dive][r_chapter4] in the Reference Guide.
 
 ### Command
 
-A command is a request for the system to perform a task or an action. 
-Commands are imperatives, for example **MakeRegistration**. In this 
-bounded context, commands originate from the UI as a result either of 
-the user initiating a request or from a saga or workflow when the saga 
-or workflow is directing an aggregate to perform an action. 
+A command is a request for the system to perform an action that changes 
+the state of the system. Commands are imperatives, for example 
+**MakeSeatReservation**. In this bounded context, commands originate 
+either from the UI as a result of a user initiating a request, or from 
+a workflow when the workflow is directing an aggregate to perform an 
+action. 
 
-Commands are processed once, and once only by a single recipient. A 
-command bus transports commands that command handlers then dispatch to 
-aggregates. Sending a command is an asynchronous operation with no 
-return value. 
+Commands are processed once by a single recipient. A command bus 
+transports commands that command handlers then dispatch to aggregates. 
+Sending a command is an asynchronous operation with no return value. 
 
 ### Event
 
@@ -387,6 +392,11 @@ implementation of the orders and reservations bounded context that are
 described in this chapter. You may find it useful to have a copy of the 
 code so you can follow along. You can download a copy of the code from 
 the repository on github: [mspnp/cqrs-journey-code][repourl]. 
+
+> **Note:** Do not expect the code samples to exactly match the code in
+> the reference implementation. This chapter describes a step in the
+> CQRS journey, the implementation may well change as we learn more and
+> refactor the code.
 
 ## The Order Access Code Record Locator 
 
