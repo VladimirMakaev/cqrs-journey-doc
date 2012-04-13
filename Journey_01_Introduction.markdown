@@ -110,23 +110,47 @@ the system before they can create and manage their conferences.
 
 ### Selling Seats for a Conference
 
-The Business Customer defines how many seats are available for the conference. The business customer may also specify events at a conference such as workshops, receptions, and premium sessions for which attendees must have a separate ticket. The business customer will also define how many seats are available for these events.
+The Business Customer defines how many seats are available for the 
+conference. The business customer may also specify events at a 
+conference such as workshops, receptions, and premium sessions for which 
+attendees must have a separate ticket. The business customer will also 
+define how many seats are available for these events. 
 
-The system manages the sale of seats to ensure that the conference and sub-events are not over subscribed. This part of the system will also operate wait-lists so that if other attendees cancel, then their seats can be re-allocated.
+The system manages the sale of seats to ensure that the conference and 
+sub-events are not over subscribed. This part of the system will also 
+operate wait-lists so that if other attendees cancel, then their seats 
+can be re-allocated. 
 
-The system will require that the names of the attendees are associated with the purchased seats so that on-site system can print badges for the attendees when they arrive at the conference.
+The system will require that the names of the attendees are associated 
+with the purchased seats so that on-site system can print badges for the 
+attendees when they arrive at the conference. 
 
 ### On-site Conference Management
 
-When attendees arrive at the conference their names should be checked against an attendee list and they should be given name badges that identify any additional conference events they are entitled to attend. They should also be given the opportunity to purchase seats for any additional events they would like to attend (assuming there are seats still available). The system that runs on-site at the conference does not assume that it is permanently connected to the main conference management system and continues to operate when it is disconnected, synchronizing its data with the main conference system when it re-establises a connection.
+When attendees arrive at the conference their names should be checked 
+against an attendee list and they should be given name badges that 
+identify any additional conference events they are entitled to attend. 
+They should also be given the opportunity to purchase seats for any 
+additional events they would like to attend (assuming there are seats 
+still available). The system that runs on-site at the conference does 
+not assume that it is permanently connected to the main conference 
+management system and continues to operate when it is disconnected, 
+synchronizing its data with the main conference system when it 
+re-establises a connection. 
 
 ### Creating a Conference
 
-A Business Customer can create new conferences and manage information about the conference such as its name, description, and dates. The Business Customer can also make a conference visible on the Contoso Conference Management System web site by publishing it, or hide it by un-publishing it.
+A Business Customer can create new conferences and manage information 
+about the conference such as its name, description, and dates. The 
+Business Customer can also make a conference visible on the Contoso 
+Conference Management System web site by publishing it, or hide it by 
+un-publishing it. 
 
-Additionally the Business Customer defines the seat types and avaialable quantity of each seat type for the conference.
+Additionally the Business Customer defines the seat types and avaialable 
+quantity of each seat type for the conference. 
 
-Contoso also plans to enable the Business Customer to specify the following characteristics of a conference:
+Contoso also plans to enable the Business Customer to specify the 
+following characteristics of a conference: 
 
 * Will the paper submission process require reviewers.
 * What will be the fee structure for paying Contoso.
@@ -135,7 +159,8 @@ Contoso also plans to enable the Business Customer to specify the following char
 
 ### Building a Program
 
-The business customer defines the conference program. This consists of the following tasks:
+The business customer defines the conference program. This consists of 
+the following tasks: 
 
 * Identifying Tracks and Track Chairs.
 * Identifying Reviewers.
