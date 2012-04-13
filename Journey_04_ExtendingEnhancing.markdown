@@ -121,6 +121,16 @@ pre-conference workshop.
 
 ### Handling Partially Fulfilled Orders
 
+When a registrant creates an order, it may not be possible to completely 
+fulfill the order. For example, a registrant may request a registrant 
+may request five seats for the full conference, five seats for the 
+drinks reception, and three seats for the pre-conference workshop. There 
+may only be three seats available and one seat for the drinks reception, 
+but more than three seats available for the pre-conference workshop. The 
+system displays this information to the registrant and gives the 
+registrant the opportunity to adjust the number of each type of seat in 
+the order before continuing to the payment process. 
+
 ## Architecture 
 
 What are the key architectural features? Server-side, UI, multi-tier, cloud, etc. 
@@ -286,41 +296,30 @@ Possible objections to this approach include:
   that support features such as paging, filtering, and sorting in the
   UI. 
   
-## Pushing Changes to the Read-side
+## Making Information about Partially Fulfilled Orders Available to the Read-side
 
 The UI displays data about orders that it obtains by querying the model 
-on the read-side. The system stores the de-normalized order data in two 
-tables in a SQL database: the **OrdersView** and **OrderItemsView** 
-tables. 
+on the read-side. Part of the data that the UI displays to the 
+registrant is information about partially fulfilled orders: for each 
+seat type in the order, the number of seats requested and the number of 
+seats that are available. This information is temporary data that is 
+only used while the registrant is creating the order using the UI; the 
+business only needs to store information about seats that were actually
+purchased, not the difference between what the registrant requested and 
+what the registrant purchased. 
 
-<table border="1">
-	<tr><th>Column</th><th>Description</th><tr>
-	<tr><td>OrderId</td><td>A unique identifier for the Order</td><tr>
-	<tr><td>ReservationExpirationDate</td><td>The time when the seat reservations expire</td><tr>
-	<tr><td>StateValue</td><td>The state of the Order: Created, PartiallyReserved, ReservationCompleted, Rejected, Confirmed</td><tr>
-	<tr><td>RegistrantEmail</td><td>The email address of the Registrant</td><tr>
-	<tr><td>AccessCode</td><td>The Access Code that the Registrant can use to access the Order</td><tr>
-</table>
+The consequence of this is that the informationa about how many seats 
+the registrant requested only needs to exist in the model on the 
+read-side. 
 
-**OrdersView Table**
+> **JanaPersona:** You can't store this information in an HTTP session
+> because the registrant may leave the site in between requesting the
+> seats and completing the order.
 
-<table border="1">
-	<tr><th>Column</th><th>Description</th><tr>
-	<tr><td>OrderItemId</td><td>A unique identifier for the Order Item</td><tr>
-	<tr><td>SeatType</td><td>The type of Seat requested</td><tr>
-	<tr><td>RequestedSeats</td><td>The number of seats requested</td><tr>
-	<tr><td>ReservedSeats</td><td>The number of seats reserved</td><tr>
-	<tr><td>OrderID</td><td>The OrderId in the parent OrdersView table</td><tr>
-</table>
-
-**OrderItemsView Table**
-
-One interesting feature to note about these tables, is that the 
-**RequestedSeats** value is not persisted on the write-side when it 
-saves **OrderItem** aggregate instances. The **RequestedSeats** value is 
-only persisted on the read-side. This is because it used by the UI while 
-it is handling the order, but is not part of the information in that the 
-domain needs to preserve. 
+A further consequence, is that the underlying storage on the read-side 
+cannot be simple SQL views because it includes data that is not stored 
+in the underlying table storage on the write-side. This means that this 
+information must be passed to the read-side by using events. 
 
 Figure 2 shows all the commands and events that the **Order** and 
 **SeatsAvailability** aggregates use and how the **Order** aggregate 
@@ -626,6 +625,136 @@ class.
 
 For more information, see [Models and Validation in ASP.NET 
 MVC][modelvalidation] on MSDN. 
+
+## Pushing Changes to the Read-side
+
+Some information about orders only needs to exist on the read-side. In 
+particular, the information about partially fulfilled orders is only 
+used in the UI and is not part of the business information persisted by 
+the domain model on the write-side. 
+
+This means that the system can't use SQL views as the underlying storage 
+mechanism on the read-side because views cannot contain data that does 
+not exist in the tables that they are based on. 
+
+The system stores the de-normalized order data in two tables in a SQL 
+database: the **OrdersView** and **OrderItemsView** tables. The 
+**OrderItemsView** table includes the **RequestedSeats** column that 
+contains data that only exists on the read-side. 
+
+<table border="1">
+	<tr><th>Column</th><th>Description</th><tr>
+	<tr><td>OrderId</td><td>A unique identifier for the Order</td><tr>
+	<tr><td>ReservationExpirationDate</td><td>The time when the seat reservations expire</td><tr>
+	<tr><td>StateValue</td><td>The state of the Order: Created, PartiallyReserved, ReservationCompleted, Rejected, Confirmed</td><tr>
+	<tr><td>RegistrantEmail</td><td>The email address of the Registrant</td><tr>
+	<tr><td>AccessCode</td><td>The Access Code that the Registrant can use to access the Order</td><tr>
+</table>
+
+**OrdersView Table**
+
+<table border="1">
+	<tr><th>Column</th><th>Description</th><tr>
+	<tr><td>OrderItemId</td><td>A unique identifier for the Order Item</td><tr>
+	<tr><td>SeatType</td><td>The type of Seat requested</td><tr>
+	<tr><td>RequestedSeats</td><td>The number of seats requested</td><tr>
+	<tr><td>ReservedSeats</td><td>The number of seats reserved</td><tr>
+	<tr><td>OrderID</td><td>The OrderId in the parent OrdersView table</td><tr>
+</table>
+
+**OrderItemsView Table**
+
+To populate these tables in the read-model, the read-side handles events 
+raised by the write-side and uses them to write to these tables. See
+Figure 2 above for more details.
+
+The **OrderViewModelGenerator** class handles these events and updates
+the read-side repository.
+
+```Cs
+public class OrderViewModelGenerator :
+    IEventHandler<OrderPlaced>, IEventHandler<OrderUpdated>,
+    IEventHandler<OrderPartiallyReserved>, IEventHandler<OrderReservationCompleted>,
+    IEventHandler<OrderRegistrantAssigned>
+{
+    private Func<IViewRepository> repositoryFactory;
+
+    public OrderViewModelGenerator(Func<IViewRepository> repositoryFactory)
+    {
+        this.repositoryFactory = repositoryFactory;
+    }
+
+    public void Handle(OrderPlaced @event)
+    {
+        var repository = this.repositoryFactory();
+        using (repository as IDisposable)
+        {
+            var dto = new OrderDTO(@event.OrderId, Order.States.Created)
+            {
+                AccessCode = @event.AccessCode,
+            };
+            dto.Lines.AddRange(@event.Seats.Select(seat => new OrderItemDTO(seat.SeatType, seat.Quantity)));
+
+            repository.Save(dto);
+        }
+    }
+
+    public void Handle(OrderRegistrantAssigned @event)
+    {
+        ...
+    }
+
+    public void Handle(OrderUpdated @event)
+    {
+        ...
+    }
+
+    public void Handle(OrderPartiallyReserved @event)
+    {
+        ...
+    }
+
+    public void Handle(OrderReservationCompleted @event)
+    {
+        ...
+    }
+
+    ...
+}
+```
+
+The following code sample shows the **OrmViewRepository** class.
+
+```Cs
+public class OrmViewRepository : DbContext, IViewRepository
+{
+    ...
+
+    public T Find<T>(Guid id) where T : class
+    {
+        return this.Set<T>().Find(id);
+    }
+
+    public IQueryable<T> Query<T>() where T : class
+    {
+        return this.Set<T>();
+    }
+
+    public void Save<T>(T entity) where T : class
+    {
+        var entry = this.Entry(entity);
+
+        if (entry.State == System.Data.EntityState.Detached)
+            this.Set<T>().Add(entity);
+
+        this.SaveChanges();
+    }
+}
+```
+
+**JanaPersona:** Notice that this repository class in the read-side 
+includes a **Save** method to persist the changes sent from the 
+write-side and handled by the **OrderViewModelGenerator** handler class. 
 
 ## Refactoring the SeatsAvailability Aggregates
 
