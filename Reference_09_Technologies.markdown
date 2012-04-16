@@ -181,8 +181,8 @@ The MVC web application in the Contoso Conference Management System uses
 the Unity Application Block (Unity) dependency injection container. The 
 **Global.asax.cs** file contains the type registrations for the command 
 and event buses, and the repositories. This file also hooks up the MVC 
-infrastructure to the Unity dependency resolver as shown in the 
-following code sample: 
+infrastructure to the Unity service locator as shown in the following 
+code sample: 
 
 
 ```Cs
@@ -191,65 +191,9 @@ protected void Application_Start()
     this.container = CreateContainer();
     RegisterHandlers(this.container);
 
-    DependencyResolver.SetResolver(new UnityDependencyResolver(this.container));
+    DependencyResolver.SetResolver(new UnityServiceLocator(this.container));
 	
 	...
-}
-```
-
-The following code sample shows the **UnityDependencyResolver** class:
-
-```Cs
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Web.Mvc;
-using Microsoft.Practices.Unity;
-
-/// <summary>
-/// This class allows ASP.NET MVC to use to Unity for resolving dependencies. 
-/// For more information see http://msdn.com/library/system.web.mvc.idependencyresolver
-/// </summary>
-public class UnityDependencyResolver : IDependencyResolver
-{
-    private readonly IUnityContainer _unity;
-
-    public UnityDependencyResolver(IUnityContainer unity)
-    {
-        _unity = unity;
-    }
-
-    public object GetService(Type serviceType)
-    {
-        try
-        {
-            return _unity.Resolve(serviceType);
-        }
-        catch (ResolutionFailedException)
-        {
-            // By definition of IDependencyResolver contract,
-            // this should return null if it cannot be found.
-            // http://msdn.com/library/system.web.mvc.idependencyresolver.getservice
-            Debug.WriteLine(string.Format("Unable to resolve request for {0}, returning null", serviceType.Name));
-            return null;
-        }
-    }
-
-    public IEnumerable<object> GetServices(Type serviceType)
-    {
-        try
-        {
-            return _unity.ResolveAll(serviceType);
-        }
-        catch (ResolutionFailedException)
-        {
-            // By definition of IDependencyResolver contract,
-            // this should return an empty collection if it cannot be found.
-            // http://msdn.com/library/system.web.mvc.idependencyresolver.getservices
-            Debug.WriteLine(string.Format("Unable to resolve request for a collection of {0}, returning an empty collection", serviceType.Name));
-            return new object[0];
-        }
-    }
 }
 ```
 
