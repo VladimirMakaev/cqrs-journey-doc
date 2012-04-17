@@ -1433,6 +1433,7 @@ reservation.
 [res-pat]:        http://www.rgoarchitects.com/nblog/2009/09/08/SOAPatternsReservations.aspx
 [sbperf]:         http://msdn.microsoft.com/en-us/library/hh528527.aspx
 [jsonnet]:		  http://james.newtonking.com/pages/json-net.aspx
+[sagapaper]:      http://www.amundsen.com/downloads/sagas.pdf
 
 [fig1]:           images/OrderMockup.png?raw=true
 [fig2]:           images/Journey_03_Aggregates_01.png?raw=true

@@ -184,7 +184,6 @@ and event buses, and the repositories. This file also hooks up the MVC
 infrastructure to the Unity service locator as shown in the following 
 code sample: 
 
-
 ```Cs
 protected void Application_Start()
 {
@@ -211,7 +210,10 @@ public RegistrationController(ICommandBus commandBus, [Dependency("registration"
     this.repositoryFactory = repositoryFactory;
 }
 ```
+## Further Information
 
+For more information about the Unity Application Block, see 
+[Unity Application Block][unity] on MSDN. 
 
 [fig1]:           images/Reference_09_ServiceBusQueue.png?raw=true
 [fig2]:           images/Reference_09_ServiceBusTopic.png?raw=true
@@ -220,3 +222,4 @@ public RegistrationController(ICommandBus commandBus, [Dependency("registration"
 [sbperf]:         http://msdn.microsoft.com/en-us/library/hh528527.aspx
 [sbpatterns]:     http://msdn.microsoft.com/en-us/library/hh410103.aspx
 [jsonnet]:		  http://james.newtonking.com/pages/json-net.aspx
+[unity]:          http://msdn.microsoft.com/en-us/library/ff647202.aspx
