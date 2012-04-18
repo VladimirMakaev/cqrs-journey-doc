@@ -13,9 +13,8 @@ journey.
 The specific topics described in this chapter include:
 
 * Improvements to the way that message correlation works with the 
-  **ReservationProcessWorkflow**. This illustrates how aggregate
-  instances within the bounded context can interact in a complex
-  manner.
+  **ReservationProcess*. This illustrates how aggregate instances 
+  within the bounded context can interact in a complex manner.
 * Implementing a record locator to enable a registrant to retrieve an 
   order that was saved during a previous session. This illustrates
   adding some additional logic to the write-side that enables you to
@@ -70,16 +69,16 @@ events to an event bus; handlers register for specific types of event on
 the event bus and then deliver the events to the subscriber. In this 
 bounded context, the only subscriber is a workflow. 
 
-### Workflow
+### Coordinating Workflow
 
-In this bounded context, a workflow is a class that coordinates the 
-behavior of the aggregates in the domain. A workflow subscribes to the 
-events that the aggregates raise, and then follow a simple set of rules 
-to determine which command or commands to send. The workflow does not 
-contain any business logic, simply logic to determine the next command 
-to send. The workflow is implemented as a state machine, so when the 
-workflow responds to an event, it can change its internal state in 
-addition to sending a new command. 
+In this bounded context, a Coordinating Workflow (or workflow) is a 
+class that coordinates the behavior of the aggregates in the domain. A 
+workflow subscribes to the events that the aggregates raise, and then 
+follow a simple set of rules to determine which command or commands to 
+send. The workflow does not contain any business logic, simply logic to 
+determine the next command to send. The workflow is implemented as a 
+state machine, so when the workflow responds to an event, it can change 
+its internal state in addition to sending a new command. 
 
 The workflow in this bounded context can receive commands as well as 
 subscribe to events. 
@@ -470,7 +469,7 @@ public IQueryable<T> Query<T>() where T : class
 
 When a registrant creates and order and makes a seat reservation, those 
 seats are reserved for a fixed period of time. The 
-**ReservationWorkflow** instance, which forwards the reservation from 
+**ReservationProcess** instance, which forwards the reservation from 
 the **SeatsAvailability** aggregate, passes the time that the 
 reservation expires to the **Order** aggregate. The following code 
 sample shows how the **Order** aggregate receives and stores the 
@@ -493,7 +492,7 @@ public void MarkAsReserved(DateTime expirationDate, IEnumerable<SeatQuantity> se
 > **MarkusPersona:** The **ReservationExpirationDate** is intially set
 > in the **Order** constructor to a time 15 minutes after the **Order**
 > is instantiated. This time may be revised by the
-> **ReservationProcessWorkflow** workflow based on when the reservations
+> **ReservationProcess** workflow based on when the reservations
 > are actually made. It is this time the workflow sends to the **Order**
 > aggregate in the **MarkSeatsAsReserved** command.
 
