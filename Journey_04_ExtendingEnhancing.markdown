@@ -755,9 +755,10 @@ public class ConferenceRegistrationDbContext : DbContext
 }
 ```
 
-**JanaPersona:** Notice that this Db context class in the read-side 
-includes a **Save** method to persist the changes sent from the 
-write-side and handled by the **OrderViewModelGenerator** handler class.
+> **JanaPersona:** Notice that this **ConferenceRegistrationDbContext**
+> in the read-side includes a **Save** method to persist the changes
+> sent from the write-side and handled by the
+> **OrderViewModelGenerator** handler class. 
 
 ## Querying the Read-side
 
@@ -792,6 +793,10 @@ public class ConferenceDao : IConferenceDao
     }
 }
 ```
+
+> **JanaPersona:** Notice how this **ConferenceDao** class only contains
+> methods that return data. It is is used by the MVC controllers to
+> retrieve data to display in the UI.
 
 ## Refactoring the SeatsAvailability Aggregates
 
