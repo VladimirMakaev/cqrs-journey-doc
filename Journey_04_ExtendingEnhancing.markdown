@@ -13,7 +13,7 @@ journey.
 The specific topics described in this chapter include:
 
 * Improvements to the way that message correlation works with the 
-  **ReservationProcess*. This illustrates how aggregate instances 
+  **RegistrationProcess*. This illustrates how aggregate instances 
   within the bounded context can interact in a complex manner.
 * Implementing a record locator to enable a registrant to retrieve an 
   order that was saved during a previous session. This illustrates
@@ -469,7 +469,7 @@ public IQueryable<T> Query<T>() where T : class
 
 When a registrant creates and order and makes a seat reservation, those 
 seats are reserved for a fixed period of time. The 
-**ReservationProcess** instance, which forwards the reservation from 
+**RegistrationProcess** instance, which forwards the reservation from 
 the **SeatsAvailability** aggregate, passes the time that the 
 reservation expires to the **Order** aggregate. The following code 
 sample shows how the **Order** aggregate receives and stores the 
@@ -492,7 +492,7 @@ public void MarkAsReserved(DateTime expirationDate, IEnumerable<SeatQuantity> se
 > **MarkusPersona:** The **ReservationExpirationDate** is intially set
 > in the **Order** constructor to a time 15 minutes after the **Order**
 > is instantiated. This time may be revised by the
-> **ReservationProcess** workflow based on when the reservations
+> **RegistrationProcess** workflow based on when the reservations
 > are actually made. It is this time the workflow sends to the **Order**
 > aggregate in the **MarkSeatsAsReserved** command.
 
