@@ -102,9 +102,12 @@ What are the key architectural features? Server-side, UI, multi-tier, cloud, etc
 
 ## Conference Management Bounded Context
 
-The Conference Management bounded context is a simple two-tier, CRUD-style web application. It is implemented using MVC 4 and Entity Framework.
+The Conference Management bounded context is a simple two-tier, 
+CRUD-style web application. It is implemented using MVC 4 and Entity 
+Framework. 
 
-**JanaPersona:** The team implemented this bounded context after it implemented the public Conference Management web-site that uses MVC 3.
+**JanaPersona:** The team implemented this bounded context after it 
+implemented the public Conference Management web-site that uses MVC 3. 
 
 # Patterns and Concepts 
 
