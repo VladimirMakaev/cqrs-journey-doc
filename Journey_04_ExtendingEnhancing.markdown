@@ -196,7 +196,7 @@ on a **ViewRepository** class to request the data that it needs. The
 **ViewRepository** class in turn runs a query against the de-normalized 
 data in the database. 
 
-The team at Contoso evaluated two approaches to implementing the **ViewRepository** class: using the **IQueryable** interface and using custom data access objects (DAOs).
+The team at Contoso evaluated two approaches to implementing the **ViewRepository** class: using the **IQueryable** interface and using non-generic data access objects (DAOs).
 
 #### Using the **IQueryable** Interface
 
@@ -246,7 +246,7 @@ Possible objections to this approach include:
 * It's hard to know if your integration tests cover all the different
   uses of the **Query** method.
 
-#### Using Custom DAOs
+#### Using Non-generic DAOs
 
 An alternative approach is to have the **ViewRepository** expose custom 
 **Find** and **Get** methods as shown in the following code snippets. 
@@ -293,8 +293,12 @@ Possible objections to this approach include:
 
 * Using the **IQueryable** interface makes it much easier to use grids 
   that support features such as paging, filtering, and sorting in the
-  UI. 
+  UI.
   
+The team decided to adopt the second approach. For examples, see the 
+**ConferenceDao** and **OrderDao** classes in the **Registration** 
+project. 
+
 ## Making Information about Partially Fulfilled Orders Available to the Read-side
 
 The UI displays data about orders that it obtains by querying the model 
@@ -676,19 +680,18 @@ public class OrderViewModelGenerator :
     IEventHandler<OrderPartiallyReserved>, IEventHandler<OrderReservationCompleted>,
     IEventHandler<OrderRegistrantAssigned>
 {
-    private Func<IViewRepository> repositoryFactory;
+    private readonly Func<ConferenceRegistrationDbContext> contextFactory;
 
-    public OrderViewModelGenerator(Func<IViewRepository> repositoryFactory)
+    public OrderViewModelGenerator(Func<ConferenceRegistrationDbContext> contextFactory)
     {
-        this.repositoryFactory = repositoryFactory;
+        this.contextFactory = contextFactory;
     }
 
     public void Handle(OrderPlaced @event)
     {
-        var repository = this.repositoryFactory();
-        using (repository as IDisposable)
+        using (var repository = this.contextFactory.Invoke())
         {
-            var dto = new OrderDTO(@event.OrderId, Order.States.Created)
+            var dto = new OrderDTO(@event.SourceId, OrderDTO.States.Created)
             {
                 AccessCode = @event.AccessCode,
             };
@@ -722,10 +725,11 @@ public class OrderViewModelGenerator :
 }
 ```
 
-The following code sample shows the **OrmViewRepository** class.
+The following code sample shows the **ConferenceRegistrationDbContext** 
+class. 
 
 ```Cs
-public class OrmViewRepository : DbContext, IViewRepository
+public class ConferenceRegistrationDbContext : DbContext
 {
     ...
 
@@ -751,9 +755,43 @@ public class OrmViewRepository : DbContext, IViewRepository
 }
 ```
 
-**JanaPersona:** Notice that this repository class in the read-side 
+**JanaPersona:** Notice that this Db context class in the read-side 
 includes a **Save** method to persist the changes sent from the 
-write-side and handled by the **OrderViewModelGenerator** handler class. 
+write-side and handled by the **OrderViewModelGenerator** handler class.
+
+## Querying the Read-side
+
+The following code sample shows a non-generic DAO class that the MVC controllers use to query for conference information on the read-side. It wraps the **ConferenceRegistrationDbContext** class shown previously.
+
+```Cs
+public class ConferenceDao : IConferenceDao
+{
+    private readonly Func<ConferenceRegistrationDbContext> contextFactory;
+
+    public ConferenceDao(Func<ConferenceRegistrationDbContext> contextFactory)
+    {
+        this.contextFactory = contextFactory;
+    }
+
+    public ConferenceDescriptionDTO GetDescription(string conferenceCode)
+    {
+        using (var repository = this.contextFactory.Invoke())
+        {
+            return repository.Query<ConferenceDescriptionDTO>().Where(dto => dto.Code == conferenceCode).FirstOrDefault();
+        }
+    }
+
+    public ConferenceAliasDTO GetConferenceAlias(string conferenceCode)
+    {
+        ...
+    }
+
+    public IList<ConferenceSeatTypeDTO> GetPublishedSeatTypes(Guid conferenceId)
+    {
+        ...
+    }
+}
+```
 
 ## Refactoring the SeatsAvailability Aggregates
 
