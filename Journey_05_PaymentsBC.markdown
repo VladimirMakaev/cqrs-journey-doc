@@ -9,7 +9,8 @@ This chapter describes the changes made by the team to prepare for the
 first production release of the Contoso Conference Management System. 
 This work includes some refactoring and additions to the Orders and 
 Registrations bounded context that was introduced in the previous two 
-chapters as well as a new Conference Management bounded context. 
+chapters as well as a new Conference Management bounded context and
+Payments bounded context. 
 
 One of the key refactorings undertaken by the team during this phase of 
 the journey was to introduce event sourcing into the Orders and 
@@ -100,14 +101,17 @@ for each attendee.
 
 What are the key architectural features? Server-side, UI, multi-tier, cloud, etc.
 
-## Conference Management Bounded Context
+### Conference Management Bounded Context
 
 The Conference Management bounded context is a simple two-tier, 
 CRUD-style web application. It is implemented using MVC 4 and Entity 
 Framework. 
 
 **JanaPersona:** The team implemented this bounded context after it 
-implemented the public Conference Management web-site that uses MVC 3. 
+implemented the public Conference Management web-site that uses MVC 3.
+
+This bounded context must integrate with other bounded contexts that 
+implement the CQRS pattern. 
 
 # Patterns and Concepts 
 
@@ -237,12 +241,172 @@ Registrations bounded context. Also, if a registrant adds a new attendee
 to a conference, the business customer must be able to view details of 
 the attendee in the list in the Conference Management web-site. 
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	Add details of integration options: db-centric, events, read-model.
-	Also integration for changes in Seat quotas, new conferences and seat types.
-  </span
+The following converstion between several developers and the domain 
+expert highlights some of the key issues that the team needed to address 
+in planning how this integration should be implemented. 
+
+> *Developer #1*: I want to talk about how we should implement two
+> pieces of the integration story associated with our CRUD-style,
+> Conference Management bounded context. First of all, when a Business
+> Customer creates a new conference or defines new seat types for an
+> existing conference in this bounded context, other bounded contexts
+> such as the Orders and Registrations bounded context will need to know
+> about the change. Secondly, when a Business Customer changes the quota
+> for a seat type other bounded contexts will need to know about this
+> change as well.
+
+> *Developer #2*: So in both cases you are pushing changes from the
+> Conference Management bounded context. It's one-way.
+
+> *Developer #1*: Correct.
+
+> *Developer #2*: What are the significant differences between the
+> scenarios that you outlined?
+
+> *Developer #1*: In the first scenario, these changes are relatively
+> infrequent and typically happen when the Business Customer creates the
+> conference. Also, these are append only changes. We don't allow a
+> Business Customer to delete a conference or a seat type after the
+> conference has been published for the first time. In the second
+> scenario, the changes might be more frequent and a Business Customer
+> might increase or decrease a seat quota.
+
+> *Developer #2*: What implementation approaches are you considering for
+> these integration scenarios?
+
+> *Developer #1*: Because we have a two tier CRUD-style bounded context,
+> for the first scenario I was planning on exposing the conference and
+> seat type information directly from the database as a simple read-only
+> service. For the second scenario, I was planning to publish events
+> whenever the Business Customer updates the seat quotas.
+
+> *Developer #2*: Why use two different approaches here, it would be
+> simpler to use a single approach. Using events is more flexible in the
+> long run. If additional bounded contexts need this information, they
+> can easily subscribe to the event. Using events provides for more
+> decoupling between the bounded contexts.
+
+> *Developer #1*: I can see that it would be easier to adapt to changing
+> requirements in the future if we used events. For example, if a new
+> bounded context required information about who changed the quota, we
+> add this information to the event. For existing bounded contexts we
+> could add an adapter that converted the new event format to the old.
+
+> *Developer #2*: You implied that the events that notify subscribers of
+> quota changes would send the change in the quota. For example, the
+> Business Customer increased a seat quota by 50. What happens if a
+> subscriber wasn't there at the beginning and so doesn't receive the
+> full history of updates?
+
+> *Developer #1*: We may have to include some synchronization mechanism
+> that uses snapshots of the current state. However, in this case the
+> event could simply report the new value of the quota. If necessary,
+> the event could report both the delta and the absolute value of the
+> seat quota.
+
+> *Developer #2*: How are you going to ensure consistency? You need to
+> guarantee that your bounded context persists its data to storage and
+> publishes the events on a message queue.
+
+> *Developer #1*: We can wrap the database write and the add to queue
+> operations in a transaction.
+
+> *Developer #2*: That's going to be problematic for two reasons.
+> Firstly, our infrastructure uses the Windows Azure Service Bus for
+> messages. You can't use a transaction to combine sending a message on
+> the Service Bus and write to a database. Secondly, we're trying to 
+> avoid two-phase commits because they always cause problems in the
+> long-run.
+
+> *Domain Expert*: We have a similar scenario with another bounded
+> context that we'll be looking at later. In this case we can't make any
+> changes to the bounded context, we no longer have an up to date copy
+> of the source code.
+
+> *Developer #1*: What can we do to avoid using a two-phase commit? And
+> what can we do if we don't have access to the source code and so can't
+> make any changes?
+
+> *Developer #2*: In both cases we use the same technique to solve the
+> problem. Instead of publishing the events from within the application
+> code, we can use another process that monitors the database and sends
+> the events when it detects a change in the database. This solution may
+> introduce a small amount of latency, but it does avoid the need for a
+> two-phase commit and it can be implemented without making any changes
+> to the application code.
+
+## Autonomy versus Authority
+
+The **Orders and Registrations** bounded context is responsible for 
+creating and managing orders on behalf of registrants. The **Payments** 
+bounded context is responsible for managing the interaction with an 
+external payments system so that registrants can pay for the seats that 
+they have ordered. 
+
+When the team were examining the domain models for these two bounded 
+contexts, they discovered that neither of them knew anything about 
+pricing. The **Orders and Registrations** bounded context created an 
+order that listed the quantities of the different seat types that the 
+registrant requested. The **Payments** bounded context simply passed a 
+total to the external payments system. At some point the system needed 
+to calculate the total from the order before invoking the payment 
+process. 
+
+The team considered two different approaches to solve this problem: 
+favoring autonomy and favoring authority. 
+
+### Favoring Autonomy
+
+In this approach, the responsibility for calcualting the order total is 
+assigned to the **Orders and Registrations** bounded context. The 
+**Orders and Registrations** bounded context is not dependent on another 
+bounded context at the time that it needs to perform the calculation 
+because it already has the necessary data. At some point in the past it 
+will have collected the pricing information it needs from other bounded 
+contexts (such as the **Conference Management** bounded context) and 
+cached it. 
+
+The advantage of this approach is that the **Orders and Registrations** 
+bounded context is autonomous. It doesn't rely on the availabilty of 
+another bounded context or service at the point in time that it needs to 
+perform the calculation. 
+
+The disadvantage is that the pricing information could be out of date. 
+The Business Customer might have changed the pricing information in the 
+**Conference Management** bounded context, but that change might not yet 
+have reached the **Orders and Registrations** bounded context. 
+
+### Favoring Authority
+
+In this approach, the part of the system that calculates the order total 
+obtains the pricing information from the bounded contexts (such as the 
+**Conference Management** bounded context) at the point in time that it 
+performs the calculation. The calculation could still be performed by 
+the **Orders and Registrations** bounded context, or be handled by 
+another bounded context or service within the system. 
+
+The advantage of this approach is that the system always uses the latest 
+pricing information whenever it is calculating an order total. 
+
+The disadvantage is that the **Orders and Registrations** bounded 
+context is dependent on another bounded context when it needs to 
+determine the total for the order. It either needs to query the 
+**Conference Management** bounded context for the up to date pricing 
+information, or call another service that performs the calculation. 
+
+### Choosing between Autonomy and Authority
+
+The choice between the two alternatives is a business decision. The 
+specific business requirements of your scenario should determine which 
+approach to take. Autonomy is often the preference for large, online 
+systems. 
+
+> **CarlosPersona:** For Constoso, the clear choice is for autonomy.
+> It's a serious problem if Registrants can't purchase seats because
+> some other bounded context is down. However, we don't really care if
+> there's a short lag between the Business Customer modifying the
+> pricing information, and that new pricing information being used to
+> calculate order totals.
 
 # Implementation Details 
 
