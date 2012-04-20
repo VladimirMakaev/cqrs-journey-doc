@@ -104,7 +104,27 @@ delivered twice in the event of a failure. This is known as *at least
 once* delivery. You must ensure that either the messages are idempotent, 
 or add logic to the consumer to detect duplicate messages and ensure 
 *exactly once* processing. Every message has a unique, unchanging Id 
-which facilitates checking for duplicates. 
+which facilitates checking for duplicates.
+
+You can use the **PeekLock** mode to make your application more robust 
+when it recieves messages. You can maintain consistency between the 
+messages you receive and a database without using a distributed 
+transaction. 
+
+### Sending Messages
+
+When you create a client to send messages, you can set the 
+**RequiresDuplicateDetection** and 
+**DuplicateDetectionHistoryTimeWindow** properties in the 
+**QueueDescription** or **TopicDescription** class. You can use 
+duplicate detection feature to ensure that a message is sent only once. 
+This is useful if you retry sending a message after a failure and you 
+don't know whether it was previously sent. 
+
+You can use the duplicate detection feature to make your application 
+more robust when it recieves messages without using a distributed 
+transaction. You can maintain consistency between the messages you send 
+and a database without using a distributed transaction. 
 
 ### Expiring Messages
 

@@ -998,6 +998,12 @@ The class that implements the **IRepository** interface is responsible
 for persisting the aggregate and publishing any events raised by the 
 aggregate on the event bus, all as part of a transaction. 
 
+**CarlosPersona:** The team later discovered an issue with this when 
+they tried to use Windows Azure Service Bus as the messaging 
+infrastructure. Windows Azure Service Bus does support distributed 
+transactions with databases. For a discussion of this issue, see 
+[Preparing for the V1 Release][j_chapter5] later in this guide. 
+
 The only event subscriber in the reservations bounded context is the 
 **RegistrationProcess** class. Its router subscribes to the event bus to 
 handle specific events as shown in the following code sample from the 
@@ -1423,6 +1429,7 @@ This second test can make use of the behavior the **SeatsAvailability**
 aggregate because the aggregate does raise an event if it rejects a 
 reservation. 
 
+[j_chapter5]:     Journey_05_PaymentsBC.markdown
 [r_chapter3]:     Reference_03_ESIntroduction.markdown
 [r_chapter4]:     Reference_04_DeepDive.markdown
 [r_chapter6]:     Reference_06_Sagas.markdown

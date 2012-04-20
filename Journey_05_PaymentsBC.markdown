@@ -335,6 +335,53 @@ in planning how this integration should be implemented.
 > two-phase commit and it can be implemented without making any changes
 > to the application code.
 
+### Some Comments on Windows Azure Service Bus
+
+The previous discussion suggested a way to avoid using a distributed 
+two-phase commit in the Conference Management bounded context. However, 
+there are some alternative approaches. 
+
+Although the Windows Azure Service Bus does not support distributed 
+transactions with databases, you can use the 
+**RequiresDuplicateDetection** property when you send messages, 
+and the **PeekLock** mode when you receive messages to create the 
+desired level of robustness without using a distributed transaction.
+
+As another approach, you can use a distributed transaction to update the 
+database and send a message using a local MSMQ queue. You can then use a 
+bridge to connect the MSMQ queue to a Windows Azure Service Bus queue. 
+
+For example of implementing a bridge from MSMQ to Windows Azure Service 
+Bus, see the sample in the [Windows Azure AppFabric SDK][appfabsdk]. 
+
+For more information about the Windows Azure Service Bus, see 
+[Technologies Used in the Reference Implementation][r_chapter9] in the 
+Reference Guide. 
+
+## Distributed Transactions and Event Sourcing
+
+The previous section that discussed the integration options for the 
+**Conference Management** bounded context raised the issue of using a 
+distributed, two-phase commit transaction to ensure consistency between 
+the database that stores the conference management data and the 
+messaging infrastructure that publishes changes to other bounded 
+contexts. 
+
+The same problem arises when you implement event sourcing: you must 
+ensure consistency between the event store in the bounded context that 
+stores all the events and the messaging infrastucture that publishes 
+those events to other bounded contexts. 
+
+A key feature of an event store implementation should be that it offers 
+a way to guarantee consistency between the events that it stores and the 
+events that the bounded context publishes to other bounded contexts.
+
+> **CarlosPersona:** This is a key challenge you should address if you
+> decide to implement an event store yourself. If you are designing a
+> scalable event store that you plan to deploy in a distributed
+> environment such as Windows Azure, you must be very careful to ensure
+> that you meet this requirement. 
+
 ## Autonomy versus Authority
 
 The **Orders and Registrations** bounded context is responsible for 
@@ -801,3 +848,4 @@ Describe any special considerations that relate to testing for this bounded cont
 [inductiveui]:			http://msdn.microsoft.com/en-us/library/ms997506.aspx
 [metroux]:              http://msdn.microsoft.com/en-us/library/windows/apps/hh465424.aspx
 [unity]:				http://msdn.microsoft.com/en-us/library/ff647202.aspx
+[appfabsdk]:            http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=27421
