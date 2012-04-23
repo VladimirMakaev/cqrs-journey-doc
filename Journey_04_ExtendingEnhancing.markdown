@@ -13,9 +13,8 @@ journey.
 The specific topics described in this chapter include:
 
 * Improvements to the way that message correlation works with the 
-  **ReservationProcessWorkflow**. This illustrates how aggregate
-  instances within the bounded context can interact in a complex
-  manner.
+  **RegistrationProcess*. This illustrates how aggregate instances 
+  within the bounded context can interact in a complex manner.
 * Implementing a record locator to enable a registrant to retrieve an 
   order that was saved during a previous session. This illustrates
   adding some additional logic to the write-side that enables you to
@@ -70,16 +69,16 @@ events to an event bus; handlers register for specific types of event on
 the event bus and then deliver the events to the subscriber. In this 
 bounded context, the only subscriber is a workflow. 
 
-### Workflow
+### Coordinating Workflow
 
-In this bounded context, a workflow is a class that coordinates the 
-behavior of the aggregates in the domain. A workflow subscribes to the 
-events that the aggregates raise, and then follow a simple set of rules 
-to determine which command or commands to send. The workflow does not 
-contain any business logic, simply logic to determine the next command 
-to send. The workflow is implemented as a state machine, so when the 
-workflow responds to an event, it can change its internal state in 
-addition to sending a new command. 
+In this bounded context, a Coordinating Workflow (or workflow) is a 
+class that coordinates the behavior of the aggregates in the domain. A 
+workflow subscribes to the events that the aggregates raise, and then 
+follow a simple set of rules to determine which command or commands to 
+send. The workflow does not contain any business logic, simply logic to 
+determine the next command to send. The workflow is implemented as a 
+state machine, so when the workflow responds to an event, it can change 
+its internal state in addition to sending a new command. 
 
 The workflow in this bounded context can receive commands as well as 
 subscribe to events. 
@@ -197,7 +196,7 @@ on a **ViewRepository** class to request the data that it needs. The
 **ViewRepository** class in turn runs a query against the de-normalized 
 data in the database. 
 
-The team at Contoso evaluated two approaches to implementing the **ViewRepository** class: using the **IQueryable** interface and using custom data access objects (DAOs).
+The team at Contoso evaluated two approaches to implementing the **ViewRepository** class: using the **IQueryable** interface and using non-generic data access objects (DAOs).
 
 #### Using the **IQueryable** Interface
 
@@ -247,7 +246,7 @@ Possible objections to this approach include:
 * It's hard to know if your integration tests cover all the different
   uses of the **Query** method.
 
-#### Using Custom DAOs
+#### Using Non-generic DAOs
 
 An alternative approach is to have the **ViewRepository** expose custom 
 **Find** and **Get** methods as shown in the following code snippets. 
@@ -294,8 +293,12 @@ Possible objections to this approach include:
 
 * Using the **IQueryable** interface makes it much easier to use grids 
   that support features such as paging, filtering, and sorting in the
-  UI. 
+  UI.
   
+The team decided to adopt the second approach. For examples, see the 
+**ConferenceDao** and **OrderDao** classes in the **Registration** 
+project. 
+
 ## Making Information about Partially Fulfilled Orders Available to the Read-side
 
 The UI displays data about orders that it obtains by querying the model 
@@ -470,7 +473,7 @@ public IQueryable<T> Query<T>() where T : class
 
 When a registrant creates and order and makes a seat reservation, those 
 seats are reserved for a fixed period of time. The 
-**ReservationWorkflow** instance, which forwards the reservation from 
+**RegistrationProcess** instance, which forwards the reservation from 
 the **SeatsAvailability** aggregate, passes the time that the 
 reservation expires to the **Order** aggregate. The following code 
 sample shows how the **Order** aggregate receives and stores the 
@@ -493,7 +496,7 @@ public void MarkAsReserved(DateTime expirationDate, IEnumerable<SeatQuantity> se
 > **MarkusPersona:** The **ReservationExpirationDate** is intially set
 > in the **Order** constructor to a time 15 minutes after the **Order**
 > is instantiated. This time may be revised by the
-> **ReservationProcessWorkflow** workflow based on when the reservations
+> **RegistrationProcess** workflow based on when the reservations
 > are actually made. It is this time the workflow sends to the **Order**
 > aggregate in the **MarkSeatsAsReserved** command.
 
@@ -677,19 +680,18 @@ public class OrderViewModelGenerator :
     IEventHandler<OrderPartiallyReserved>, IEventHandler<OrderReservationCompleted>,
     IEventHandler<OrderRegistrantAssigned>
 {
-    private Func<IViewRepository> repositoryFactory;
+    private readonly Func<ConferenceRegistrationDbContext> contextFactory;
 
-    public OrderViewModelGenerator(Func<IViewRepository> repositoryFactory)
+    public OrderViewModelGenerator(Func<ConferenceRegistrationDbContext> contextFactory)
     {
-        this.repositoryFactory = repositoryFactory;
+        this.contextFactory = contextFactory;
     }
 
     public void Handle(OrderPlaced @event)
     {
-        var repository = this.repositoryFactory();
-        using (repository as IDisposable)
+        using (var repository = this.contextFactory.Invoke())
         {
-            var dto = new OrderDTO(@event.OrderId, Order.States.Created)
+            var dto = new OrderDTO(@event.SourceId, OrderDTO.States.Created)
             {
                 AccessCode = @event.AccessCode,
             };
@@ -723,10 +725,11 @@ public class OrderViewModelGenerator :
 }
 ```
 
-The following code sample shows the **OrmViewRepository** class.
+The following code sample shows the **ConferenceRegistrationDbContext** 
+class. 
 
 ```Cs
-public class OrmViewRepository : DbContext, IViewRepository
+public class ConferenceRegistrationDbContext : DbContext
 {
     ...
 
@@ -752,9 +755,48 @@ public class OrmViewRepository : DbContext, IViewRepository
 }
 ```
 
-**JanaPersona:** Notice that this repository class in the read-side 
-includes a **Save** method to persist the changes sent from the 
-write-side and handled by the **OrderViewModelGenerator** handler class. 
+> **JanaPersona:** Notice that this **ConferenceRegistrationDbContext**
+> in the read-side includes a **Save** method to persist the changes
+> sent from the write-side and handled by the
+> **OrderViewModelGenerator** handler class. 
+
+## Querying the Read-side
+
+The following code sample shows a non-generic DAO class that the MVC controllers use to query for conference information on the read-side. It wraps the **ConferenceRegistrationDbContext** class shown previously.
+
+```Cs
+public class ConferenceDao : IConferenceDao
+{
+    private readonly Func<ConferenceRegistrationDbContext> contextFactory;
+
+    public ConferenceDao(Func<ConferenceRegistrationDbContext> contextFactory)
+    {
+        this.contextFactory = contextFactory;
+    }
+
+    public ConferenceDescriptionDTO GetDescription(string conferenceCode)
+    {
+        using (var repository = this.contextFactory.Invoke())
+        {
+            return repository.Query<ConferenceDescriptionDTO>().Where(dto => dto.Code == conferenceCode).FirstOrDefault();
+        }
+    }
+
+    public ConferenceAliasDTO GetConferenceAlias(string conferenceCode)
+    {
+        ...
+    }
+
+    public IList<ConferenceSeatTypeDTO> GetPublishedSeatTypes(Guid conferenceId)
+    {
+        ...
+    }
+}
+```
+
+> **JanaPersona:** Notice how this **ConferenceDao** class only contains
+> methods that return data. It is is used by the MVC controllers to
+> retrieve data to display in the UI.
 
 ## Refactoring the SeatsAvailability Aggregates
 

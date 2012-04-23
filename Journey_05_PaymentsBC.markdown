@@ -9,7 +9,8 @@ This chapter describes the changes made by the team to prepare for the
 first production release of the Contoso Conference Management System. 
 This work includes some refactoring and additions to the Orders and 
 Registrations bounded context that was introduced in the previous two 
-chapters as well as a new Conference Management bounded context. 
+chapters as well as a new Conference Management bounded context and
+Payments bounded context. 
 
 One of the key refactorings undertaken by the team during this phase of 
 the journey was to introduce event sourcing into the Orders and 
@@ -39,7 +40,21 @@ Customer. The Business Customer can use his email address and the Access
 Code on the Conference Management Web Site to retrieve the conference 
 details from the system at a later date. The system uses access codes 
 instead of passwords to avoid the overhead for the Business Customer of 
-setting up an account with the system. 
+setting up an account with the system.
+
+### Event Sourcing
+
+Event Sourcing is a way of persisting and reloading the state of 
+aggregates within the system. Whenever the the state of an aggregate 
+changes, the aggregate raises an event detailing the state change. The 
+system then saves this event in an event store. The system can recreate 
+the state of an aggregate by replaying all of the previously saved 
+events associated with that aggregate instance. The event store becomes 
+the book of record for the data stored by the system. 
+
+In addition, you can use event sourcing as a source of audit data, as a 
+way to query historic state, and to replay events for debugging and 
+problem analysis. 
 
 ## User Stories 
 
@@ -86,11 +101,17 @@ for each attendee.
 
 What are the key architectural features? Server-side, UI, multi-tier, cloud, etc.
 
-## Conference Management Bounded Context
+### Conference Management Bounded Context
 
-The Conference Management bounded context is a simple two-tier, CRUD-style web application. It is implemented using MVC 4 and Entity Framework.
+The Conference Management bounded context is a simple two-tier, 
+CRUD-style web application. It is implemented using MVC 4 and Entity 
+Framework. 
 
-**JanaPersona:** The team implemented this bounded context after it implemented the public Conference Management web-site that uses MVC 3.
+**JanaPersona:** The team implemented this bounded context after it 
+implemented the public Conference Management web-site that uses MVC 3.
+
+This bounded context must integrate with other bounded contexts that 
+implement the CQRS pattern. 
 
 # Patterns and Concepts 
 
@@ -104,12 +125,31 @@ The Conference Management bounded context is a simple two-tier, CRUD-style web a
 
 ## Event Sourcing
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	Add brief summary of event sourcing with links to Reference Guide.
-  </span>
-</div> 
+The team at Contoso originally implemented the Orders and Reservations 
+bounded context without using event sourcing. However, during the 
+implementation it became clear that using event sourcing would help to 
+simplify this bounded context. 
+
+In the previous chapter [Extending and Enhancing the Orders and 
+Registrations Bounded Contexts][j_chapter4] the team found that they 
+needed to use events to push changes from the write-side to the 
+read-side. On the read-side the **OrderViewModelGenerator** class 
+subscribed to the events published by the **Order** aggregate, and used 
+those events to update the views in the database that were queried by 
+the read-model. 
+
+This was already half-way to an event sourcing implementation, so it 
+made sense to use a single persistence mechanism based on events for the 
+whole bounded context. 
+
+The event sourcing infrastructure is reusable in other bounded contexts, 
+and the implementation of the Orders and Registrations becomes simpler. 
+
+> **PoePersona:** As a practical problem, the team had limited time
+> before the V1 release to implement a production quality event store.
+> They created a simple, basic event store based on SQL Server as an
+> interim solution. However, they will face the problem in the future
+> of migrating from one event store to another.
 
 ## Task-based UI
 
@@ -201,11 +241,219 @@ Registrations bounded context. Also, if a registrant adds a new attendee
 to a conference, the business customer must be able to view details of 
 the attendee in the list in the Conference Management web-site. 
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	Add details of integration options: db-centric, events, read-model.
-  </span
+The following converstion between several developers and the domain 
+expert highlights some of the key issues that the team needed to address 
+in planning how this integration should be implemented. 
+
+> *Developer #1*: I want to talk about how we should implement two
+> pieces of the integration story associated with our CRUD-style,
+> Conference Management bounded context. First of all, when a Business
+> Customer creates a new conference or defines new seat types for an
+> existing conference in this bounded context, other bounded contexts
+> such as the Orders and Registrations bounded context will need to know
+> about the change. Secondly, when a Business Customer changes the quota
+> for a seat type other bounded contexts will need to know about this
+> change as well.
+
+> *Developer #2*: So in both cases you are pushing changes from the
+> Conference Management bounded context. It's one-way.
+
+> *Developer #1*: Correct.
+
+> *Developer #2*: What are the significant differences between the
+> scenarios that you outlined?
+
+> *Developer #1*: In the first scenario, these changes are relatively
+> infrequent and typically happen when the Business Customer creates the
+> conference. Also, these are append only changes. We don't allow a
+> Business Customer to delete a conference or a seat type after the
+> conference has been published for the first time. In the second
+> scenario, the changes might be more frequent and a Business Customer
+> might increase or decrease a seat quota.
+
+> *Developer #2*: What implementation approaches are you considering for
+> these integration scenarios?
+
+> *Developer #1*: Because we have a two tier CRUD-style bounded context,
+> for the first scenario I was planning on exposing the conference and
+> seat type information directly from the database as a simple read-only
+> service. For the second scenario, I was planning to publish events
+> whenever the Business Customer updates the seat quotas.
+
+> *Developer #2*: Why use two different approaches here, it would be
+> simpler to use a single approach. Using events is more flexible in the
+> long run. If additional bounded contexts need this information, they
+> can easily subscribe to the event. Using events provides for more
+> decoupling between the bounded contexts.
+
+> *Developer #1*: I can see that it would be easier to adapt to changing
+> requirements in the future if we used events. For example, if a new
+> bounded context required information about who changed the quota, we
+> add this information to the event. For existing bounded contexts we
+> could add an adapter that converted the new event format to the old.
+
+> *Developer #2*: You implied that the events that notify subscribers of
+> quota changes would send the change in the quota. For example, the
+> Business Customer increased a seat quota by 50. What happens if a
+> subscriber wasn't there at the beginning and so doesn't receive the
+> full history of updates?
+
+> *Developer #1*: We may have to include some synchronization mechanism
+> that uses snapshots of the current state. However, in this case the
+> event could simply report the new value of the quota. If necessary,
+> the event could report both the delta and the absolute value of the
+> seat quota.
+
+> *Developer #2*: How are you going to ensure consistency? You need to
+> guarantee that your bounded context persists its data to storage and
+> publishes the events on a message queue.
+
+> *Developer #1*: We can wrap the database write and the add to queue
+> operations in a transaction.
+
+> *Developer #2*: That's going to be problematic for two reasons.
+> Firstly, our infrastructure uses the Windows Azure Service Bus for
+> messages. You can't use a transaction to combine sending a message on
+> the Service Bus and write to a database. Secondly, we're trying to 
+> avoid two-phase commits because they always cause problems in the
+> long-run.
+
+> *Domain Expert*: We have a similar scenario with another bounded
+> context that we'll be looking at later. In this case we can't make any
+> changes to the bounded context, we no longer have an up to date copy
+> of the source code.
+
+> *Developer #1*: What can we do to avoid using a two-phase commit? And
+> what can we do if we don't have access to the source code and so can't
+> make any changes?
+
+> *Developer #2*: In both cases we use the same technique to solve the
+> problem. Instead of publishing the events from within the application
+> code, we can use another process that monitors the database and sends
+> the events when it detects a change in the database. This solution may
+> introduce a small amount of latency, but it does avoid the need for a
+> two-phase commit and it can be implemented without making any changes
+> to the application code.
+
+### Some Comments on Windows Azure Service Bus
+
+The previous discussion suggested a way to avoid using a distributed 
+two-phase commit in the Conference Management bounded context. However, 
+there are some alternative approaches. 
+
+Although the Windows Azure Service Bus does not support distributed 
+transactions with databases, you can use the 
+**RequiresDuplicateDetection** property when you send messages, 
+and the **PeekLock** mode when you receive messages to create the 
+desired level of robustness without using a distributed transaction.
+
+As another approach, you can use a distributed transaction to update the 
+database and send a message using a local MSMQ queue. You can then use a 
+bridge to connect the MSMQ queue to a Windows Azure Service Bus queue. 
+
+For example of implementing a bridge from MSMQ to Windows Azure Service 
+Bus, see the sample in the [Windows Azure AppFabric SDK][appfabsdk]. 
+
+For more information about the Windows Azure Service Bus, see 
+[Technologies Used in the Reference Implementation][r_chapter9] in the 
+Reference Guide. 
+
+## Distributed Transactions and Event Sourcing
+
+The previous section that discussed the integration options for the 
+**Conference Management** bounded context raised the issue of using a 
+distributed, two-phase commit transaction to ensure consistency between 
+the database that stores the conference management data and the 
+messaging infrastructure that publishes changes to other bounded 
+contexts. 
+
+The same problem arises when you implement event sourcing: you must 
+ensure consistency between the event store in the bounded context that 
+stores all the events and the messaging infrastucture that publishes 
+those events to other bounded contexts. 
+
+A key feature of an event store implementation should be that it offers 
+a way to guarantee consistency between the events that it stores and the 
+events that the bounded context publishes to other bounded contexts.
+
+> **CarlosPersona:** This is a key challenge you should address if you
+> decide to implement an event store yourself. If you are designing a
+> scalable event store that you plan to deploy in a distributed
+> environment such as Windows Azure, you must be very careful to ensure
+> that you meet this requirement. 
+
+## Autonomy versus Authority
+
+The **Orders and Registrations** bounded context is responsible for 
+creating and managing orders on behalf of registrants. The **Payments** 
+bounded context is responsible for managing the interaction with an 
+external payments system so that registrants can pay for the seats that 
+they have ordered. 
+
+When the team were examining the domain models for these two bounded 
+contexts, they discovered that neither of them knew anything about 
+pricing. The **Orders and Registrations** bounded context created an 
+order that listed the quantities of the different seat types that the 
+registrant requested. The **Payments** bounded context simply passed a 
+total to the external payments system. At some point the system needed 
+to calculate the total from the order before invoking the payment 
+process. 
+
+The team considered two different approaches to solve this problem: 
+favoring autonomy and favoring authority. 
+
+### Favoring Autonomy
+
+In this approach, the responsibility for calcualting the order total is 
+assigned to the **Orders and Registrations** bounded context. The 
+**Orders and Registrations** bounded context is not dependent on another 
+bounded context at the time that it needs to perform the calculation 
+because it already has the necessary data. At some point in the past it 
+will have collected the pricing information it needs from other bounded 
+contexts (such as the **Conference Management** bounded context) and 
+cached it. 
+
+The advantage of this approach is that the **Orders and Registrations** 
+bounded context is autonomous. It doesn't rely on the availabilty of 
+another bounded context or service at the point in time that it needs to 
+perform the calculation. 
+
+The disadvantage is that the pricing information could be out of date. 
+The Business Customer might have changed the pricing information in the 
+**Conference Management** bounded context, but that change might not yet 
+have reached the **Orders and Registrations** bounded context. 
+
+### Favoring Authority
+
+In this approach, the part of the system that calculates the order total 
+obtains the pricing information from the bounded contexts (such as the 
+**Conference Management** bounded context) at the point in time that it 
+performs the calculation. The calculation could still be performed by 
+the **Orders and Registrations** bounded context, or be handled by 
+another bounded context or service within the system. 
+
+The advantage of this approach is that the system always uses the latest 
+pricing information whenever it is calculating an order total. 
+
+The disadvantage is that the **Orders and Registrations** bounded 
+context is dependent on another bounded context when it needs to 
+determine the total for the order. It either needs to query the 
+**Conference Management** bounded context for the up to date pricing 
+information, or call another service that performs the calculation. 
+
+### Choosing between Autonomy and Authority
+
+The choice between the two alternatives is a business decision. The 
+specific business requirements of your scenario should determine which 
+approach to take. Autonomy is often the preference for large, online 
+systems. 
+
+> **CarlosPersona:** For Constoso, the clear choice is for autonomy.
+> It's a serious problem if Registrants can't purchase seats because
+> some other bounded context is down. However, we don't really care if
+> there's a short lag between the Business Customer modifying the
+> pricing information, and that new pricing information being used to
+> calculate order totals.
 
 # Implementation Details 
 
@@ -225,6 +473,271 @@ In the Visual Studio solution, the **Conference** project contains the model cod
 	Add details of intregration with other bounded contexts.
   </span>
 </div> 
+
+## Event Sourcing
+
+The intial implementation of the event sourcing infrastructure is 
+extremely basic: the team intends to replace it with a production 
+quality event store in the near future. This section describes the 
+initial, basic, implementation and lists the various ways it must be 
+improved. 
+
+The core elements of this basic event sourcing solution are:
+
+* Whenever the state of an aggregate instance changes, the instance
+  raises an event that fully describes the state change.
+* The system persists these events in an event store. This solution uses
+  a SQL database to store the events.
+* An aggregate can rebuild its state by replaying its past stream of
+  events.
+* Other aggregates and workflows (possibly in different bounded
+  contexts) can subscribe to these events.
+  
+### Raising Events when the State of an Aggregate Changes
+
+The following two methods from the **Order** aggregate are examples of 
+methods that the **OrderCommandHandler** class invokes when it receives 
+a command for the order. Neither of these methods update the state of 
+the **Order** aggregate, instead they raise an event that will be 
+handled by the **Order** aggregate. In the **MarkAsReserved** method, 
+there is some minimal logic to determine which of two events to raise. 
+
+
+```Cs
+public void MarkAsReserved(DateTime expirationDate, IEnumerable<SeatQuantity> reservedSeats)
+{
+    if (this.isConfirmed)
+        throw new InvalidOperationException("Cannot modify a confirmed order.");
+
+    var reserved = reservedSeats.ToList();
+
+    // Is there an order item which didn't get an exact reservation?
+    if (this.seats.Any(item => !reserved.Any(seat => seat.SeatType == item.SeatType && seat.Quantity == item.Quantity)))
+    {
+        this.Update(new OrderPartiallyReserved(this.id, this.Version + 1, expirationDate, reserved));
+    }
+    else
+    {
+        this.Update(new OrderReservationCompleted(this.id, this.Version + 1, expirationDate, reserved));
+    }
+}
+
+public void ConfirmPayment()
+{
+    this.Update(new OrderPaymentConfirmed(this.id, this.Version + 1));
+}
+```
+
+The **Update** method and the **Version** property are defined in the 
+abstract bas class of the **Order** class. The following code sample 
+shows this method and property in the **EventSourcedAggregateRoot** 
+class. 
+
+
+```Cs
+public int Version { get { return this.version; } }
+
+protected void Update(IDomainEvent e)
+{
+    this.handlers[e.GetType()].Invoke(e);
+    Debug.Assert(e.Version == this.version + 1);
+    this.version = e.Version;
+    this.pendingEvents.Add(e);
+}
+```
+
+The **Update** method determines which event handler in the aggregate it 
+should invoke to handle the event type. 
+
+
+> **MarkusPersona:** The version of the aggregate is incremented every
+> time its state is updated.
+
+The following code sample shows the event handler methods in the 
+**Order** class that are invoked when the command methods shown above 
+are called. 
+
+
+```Cs
+private void OnOrderPartiallyReserved(OrderPartiallyReserved e)
+{
+    this.seats = e.Seats.ToList();
+}
+
+private void OnOrderReservationCompleted(OrderReservationCompleted e)
+{
+    this.seats = e.Seats.ToList();
+}
+
+private void OnOrderExpired(OrderExpired e)
+{
+}
+
+private void OnOrderPaymentConfirmed(OrderPaymentConfirmed e)
+{
+    this.isConfirmed = true;
+}
+```
+
+These methods update the state of the aggregate.
+
+An aggregate must be able to handle both events from other aggregates 
+and events that it raises itself. The protected constructor in the 
+**Order** class lists all the events that the **Order** aggregate can 
+handle. 
+
+```Cs
+protected Order()
+{
+    base.Handles<OrderPlaced>(this.OnOrderPlaced);
+    base.Handles<OrderUpdated>(this.OnOrderUpdated);
+    base.Handles<OrderPartiallyReserved>(this.OnOrderPartiallyReserved);
+    base.Handles<OrderReservationCompleted>(this.OnOrderReservationCompleted);
+    base.Handles<OrderExpired>(this.OnOrderExpired);
+    base.Handles<OrderPaymentConfirmed>(this.OnOrderPaymentConfirmed);
+    base.Handles<OrderRegistrantAssigned>(this.OnOrderRegistrantAssigned);
+}
+```
+
+### Persisting Events to the Event Store
+
+When the aggregate processes an event in the **Update** method in the 
+**EventSourcedAggregateRoot** class, it adds the event to a private list 
+of pending events. This list is exposed as a public, **IEnumerable** 
+property called **Events**. 
+
+The following code sample from the **OrderCommandHandler** class shows 
+how the handler invokes a method in the **Order** class to handle a 
+command, and then uses a repository to persist the current state of the 
+**Order** aggregate. 
+
+
+```Cs
+public void Handle(MarkSeatsAsReserved command)
+{
+    var order = repository.Find(command.OrderId);
+
+    if (order != null)
+    {
+        order.MarkAsReserved(command.Expiration, command.Seats);
+        repository.Save(order);
+    }
+}
+```
+
+The following code sample shows the initial, simple implementation of 
+the **Save** method in the **SqlEventRepository** class. 
+
+
+```Cs
+public void Save(T aggregateRoot)
+{
+    // TODO: guarantee that only incremental versions of the event are stored
+    var events = aggregateRoot.Events.ToArray();
+    using (var context = this.contextFactory.Invoke())
+    {
+        foreach (var e in events)
+        {
+            using (var stream = new MemoryStream())
+            {
+                this.serializer.Serialize(stream, e);
+                var serialized = new Event { AggregateId = e.SourceId, Version = e.Version, Payload = stream.ToArray() };
+                context.Set<Event>().Add(serialized);
+            }
+        }
+
+        context.SaveChanges();
+    }
+
+    // TODO: guarantee delivery or roll back, or have a way to resume after a system crash
+    this.eventBus.Publish(events);
+}
+```
+
+### Replaying Events to Re-build State
+
+When a handler class loads an aggregate instance from storage, it loads the state of the instance by replaying the stored event stream.
+
+The following code sample from the **OrderCommandHandler** class shows how this process is initiated by calling the **Find** method in the repository.
+
+```Cs
+public void Handle(MarkSeatsAsReserved command)
+{
+    var order = repository.Find(command.OrderId);
+
+    ...
+}
+```
+
+The following code sample shows how the **SqlEventRepository** class 
+loads the event stream associated with the aggregate. 
+
+
+```Cs
+public T Find(Guid id)
+{
+    List<Event> all;
+    using (var context = this.contextFactory.Invoke())
+    {
+        all = context.Set<Event>().Where(x => x.AggregateId == id).OrderBy(x => x.Version).ToList();
+    }
+
+    if (all.Count > 0)
+    {
+        var deserialized = all.Select(x => this.serializer.Deserialize(new MemoryStream(x.Payload))).Cast<IDomainEvent>().ToList();
+        return (T)Activator.CreateInstance(typeof(T), deserialized);
+    }
+
+    return null;
+}
+```
+
+The following code sample shows the constructor in the **Order** class 
+that rebuilds the state of an order from its event stream when it is 
+invoked by the **CreateInstance** method in the previous code sample. 
+
+
+```Cs
+public Order(IEnumerable<IDomainEvent> history) : this()
+{
+    this.Rehydrate(history);
+}
+```
+
+The **Rehydrate** method is defined in the **EventSourcedAggregateRoot** 
+class as shown in the following code sample. 
+
+```Cs
+protected void Rehydrate(IEnumerable<IDomainEvent> pastEvents)
+{
+    foreach (var e in pastEvents)
+    {
+        this.handlers[e.GetType()].Invoke(e);
+        this.version = e.Version;
+    }
+}
+```
+
+For each stored event in the history, it determines the appropriate 
+handler method to invoke in the **Order** class.
+
+### Issues with the Simple Event Store Implementation
+
+The simple implementation of event sourcing and an event store outlined 
+in the previous sections has a number of short-comings. The following 
+list identifies some of these short-comings that should be overcome in a 
+production quality implmentation. 
+
+1. There is no guarantee in the **Save** method in the
+   **SqlEventRepository** class that the event is persisted to storage
+   and published to the messaging infrastructure. A failure could result
+   in an event being saved to storage but not being published.
+2. There is no chack that when the system persists an event, that it is
+   a later event than the previous one. Potentially, events could be
+   stored out of sequence.
+3. There are no optimizations in place for aggregate instances that have
+   a large number of events in their event stream. This could result in
+   performance problems when replaying events.
 
 # Running the Applications
 
@@ -329,8 +842,10 @@ between the implementations.
 
 Describe any special considerations that relate to testing for this bounded context.  
 
+[j_chapter4]:	        Journey_04_ExtendingEnhancing.markdown
 [r_chapter9]:     		Reference_09_Technologies.markdown
 
 [inductiveui]:			http://msdn.microsoft.com/en-us/library/ms997506.aspx
 [metroux]:              http://msdn.microsoft.com/en-us/library/windows/apps/hh465424.aspx
 [unity]:				http://msdn.microsoft.com/en-us/library/ff647202.aspx
+[appfabsdk]:            http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=27421

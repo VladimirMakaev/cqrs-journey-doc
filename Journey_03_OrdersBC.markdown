@@ -73,16 +73,16 @@ events to an event bus; handlers register for specific types of event on
 the event bus and then deliver the event to the subscriber. In this 
 bounded context, the only subscriber is a workflow. 
 
-### Workflow
+### Coordinating Workflow
 
-In this bounded context, a workflow is a class that coordinates the behavior 
-of the aggregates in the domain. A workflow subscribes to the events that 
-the aggregates raise, and then follow a simple set of rules to determine 
-which command or commands to send. The workflow does not contain any 
-business logic, simply logic to determine the next command to send. The 
-workflow is implemented as a state machine, so when the workflow responds to an 
-event, it can change its internal state in addition to sending a new 
-command. 
+In this bounded context, a Coordinating Workflow (or workflow) is a 
+class that coordinates the behavior of the aggregates in the domain. A 
+workflow subscribes to the events that the aggregates raise, and then 
+follow a simple set of rules to determine which command or commands to 
+send. The workflow does not contain any business logic, simply logic to 
+determine the next command to send. The workflow is implemented as a 
+state machine, so when the workflow responds to an event, it can change 
+its internal state in addition to sending a new command. 
 
 The workflow in this bounded context can receive commands as well as 
 subscribe to events.
@@ -340,8 +340,8 @@ The numbers in the diagram correspond to the following steps:
 2. The new **Order** aggregate, with an ID of 4239,  is persisted to
    the data store.
 3. The **Order** aggregate raises an event that is handled by the
-   **ReservationProcess** workflow.
-4. The **ReservationProcess** workflow determines that a command should be
+   **RegistrationProcess** workflow.
+4. The **RegistrationProcess** workflow determines that a command should be
    sent to the **SeatsAvailability** aggregate with an ID of
    157.
 5. The **SeatsAvailability** aggregate is re-hydrated from the
@@ -351,15 +351,15 @@ The numbers in the diagram correspond to the following steps:
    data store.
 
 > **BharathPersona:** Workflow or saga? Initially the team referred to
-> the **ReservationProcess** workflow as a saga. However, after they
+> the **RegistrationProcess** workflow as a saga. However, after they
 > reviewed the original definition of a saga from the paper
 > [Sagas](sagapaper) by Hector Garcia-Molina and Kenneth Salem, they
 > revised their decision. The key reasons for this are that reservation
 > process does not include explicit compensation steps, and does not
 > need to be represented as a long-lived transaction.
 
-For more information about sagas see the chapter [Sagas][r_chapter6] in
-the Reference Guide.
+For more information about workflows and sagas see the chapter
+[Coordinating Workflows and Sagas][r_chapter6] in the Reference Guide.
    
 The team identified these questions about these approaches:
 
@@ -792,7 +792,7 @@ following conversation between two developers explores this decision.
 Figure 6 shows the entities that exist in the write-side model. There 
 are two aggregates, **Order** and **SeatsAvailability**, each 
 one containing multiple entity types. There is also a 
-**ReservationWorkflow** class that manages the interaction between the
+**RegistrationProcess** class that manages the interaction between the
 aggregates. 
 
 The table in the figure 6 shows how the workflow behaves given a current 
@@ -832,18 +832,18 @@ public Order(Guid id, Guid userId, Guid conferenceId, IEnumerable<OrderItem> lin
 > **Note:** To see how the infrastructure elements deliver commands and
   events, see figure 7.
 
-The system creates a new **ReservationWorkflow** instance to manage the 
-new order. The following code sample from the **ReservationWorkflow** 
+The system creates a new **RegistrationProcess** instance to manage the 
+new order. The following code sample from the **RegistrationProcess** 
 class shows how the workflow handles the event. 
 
 ```Cs
 public void Handle(OrderPlaced message)
 {
-    if (this.State == WorkflowState.NotStarted)
+    if (this.State == ProcessState.NotStarted)
     {
         this.OrderId = message.OrderId;
         this.ReservationId = Guid.NewGuid();
-        this.State = WorkflowState.AwaitingReservationConfirmation;
+        this.State = ProcessState.AwaitingReservationConfirmation;
 
         this.AddCommand(
             new MakeSeatReservation
@@ -892,20 +892,20 @@ public void MakeReservation(Guid reservationId, int numberOfSeats)
 }
 ```
 
-The **ReservationWorkflow** class handles the the 
+The **RegistrationProcess** class handles the the 
 **ReservationAccepted** and **ReservationRejected** events. This 
 reservation is a temporary reservation for seats to give the user the 
-opportunity to make a payment. The workflow is responsible for releasing the 
-reservation when either the purchase is complete, or the reservation 
+opportunity to make a payment. The workflow is responsible for releasing 
+the reservation when either the purchase is complete, or the reservation 
 timeout period expires. The following code sample shows how the workflow 
 handles these two messages. 
 
 ```Cs
 public void Handle(ReservationAccepted message)
 {
-    if (this.State == WorkflowState.AwaitingReservationConfirmation)
+    if (this.State == ProcessState.AwaitingReservationConfirmation)
     {
-        this.State = WorkflowState.AwaitingPayment;
+        this.State = ProcessState.AwaitingPayment;
 
         this.AddCommand(new MarkOrderAsBooked { OrderId = this.OrderId });
         this.commands.Add(
@@ -922,9 +922,9 @@ public void Handle(ReservationAccepted message)
 
 public void Handle(ReservationRejected message)
 {
-    if (this.State == WorkflowState.AwaitingReservationConfirmation)
+    if (this.State == ProcessState.AwaitingReservationConfirmation)
     {
-        this.State = WorkflowState.Completed;
+        this.State = ProcessState.Completed;
         this.AddCommand(new RejectOrder { OrderId = this.OrderId });
     }
     else
@@ -944,7 +944,7 @@ The previous code sample shows how the workflow sends the
 holding the message in a queue for the delay of fifteen minutes. 
 
 You can examine the code in the **Order**, 
-**SeatsAvailability**, and **ReservationWorkflow** classes 
+**SeatsAvailability**, and **RegistrationProcess** classes 
 to see how the other message handlers are implemented. They all follow 
 the same pattern: receive a message, perform some logic, and send a 
 message. 
@@ -998,10 +998,16 @@ The class that implements the **IRepository** interface is responsible
 for persisting the aggregate and publishing any events raised by the 
 aggregate on the event bus, all as part of a transaction. 
 
+**CarlosPersona:** The team later discovered an issue with this when 
+they tried to use Windows Azure Service Bus as the messaging 
+infrastructure. Windows Azure Service Bus does support distributed 
+transactions with databases. For a discussion of this issue, see 
+[Preparing for the V1 Release][j_chapter5] later in this guide. 
+
 The only event subscriber in the reservations bounded context is the 
-**ReservationWorkflow** class. Its router subscribes to the event bus to 
+**RegistrationProcess** class. Its router subscribes to the event bus to 
 handle specific events as shown in the following code sample from the 
-**ReservationWorkflow** class. 
+**RegistrationProcess** class. 
 
 > **Note:* We use the term handler to refer to the classes that handle 
 > commands and forward them to aggregate instances, and the term router 
@@ -1016,10 +1022,10 @@ public void Handle(ReservationAccepted @event)
 	{
         lock (lockObject)
         {
-            var workflow = repo.Find<RegistrationWorkflow>(@event.ReservationId);
-            workflow.Handle(@event);
+            var process = repo.Find<RegistrationProcess>(@event.ReservationId);
+            process.Handle(@event);
 
-            repo.Save(workflow);
+            repo.Save(process);
         }
 	}
 }
@@ -1074,7 +1080,7 @@ that the **TopicSender** class sends events to can have multiple
 subscriptions. Each subscription is associated with a particular handler 
 type so that events reach all of their subscribers. In the example shown 
 in figure 8, the **ReservationRejected** event is sent to the 
-**RegistrationWorkflow**, the **WaitListWorkflow**, and one other 
+**RegistrationProcess**, the **WaitListProcess**, and one other 
 destination. 
 
 A command has only one recipient. In figure 8, the 
@@ -1240,7 +1246,7 @@ for processing when the consumer restarts.
 As stated previously, a subscription should be associated with a single 
 event handler type, although an event may be handled by multiple handler 
 types. For example, the **ReservationRejected** event may be handled by 
-both the **RegistrationWorkflowHandler** and **WaitListWorkflowHandler** 
+both the **RegistrationProcessHandler** and **WaitListProcessHandler** 
 handler classes because it must be delivered to the two workflows. 
 
 Figure 8 suggests that Topic B is only reponsible for delivering 
@@ -1248,7 +1254,7 @@ Figure 8 suggests that Topic B is only reponsible for delivering
 additional event types such as **ReservationAccepted** events. In this 
 scenario, the handler classes might need to include some additional 
 logic: if the **ReservationAccepted** event only needs to go to the 
-**RegistrationWorkflow** workflow, then the **WaitListWorkflow** would 
+**RegistrationProcess** workflow, then the **WaitListProcess** would 
 need to discard any **ReservationAccepted** events that it retrieved 
 from its subscription. 
 
@@ -1423,6 +1429,7 @@ This second test can make use of the behavior the **SeatsAvailability**
 aggregate because the aggregate does raise an event if it rejects a 
 reservation. 
 
+[j_chapter5]:     Journey_05_PaymentsBC.markdown
 [r_chapter3]:     Reference_03_ESIntroduction.markdown
 [r_chapter4]:     Reference_04_DeepDive.markdown
 [r_chapter6]:     Reference_06_Sagas.markdown
