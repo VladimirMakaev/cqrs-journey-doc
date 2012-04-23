@@ -30,7 +30,7 @@ communicate with another bounded context by raising events.
 
 # Bounded Contexts in the Conference Management System 
 
-## The Orders and Reservations Bounded Context
+## The Orders and Registrations Bounded Context
 
 When a registrant interacts with the system, the system creates an 
 **Order** to manage the **Reservations**, payment, and 
@@ -55,14 +55,81 @@ other registrants to reserve.
   </span>
 </div>
 
-## The Registrations Bounded Context
+## The Conference Management Bounded Context
 
-## The Wait-listing Bounded Context
+## The On-site Client Application Bounded Context 
 
 ## The Payments Bounded Context 
+
+## The Conference Feedback Bounded Context
+
+## Relationships Between the Bounded Contexts
+
+Figure 1 shows the five bounded contexts that make up the Contoso Conference Management System. The arrows on the diagram indicate the flow of data as events between them.
+
+![Figure 1][fig1]
+
+**Bounded Contexts in the Contoso Conference Management System**
+
+The following table lists the events that are associated with each of the numbered arrows.
+
+<table border="1">
+  <tr>
+    <th>Arrow</th><th>Events</th>
+  </tr>
+  <tr>
+    <td>1</td>
+	<td>
+	  **ConferenceCreated**<br/>
+	  **ConferenceUpdated**<br/>
+	  **ConferencePublished**<br/>
+	  **ConferenceUnpublished**<br/>
+	  **SeatCreated**<br/>
+	  **SeatUpdated**<br/>
+	  **SeatsAdded**<br/>
+	  **SeatsRemoved**<br/>
+	</td>
+  </tr>
+  <tr>
+    <td>2</td>
+	<td>
+	  **GetConferenceDescription** (request from client)<br/>
+	  ??
+	</td>
+  </tr>
+  <tr>
+    <td>3</td>
+	<td>
+	  ??
+	</td>
+  </tr>
+  <tr>
+    <td>4</td>
+	<td>
+	  **AttendeeCheckedIn** (sent from client)<br/>
+	  **RegistrationUpdated** (sent from client)<br/>
+	  **GetConferenceStatus** (request from client)<br/>
+	  **RegistrationAddedOrUpdated** (sent from server)<br/>
+	  **RegistrationRemoved** (sent from server)<br/>
+	  **AttendeeCheckedIn** (sent from server)<br/>
+	</td>
+  </tr>
+  <tr>
+    <td>5</td>
+	<td>
+	  **InitiateInvoicePayment** (sent to Payments bounded context)<br/>
+	  **InitiateThirdPartyProcessorPayment (sent to Payments bounded context)<br/>
+	  **PaymentCompleted** (sent from Payments bounded context)<br/>
+	  **PaymentRejected** (sent from Payments bounded context)<br/>
+	</td>
+  </tr>
+
+</table>
 
 # Why Did We Choose These Bounded Contexts? 
 
 
 [j_chapter1]:	  Journey_01_Introduction.markdown
 [r_chapter1]:     Reference_01_CQRSInContext.markdown
+
+[fig1]:           images/Journey_02_BCs.png?raw=true
