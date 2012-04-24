@@ -463,9 +463,13 @@ Provide significantly more detail for those BCs that use CQRS/ES. Significantly 
 
 ## The Conference Management Bounded Context
 
-The Conference Management Bounded Context that enables a Business Customer to define and  manage conferences is implemented using a simple two-tier, CRUD-style application using MVC 4.
+The Conference Management Bounded Context that enables a Business 
+Customer to define and manage conferences is implemented using a simple 
+two-tier, CRUD-style application using MVC 4. 
 
-In the Visual Studio solution, the **Conference** project contains the model code, and the **Conference.Web** project contains the MVC views and controllers.
+In the Visual Studio solution, the **Conference** project contains the 
+model code, and the **Conference.Web** project contains the MVC views 
+and controllers. 
 
 <div style="margin-left:20px;margin-right:20px;">
   <span style="background-color:yellow;">
@@ -473,6 +477,69 @@ In the Visual Studio solution, the **Conference** project contains the model cod
 	Add details of intregration with other bounded contexts.
   </span>
 </div> 
+
+## The Payments Bounded Context
+
+The Payments bounded context is responsible for handling the interaction 
+with the external systems that validate and process payments. In the V1 
+release, payments can be processed either by a fake, external, 
+third-party payments processor (that mimics the behavior of systems such 
+as PayPal) or by an invoicing system. The external systems can report 
+either that a payment was successful or that a payment failed. 
+
+The sequence diagram in figure 3 illustrates how the key elements that 
+are involved in the payments process interact with each other. The 
+diagram is shows a simplified view, for example by ignoring the handler 
+classes to better describe the process. 
+
+![Figure 3][fig3]
+
+**Overview of the payment process**
+
+The diagram shows how the Orders and Registrations bounded context, the 
+Payments bounded context, and the external payments service all interact 
+with each other. Registrants can also opt to pay by invoice instead of 
+using a third-party payments processing service, however for reasosn of 
+simplicity, the diagram does not show this option. 
+
+The Registrant makes a payment as a part of the overall flow in the UI 
+as shown in figure 2. The **PaymentController** controller class does 
+not display a view unless it has to wait for the system to create the 
+**ThirdPartyProcessorPayment** aggregate instance. Its role is to 
+forward to payment information collected from the Registrant to the 
+third-party payments processor. 
+
+Typically, when you implement the CQRS pattern, you use events as the 
+mechanism for communicaating between bounded contexts. However in this 
+case, the **RegistrationController** and **PaymentController** 
+controller classes send commands to the Payments bounded context. The 
+Payments bounded context does use events to communicate back with the 
+**RegistrationProcess** cordinating workflow in the Orders and 
+Registrations bounded context. 
+
+The implementation of the Payments bounded context uses the CQRS pattern 
+without event sourcing. 
+
+The write-side model contains an aggregate called 
+**ThirdPartyProcessorPayment** that consists of two classes: 
+**ThirdPartyProcessorPayment** and **ThirdPartyProcessorPaymentItem**. 
+Instances of these classes are persisted to a SQL database by using 
+Entity Framework. The **PaymentsDbContext** class implements an Entity 
+Framework context. 
+
+The **ThirdPartyProcessorPaymentCommandHandler** implements a command 
+handler for the write-side. 
+
+The read-side model is also implemented using Entity Framework. The 
+**PaymentDao** class exposes the payment data on the read-side. For an 
+example, see the **GetThirdPartyProcessorPaymentDetails** method. 
+
+Figure 4 illustrates the different parts that make up the read-side and 
+the write-side of the Payments bounded context. 
+
+![Figure 4][fig4]
+
+**The read-side and the write-side in the Payments bounded context**
 
 ## Event Sourcing
 
@@ -844,6 +911,11 @@ Describe any special considerations that relate to testing for this bounded cont
 
 [j_chapter4]:	        Journey_04_ExtendingEnhancing.markdown
 [r_chapter9]:     		Reference_09_Technologies.markdown
+
+[fig1]:           images/Journey_05_UIs.png?raw=true
+[fig2]:           images/Journey_05_Tasks.png?raw=true
+[fig3]:           images/Journey_05_Payments.png?raw=true
+[fig4]:           images/Journey_05_PaymentBC.png?raw=true
 
 [inductiveui]:			http://msdn.microsoft.com/en-us/library/ms997506.aspx
 [metroux]:              http://msdn.microsoft.com/en-us/library/windows/apps/hh465424.aspx
