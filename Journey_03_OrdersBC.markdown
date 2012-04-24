@@ -1194,7 +1194,8 @@ private void OnMessageReceived(object sender, BrokeredMessageEventArgs args)
         {
             ...
 			
-            args.Message.Async(args.Message.BeginDeadLetter, args.Message.EndDeadLetter);
+            if (args.Message.DeliveryCount >= 5)
+                args.Message.Async(args.Message.BeginDeadLetter, args.Message.EndDeadLetter);
         }
     }
 }
