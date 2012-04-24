@@ -241,7 +241,7 @@ Registrations bounded context. Also, if a registrant adds a new attendee
 to a conference, the business customer must be able to view details of 
 the attendee in the list in the Conference Management web-site. 
 
-The following converstion between several developers and the domain 
+The following conversation between several developers and the domain 
 expert highlights some of the key issues that the team needed to address 
 in planning how this integration should be implemented. 
 
@@ -369,7 +369,7 @@ contexts.
 
 The same problem arises when you implement event sourcing: you must 
 ensure consistency between the event store in the bounded context that 
-stores all the events and the messaging infrastucture that publishes 
+stores all the events and the messaging infrastructure that publishes 
 those events to other bounded contexts. 
 
 A key feature of an event store implementation should be that it offers 
@@ -404,7 +404,7 @@ favoring autonomy and favoring authority.
 
 ### Favoring Autonomy
 
-In this approach, the responsibility for calcualting the order total is 
+In this approach, the responsibility for calculating the order total is 
 assigned to the **Orders and Registrations** bounded context. The 
 **Orders and Registrations** bounded context is not dependent on another 
 bounded context at the time that it needs to perform the calculation 
@@ -414,7 +414,7 @@ contexts (such as the **Conference Management** bounded context) and
 cached it. 
 
 The advantage of this approach is that the **Orders and Registrations** 
-bounded context is autonomous. It doesn't rely on the availabilty of 
+bounded context is autonomous. It doesn't rely on the availability of 
 another bounded context or service at the point in time that it needs to 
 perform the calculation. 
 
@@ -448,7 +448,7 @@ specific business requirements of your scenario should determine which
 approach to take. Autonomy is often the preference for large, online 
 systems. 
 
-> **CarlosPersona:** For Constoso, the clear choice is for autonomy.
+> **CarlosPersona:** For Contoso, the clear choice is for autonomy.
 > It's a serious problem if Registrants can't purchase seats because
 > some other bounded context is down. However, we don't really care if
 > there's a short lag between the Business Customer modifying the
@@ -474,7 +474,7 @@ and controllers.
 <div style="margin-left:20px;margin-right:20px;">
   <span style="background-color:yellow;">
     <b>Comment [DRB]:</b>
-	Add details of intregration with other bounded contexts.
+	Add details of integration with other bounded contexts.
   </span>
 </div> 
 
@@ -499,7 +499,7 @@ classes to better describe the process.
 The diagram shows how the Orders and Registrations bounded context, the 
 Payments bounded context, and the external payments service all interact 
 with each other. Registrants can also opt to pay by invoice instead of 
-using a third-party payments processing service, however for reasosn of 
+using a third-party payments processing service, however for reason of 
 simplicity, the diagram does not show this option. 
 
 The Registrant makes a payment as a part of the overall flow in the UI 
@@ -510,11 +510,11 @@ forward to payment information collected from the Registrant to the
 third-party payments processor. 
 
 Typically, when you implement the CQRS pattern, you use events as the 
-mechanism for communicaating between bounded contexts. However in this 
+mechanism for communicating between bounded contexts. However in this 
 case, the **RegistrationController** and **PaymentController** 
 controller classes send commands to the Payments bounded context. The 
 Payments bounded context does use events to communicate back with the 
-**RegistrationProcess** cordinating workflow in the Orders and 
+**RegistrationProcess** coordinating workflow in the Orders and 
 Registrations bounded context. 
 
 The implementation of the Payments bounded context uses the CQRS pattern 
@@ -543,7 +543,7 @@ the write-side of the Payments bounded context.
 
 ## Event Sourcing
 
-The intial implementation of the event sourcing infrastructure is 
+The initial implementation of the event sourcing infrastructure is 
 extremely basic: the team intends to replace it with a production 
 quality event store in the near future. This section describes the 
 initial, basic, implementation and lists the various ways it must be 
@@ -581,41 +581,49 @@ public void MarkAsReserved(DateTime expirationDate, IEnumerable<SeatQuantity> re
     // Is there an order item which didn't get an exact reservation?
     if (this.seats.Any(item => !reserved.Any(seat => seat.SeatType == item.SeatType && seat.Quantity == item.Quantity)))
     {
-        this.Update(new OrderPartiallyReserved(this.id, this.Version + 1, expirationDate, reserved));
+        this.Update(new OrderPartiallyReserved { ReservationExpiration = expirationDate, Seats = reserved.ToArray() });
     }
     else
     {
-        this.Update(new OrderReservationCompleted(this.id, this.Version + 1, expirationDate, reserved));
+        this.Update(new OrderReservationCompleted { ReservationExpiration = expirationDate, Seats = reserved.ToArray() });
     }
 }
 
 public void ConfirmPayment()
 {
-    this.Update(new OrderPaymentConfirmed(this.id, this.Version + 1));
+    this.Update(new OrderPaymentConfirmed());
 }
 ```
 
-The **Update** method and the **Version** property are defined in the 
-abstract bas class of the **Order** class. The following code sample 
-shows this method and property in the **EventSourcedAggregateRoot** 
-class. 
+The **Update** method is defined in the abstract base class of the 
+**Order** class. The following code sample shows this method and the 
+**Id** and **Version** properties in the **EventSourced** class. 
 
 
 ```Cs
+private readonly Guid id;
+private int version = -1;
+
+protected EventSourced(Guid id)
+{
+    this.id = id;
+}
+
 public int Version { get { return this.version; } }
 
-protected void Update(IDomainEvent e)
+protected void Update(VersionedEvent e)
 {
+    e.SourceId = this.Id;
+    e.Version = this.version + 1;
     this.handlers[e.GetType()].Invoke(e);
-    Debug.Assert(e.Version == this.version + 1);
     this.version = e.Version;
     this.pendingEvents.Add(e);
 }
 ```
 
-The **Update** method determines which event handler in the aggregate it 
-should invoke to handle the event type. 
-
+The **Update** method sets the Id and increments the version of the 
+aggregate, and determines which event handler in the aggregate it should 
+invoke to handle the event type. 
 
 > **MarkusPersona:** The version of the aggregate is incremented every
 > time its state is updated.
@@ -671,12 +679,12 @@ protected Order()
 When the aggregate processes an event in the **Update** method in the 
 **EventSourcedAggregateRoot** class, it adds the event to a private list 
 of pending events. This list is exposed as a public, **IEnumerable** 
-property called **Events**. 
+property of the abstract **EventSourced** class called **Events**. 
 
 The following code sample from the **OrderCommandHandler** class shows 
 how the handler invokes a method in the **Order** class to handle a 
 command, and then uses a repository to persist the current state of the 
-**Order** aggregate. 
+**Order** aggregate by appending all of the pending events to the store. 
 
 
 ```Cs
@@ -693,14 +701,14 @@ public void Handle(MarkSeatsAsReserved command)
 ```
 
 The following code sample shows the initial, simple implementation of 
-the **Save** method in the **SqlEventRepository** class. 
+the **Save** method in the **SqlEventSourcedRepository** class. 
 
 
 ```Cs
-public void Save(T aggregateRoot)
+public void Save(T eventSourced)
 {
     // TODO: guarantee that only incremental versions of the event are stored
-    var events = aggregateRoot.Events.ToArray();
+    var events = eventSourced.Events.ToArray();
     using (var context = this.contextFactory.Invoke())
     {
         foreach (var e in events)
@@ -736,46 +744,50 @@ public void Handle(MarkSeatsAsReserved command)
 }
 ```
 
-The following code sample shows how the **SqlEventRepository** class 
-loads the event stream associated with the aggregate. 
+The following code sample shows how the **SqlEventSourcedRepository**
+class loads the event stream associated with the aggregate. 
 
 
 ```Cs
 public T Find(Guid id)
 {
-    List<Event> all;
     using (var context = this.contextFactory.Invoke())
     {
-        all = context.Set<Event>().Where(x => x.AggregateId == id).OrderBy(x => x.Version).ToList();
-    }
+        var deserialized = context.Set<Event>()
+            .Where(x => x.AggregateId == id)
+            .OrderBy(x => x.Version)
+            .AsEnumerable()
+            .Select(x => this.serializer.Deserialize(new MemoryStream(x.Payload)))
+            .Cast<IVersionedEvent>()
+            .AsCachedAnyEnumerable();
 
-    if (all.Count > 0)
-    {
-        var deserialized = all.Select(x => this.serializer.Deserialize(new MemoryStream(x.Payload))).Cast<IDomainEvent>().ToList();
-        return (T)Activator.CreateInstance(typeof(T), deserialized);
-    }
+        if (deserialized.Any())
+        {
+            return entityFactory.Invoke(id, deserialized);
+        }
 
-    return null;
+        return null;
+    }
 }
 ```
 
 The following code sample shows the constructor in the **Order** class 
-that rebuilds the state of an order from its event stream when it is 
-invoked by the **CreateInstance** method in the previous code sample. 
+that rebuilds the state of the order from its event stream when it is 
+invoked by the **Invoke** method in the previous code sample. 
 
 
 ```Cs
-public Order(IEnumerable<IDomainEvent> history) : this()
+public Order(Guid id, IEnumerable<IVersionedEvent> history) : this(id)
 {
-    this.Rehydrate(history);
+    this.LoadFrom(history);
 }
 ```
 
-The **Rehydrate** method is defined in the **EventSourcedAggregateRoot** 
-class as shown in the following code sample. 
+The **LoadFrom** method is defined in the **EventSourced** class as
+shown in the following code sample. 
 
 ```Cs
-protected void Rehydrate(IEnumerable<IDomainEvent> pastEvents)
+protected void LoadFrom(IEnumerable<IVersionedEvent> pastEvents)
 {
     foreach (var e in pastEvents)
     {
@@ -786,20 +798,21 @@ protected void Rehydrate(IEnumerable<IDomainEvent> pastEvents)
 ```
 
 For each stored event in the history, it determines the appropriate 
-handler method to invoke in the **Order** class.
+handler method to invoke in the **Order** class and updates the version
+number of the aggregate instance.
 
 ### Issues with the Simple Event Store Implementation
 
 The simple implementation of event sourcing and an event store outlined 
 in the previous sections has a number of short-comings. The following 
 list identifies some of these short-comings that should be overcome in a 
-production quality implmentation. 
+production quality implementation. 
 
 1. There is no guarantee in the **Save** method in the
    **SqlEventRepository** class that the event is persisted to storage
    and published to the messaging infrastructure. A failure could result
    in an event being saved to storage but not being published.
-2. There is no chack that when the system persists an event, that it is
+2. There is no check that when the system persists an event, that it is
    a later event than the previous one. Potentially, events could be
    stored out of sequence.
 3. There are no optimizations in place for aggregate instances that have
