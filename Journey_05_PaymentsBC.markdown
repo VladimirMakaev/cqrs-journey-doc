@@ -905,7 +905,12 @@ between the implementations.
 > For more information, see [Technologies Used in the Reference
 > Implementation][r_chapter9] in the Reference Guide.
 
-# Testing 
+# Testing
+
+> **MarkusPersona:** Don't let your passing unit tests lull you into a
+> false sense of security. There are lots of moving parts when you
+> implement the CQRS pattern. You need to test that they all work
+> correctly together.
 
 Describe any special considerations that relate to testing for this bounded context.  
 
