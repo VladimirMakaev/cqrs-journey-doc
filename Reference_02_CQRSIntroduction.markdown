@@ -340,7 +340,7 @@ This is related to the concept of Continuous Integration in DDD:
 
 > "Continuous integration means that all work within the context is 
   being merged and made consistent frequently enough that when splinters
-  happed they are caught and corrected quickly."  
+  happen they are caught and corrected quickly."  
   Eric Evans, "Domain-Driven Design," p342. 
 
 In some cases, it may be possible to have different development teams 
