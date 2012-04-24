@@ -953,15 +953,15 @@ between the implementations.
 Describe any special considerations that relate to testing for this bounded context.  
 
 
-[j_chapter4]:	        Journey_04_ExtendingEnhancing.markdown
-[r_chapter9]:     		Reference_09_Technologies.markdown
+[j_chapter4]:		Journey_04_ExtendingEnhancing.markdown
+[r_chapter9]: 		Reference_09_Technologies.markdown
 
-[fig1]:           images/Journey_05_UIs.png?raw=true
-[fig2]:           images/Journey_05_Tasks.png?raw=true
-[fig3]:           images/Journey_05_Payments.png?raw=true
-[fig4]:           images/Journey_05_PaymentBC.png?raw=true
+[fig1]:				images/Journey_05_UIs.png?raw=true
+[fig2]:				images/Journey_05_Tasks.png?raw=true
+[fig3]:				images/Journey_05_Payments.png?raw=true
+[fig4]:				images/Journey_05_PaymentBC.png?raw=true
 
-[inductiveui]:			http://msdn.microsoft.com/en-us/library/ms997506.aspx
-[metroux]:              http://msdn.microsoft.com/en-us/library/windows/apps/hh465424.aspx
-[unity]:				http://msdn.microsoft.com/en-us/library/ff647202.aspx
-[appfabsdk]:            http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=27421
+[inductiveui]:		http://msdn.microsoft.com/en-us/library/ms997506.aspx
+[metroux]:			http://msdn.microsoft.com/en-us/library/windows/apps/hh465424.aspx
+[unity]:			http://msdn.microsoft.com/en-us/library/ff647202.aspx
+[appfabsdk]:		http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=27421
