@@ -471,10 +471,35 @@ In the Visual Studio solution, the **Conference** project contains the
 model code, and the **Conference.Web** project contains the MVC views 
 and controllers. 
 
+### Integration with the Orders and Registration Bounded Context
+
+The Conference Management bounded context pushes notifications of 
+changes to conferences by publishing the following events. 
+
+* **ConferenceCreated:** The bounded context publishes this event
+  whenever a Business Customer creates a new conference.
+* **ConferenceUpdated:** The bounded context publishes this event
+  whenever a Business Customer updates an existing conference.
+* **ConferencePublished:** The bounded context publishes this event
+  whenever a Business Customer publishes a conference.
+* **ConferenceUnpublished:** The bounded context publishes this event
+  whenever a Business Customer un-publishes a new conference.
+* **SeatCreated:** The bounded context publishes this event whenever a
+  Business Customer defines a new seat type.
+* **SeatsAdded:** The bounded context publishes this event whenever a
+  Business Customer increase the quota of a seat type.
+* **SeatsAdded:** The bounded context publishes this event whenever a
+  Business Customer increase the quota of a seat type.
+* **SeatsRemoved:** The bounded context publishes this event whenever a
+  Business Customer decreases the quota of a seat type.
+  
+The **ConferenceService** class in the Conference project publishes 
+these events to the event bus. 
+
 <div style="margin-left:20px;margin-right:20px;">
   <span style="background-color:yellow;">
     <b>Comment [DRB]:</b>
-	Add details of integration with other bounded contexts.
+	At the moment there is no distributed transaction to wrap the database update and the message publishing.
   </span>
 </div> 
 
@@ -926,6 +951,7 @@ between the implementations.
 > correctly together.
 
 Describe any special considerations that relate to testing for this bounded context.  
+
 
 [j_chapter4]:	        Journey_04_ExtendingEnhancing.markdown
 [r_chapter9]:     		Reference_09_Technologies.markdown
