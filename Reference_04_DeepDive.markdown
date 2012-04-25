@@ -101,14 +101,193 @@ helps you to simplify the design of the application and makes it easier
 to implement collaborative applications where multiple users may be 
 trying to modify the same data simultaneously on the write-side. 
 
-# The Domain Model  
+# Defining Aggregates in the Domain Model  
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	Aggregate Roots, Bounded Contexts etc.
-  </span>
-</div> 
+In Domain-driven Design, an **Aggregate** defines a consistency 
+boundary. Typically, in when you implement the CQRS pattern, the classes 
+in the write-model define your aggregates. Aggregates are the recipients 
+of **Commands**, and are units of persistence. After an aggregate 
+instance has processed a command and its state has changed, the system 
+must persist the new state of the instance to storage. 
+
+An aggregate may consist of multiple related objects, for example an 
+order and multiple order lines all of which should be persisted 
+together. However, if you have correctly identified your aggregate 
+boundaries you should not need to use transactions to persist multiple 
+aggregate instances together. 
+
+If an aggregate consists of multiple types, you should identify one type 
+as the **Aggregate Root**. You should access all of the objects within 
+the aggregate through the aggregate root, and you should only hold 
+references to the aggregate root. Every aggregate instance should have a 
+unique identifier. 
+
+## Aggregates and ORMs
+
+To persist your aggregates when you are using an ORM such as Entity 
+Framework to manage your persistence requires minimal code in your 
+aggregate classes. 
+
+The following code sample shows an **IAggregateRoot** interface and a 
+set of classes that define an **Order** aggregate. This illustrates an 
+approach to implementing aggregates that can be persisted using an ORM. 
+
+```Cs
+public interface IAggregateRoot
+{
+    Guid Id { get; }
+}
+
+public class Order : IAggregateRoot
+{
+    private List<SeatQuantity> seats;
+	
+	public Guid Id { get; private set; }
+	
+	public void UpdateSeats(IEnumerable<OrderItem> seats)
+    {
+        this.seats = ConvertItems(seats);
+    }
+
+	...
+}
+
+...
+
+public struct SeatQuantity
+{
+	...
+}
+```
+
+## Aggregates and Event Sourcing
+
+If you are using event sourcing, then your aggregates must create events 
+to record all of the state changes that result from processing commands. 
+This requires slightly more code in your aggregate definitons than when 
+you are using an ORM. 
+
+The following code sample shows an **IEventSourced** interface, an 
+**EventSourced** abstract class, and a set of classes that define an 
+**Order** aggregate. This illustrates an approach to implementing 
+aggregates that can be persisted using event sourcing. 
+
+```Cs
+public interface IEventSourced
+{
+    Guid Id { get; }
+
+    int Version { get; }
+
+    IEnumerable<IVersionedEvent> Events { get; }
+}
+
+...
+
+public abstract class EventSourced : IEventSourced
+{
+    private readonly Dictionary<Type, Action<IVersionedEvent>> handlers = new Dictionary<Type, Action<IVersionedEvent>>();
+    private readonly List<IVersionedEvent> pendingEvents = new List<IVersionedEvent>();
+
+    private readonly Guid id;
+    private int version = -1;
+
+    protected EventSourced(Guid id)
+    {
+        this.id = id;
+    }
+
+    public Guid Id
+    {
+        get { return this.id; }
+    }
+
+    public int Version { get { return this.version; } }
+
+    public IEnumerable<IVersionedEvent> Events
+    {
+        get { return this.pendingEvents; }
+    }
+
+    protected void Handles<TEvent>(Action<TEvent> handler)
+        where TEvent : IEvent
+    {
+        this.handlers.Add(typeof(TEvent), @event => handler((TEvent)@event));
+    }
+
+    protected void LoadFrom(IEnumerable<IVersionedEvent> pastEvents)
+    {
+        foreach (var e in pastEvents)
+        {
+            this.handlers[e.GetType()].Invoke(e);
+            this.version = e.Version;
+        }
+    }
+
+    protected void Update(VersionedEvent e)
+    {
+        e.SourceId = this.Id;
+        e.Version = this.version + 1;
+        this.handlers[e.GetType()].Invoke(e);
+        this.version = e.Version;
+        this.pendingEvents.Add(e);
+    }
+}
+
+...
+
+public class Order : EventSourced
+{
+    private List<SeatQuantity> seats;
+
+    protected Order(Guid id) : base(id)
+    {
+        base.Handles<OrderUpdated>(this.OnOrderUpdated);
+		...
+    }
+
+    public Order(Guid id, IEnumerable<IVersionedEvent> history) : this(id)
+    {
+        this.LoadFrom(history);
+    }
+
+    public void UpdateSeats(IEnumerable<OrderItem> seats)
+    {
+        this.Update(new OrderUpdated { Seats = ConvertItems(seats) });
+    }
+	
+	private void OnOrderUpdated(OrderUpdated e)
+	{
+		this.seats = e.Seats.ToList();
+	}
+	
+	...
+}
+
+...
+
+public struct SeatQuantity
+{
+	...
+}
+```
+
+In this example, the **UpdateSeats** method creates a new 
+**OrderUpdated** event instead of updating the state of the aggregate 
+directly. The **Update** method in the abstract base class is 
+responsible for adding the event to the list of pending events to be 
+appended to the event stream in the store, and for invoking the 
+**OnOrderUpdated** event handler to update the state of the aggregate. 
+Every event that is handled in this way also updates the version of the 
+aggregate. 
+
+The constructor in the aggregate class and the **LoadFrom** method in 
+the abstract base class handle replaying the event stream to re-load the 
+state of the aggregate. 
+
+> **MarkusPersona:** We tried to avoid polluting the aggregate classes
+> with infrastructure related code. These aggregate classes should
+> implement the domain model and logic.
 
 # Commands and CommandHandlers 
 
@@ -152,9 +331,6 @@ using System;
 	
 public interface ICommand
 {
-	/// <summary>
-	/// Gets the command identifier.
-	/// </summary>
 	Guid Id { get; }
 }
 
@@ -197,26 +373,15 @@ instance. The Command Handler performs the following tasks:
 
 Typically, you will organize your command handlers so that you have a 
 class that contains all of the handlers for a specific aggregate type. 
-The following sections show example command handler implementations for 
-bounded contexts that don't use event sourcing and for bounded contexts 
-that do use event sourcing. 
 
 You messaging infrastructure should ensure that it delivers just a 
 single copy of a command to single command handler. Commands should be 
 processed once, by a single recipient. 
 
-### Command Handlers without Event Sourcing
-
 The following code sample shows a command handler class that handles 
-commands for **Order** instances in a bounded context that does not use 
-event sourcing. 
+commands for **Order** instances. 
 
 ```Cs
-using System;
-using System.Linq;
-using Common;
-using Registration.Commands;
-
 public class OrderCommandHandler :
 	ICommandHandler<RegisterToConference>,
 	ICommandHandler<MarkOrderAsBooked>,
@@ -278,13 +443,35 @@ command that creates a new aggregate instance. The **MarkOrderAsBooked**
 command is an example of a command that locates an existing aggregate 
 instance. Both examples use the **Save** method to persist the instance. 
 
+If this bounded context uses an ORM, then the **Find** and **Save** 
+methods in the repository class will locate and persist the aggregate 
+instance in the underlying database. 
+
+If this bounded context uses event sourcing, then the **Find** method 
+will replay the aggregate's event stream to recreate the state, and the 
+**Save** method will append the new events to the aggregate's event 
+stream. 
+
 > **Note:** If the aggregate generated any events when it processed the
 > command, then these events are published when the repository saves the
 > aggregate instance.
 
-### Command Handlers with Event Sourcing
-
 # Events and EventHandlers 
+
+Events can play two different roles in a CQRS implementation.
+
+* **Event sourcing.** As described previously, event sourcing is an
+  approach to persisting the state of aggregate instances by saving the
+  stream of events in order to record changes in the state of the
+  aggregate.
+* **Communication and Integration.** You can also use events to
+  communicate between aggregates or workflows in the same or in
+  different bounded contexts. Events publish to subscribers information
+  about something that has happened.
+
+One event can play both roles: an aggregate may raise an event to record 
+a state change and to notify an aggregate in another bounded context of 
+the change. 
 
 ## Events and Intent
 
@@ -418,11 +605,87 @@ was executed, which means that we need to save everything!
 
 ## Events
 
+Events report that something has happened. An aggregate or workflow publishes one-way, asynchronous messages that are published to multiple recipients. For example: **SeatsUpdated**, **PaymentCompleted**, and **EmailSent**.
+
 ### Sample Code
+
+The following code sample shows a possible implementation of an event that is used to communicate between aggregates or workflows. It implements the **IEvent** interface.
+
+```Cs
+public interface IEvent
+{
+    Guid SourceId { get; }
+}
+
+...
+
+public class SeatsAdded : IEvent
+{
+    public Guid ConferenceId { get; set; }
+
+    public Guid SourceId { get; set; }
+
+    public int TotalQuantity { get; set; }
+
+    public int AddedQuantity { get; set; }
+}
+```
+
+The following code sample shows a possible implementation of an event that is used in an event sourcing implementation. It extends the **VersionedEvent** abstract class.
+
+```Cs
+public abstract class VersionedEvent : IVersionedEvent
+{
+    public Guid SourceId { get; set; }
+
+    public int Version { get; set; }
+}
+
+...
+
+public class AvailableSeatsChanged : VersionedEvent
+{
+    public IEnumerable<SeatQuantity> Seats { get; set; }
+}
+```
 
 ## EventHandlers
 
+Events are published to multiple recipients, typically an aggregate 
+instances or workflows. The Event Handler performs the following
+tasks: 
+
+1. It receives a Event instance from the messaging infrastructure.
+2. It validates that the Event is a valid Event.
+3. It locates the aggregate or workflow instance that is the
+   target of the Event. This may involve creating a new aggregate
+   instance or locating an existing instance.
+4. It invokes the appropriate method on the aggregate or workflow
+   instance passing in any parameters from the event.
+5. It persists the new state of the aggregate or workflow to storage.
+
 ### Sample Code
+
+```Cs
+public void Handle(SeatsAdded @event)
+{
+    var availability = this.repository.Find(@event.ConferenceId);
+    if (availability == null)
+        availability = new SeatsAvailability(@event.ConferenceId);
+
+    availability.AddSeats(@event.SourceId, @event.AddedQuantity);
+    this.repository.Save(availability);
+}
+```
+
+If this bounded context uses an ORM, then the **Find** and **Save** 
+methods in the repository class will locate and persist the aggregate 
+instance in the underlying database. 
+
+If this bounded context uses event sourcing, then the **Find** method 
+will replay the aggregate's event stream to recreate the state, and the 
+**Save** method will append the new events to the aggregate's event 
+stream.
 
 # Embracing Eventual Consistency 
 
@@ -618,7 +881,9 @@ instance.
 > on case-by-case basis." 
 > Rinat Abdullin (CQRS Advisors Mail List)
 
-# Messaging 
+# Messaging
+
+
 
 ## Messaging and CQRS 
 
