@@ -257,6 +257,13 @@ to use event sourcing in your system:
   a particular event type or aggregate at some point in the future. You
   must consider how your system will be able to handle multiple versions
   of an event type and aggregates. 
+- **Querying.** Although it is easy to load the current state of an
+  object by replaying its event stream (or its state at some point in
+  the past), it is difficult or expensive to run a query such as: find
+  all my orders where the total value is greater than $250. However, you
+  should remember that such queries will typically be executed on the
+  read-side where you can ensure that you build data projections that
+  are specifically designed to answer such questions.
   
 # CQRS/ES
 The chapter "Introducing Command Query Responsibility Segregation" 
