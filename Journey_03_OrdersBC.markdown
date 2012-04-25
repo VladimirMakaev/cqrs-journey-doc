@@ -1436,11 +1436,11 @@ reservation.
 [r_chapter6]:     Reference_06_Sagas.markdown
 [r_chapter9]:     Reference_09_Technologies.markdown
 
-[tddstyle]:		  http://martinfowler.com/articles/mocksArentStubs.html
-[repourl]:		  https://github.com/mspnp/cqrs-journey-code
+[tddstyle]:       http://martinfowler.com/articles/mocksArentStubs.html
+[repourl]:        https://github.com/mspnp/cqrs-journey-code
 [res-pat]:        http://www.rgoarchitects.com/nblog/2009/09/08/SOAPatternsReservations.aspx
 [sbperf]:         http://msdn.microsoft.com/en-us/library/hh528527.aspx
-[jsonnet]:		  http://james.newtonking.com/pages/json-net.aspx
+[jsonnet]:        http://james.newtonking.com/pages/json-net.aspx
 [sagapaper]:      http://www.amundsen.com/downloads/sagas.pdf
 
 [fig1]:           images/OrderMockup.png?raw=true

@@ -129,7 +129,7 @@ The following table lists the events that are associated with each of the number
 # Why Did We Choose These Bounded Contexts? 
 
 
-[j_chapter1]:	  Journey_01_Introduction.markdown
+[j_chapter1]:     Journey_01_Introduction.markdown
 [r_chapter1]:     Reference_01_CQRSInContext.markdown
 
 [fig1]:           images/Journey_02_BCs.png?raw=true

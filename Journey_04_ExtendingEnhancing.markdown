@@ -845,10 +845,10 @@ then handles the event when its handler invokes the **AddSeats** method.
 
 Describe any special considerations that relate to testing for this bounded context.  
 
-[j_chapter5]:	  Journey_05_PaymentsBC.markdown
-[r_chapter4]:     Reference_04_DeepDive.markdown
+[j_chapter5]:       Journey_05_PaymentsBC.markdown
+[r_chapter4]:       Reference_04_DeepDive.markdown
 
-[fig1]:           images/Journey_04_ViewRepository.png?raw=true
-[fig2]:           images/Journey_04_Architecture.png?raw=true
-[fig3]:           images/Journey_04_SeatsAvailability.png?raw=true
-[modelvalidation]: http://msdn.microsoft.com/en-us/library/dd410405(VS.98).aspx
+[fig1]:             images/Journey_04_ViewRepository.png?raw=true
+[fig2]:             images/Journey_04_Architecture.png?raw=true
+[fig3]:             images/Journey_04_SeatsAvailability.png?raw=true
+[modelvalidation]:  http://msdn.microsoft.com/en-us/library/dd410405(VS.98).aspx
