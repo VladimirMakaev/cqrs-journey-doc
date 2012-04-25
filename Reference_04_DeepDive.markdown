@@ -2,6 +2,105 @@
 
 # A CQRS/ES Deep Dive (Chapter Title)
 
+# Introduction
+
+This chapter begins with a brief recap of some of the key points from 
+the previous chapters before exploring in more detail the key concepts 
+related to CQRS and Event Sourcing (ES). 
+
+## Read-models and Write-models
+
+The CQRS pattern assigns the responsibility for modifying your 
+application data and querying your application data to different sets of 
+objects: a write-model and a read-model. The immediate benefit of this 
+segregation is to clarify and simplify your code by applying the 
+single-responsibilty principle: objects are responsible either for 
+modifying data or querying data. 
+
+However, the most important benefit of this segregation is that it is an 
+enabler for making other changes to your application. 
+
+## Commands and Data Transfer Objects
+
+A typical approach to enabling a user to edit data is to use DTOs: the 
+UI retrieves the data to be edited from the application as a DTO, a user 
+edits the DTO in the UI, the UI sends the modified DTO back to the 
+application, the application then applies those changes to the data in 
+the database. 
+
+This approach is data-centric and tends to use standard CRUD operations 
+throughout. In the UI, the user performs operations that are essentially
+CRUD operations.
+
+This is a simple, well understood aproach that works well for many 
+applications. However, for some applications it is more useful if the UI 
+sends commands instead of DTOs back to the application to make changes 
+to the data. Commands are behavior-centric instead of data-centric, 
+maybe more intuitive to users, and can capture the user's intent more
+effectively than DTOs. 
+
+## Domain-driven Design (DDD) and Aggregates
+
+Using commands enables you build a UI that is more closely aligned with 
+the behaviors associated with your domain. Related to this are the DDD 
+concepts associated with a rich domain model, focusing on aggregates as 
+way to model consistency boundaries based on domain concepts. 
+
+One of the advatages of using commands and aggregates instead of DTOs is 
+to simplify locking and concurrency management in your application. 
+
+## Data and Normalization
+
+One of the changes that the CQRS pattern enables in your application is 
+to segregrate your data as well as your objects. The write-model can use 
+a database that is optimized for writes by being fully normalized. The 
+read-model can use a database that is optimized for reads by being 
+de-normalized to suit the specific queries that the application must 
+support on the read-side. 
+
+Several benefits flow from this: better performance because each 
+database is optimized for a particlar set of operations, better 
+scalability because you can scale-out each side independently, and 
+simpler locking schemes. On the write side you no longer need to worry 
+about how your locks impact queries, and on the read-side your database 
+can be read-only. 
+
+## Events and Event Sourcing
+
+If you use databases on both the read-side and write-side you will still 
+be performing CRUD operations on the database tables on the write-side 
+and you will need a mechanism to push the changes from your normalized 
+tables on the write-side to your de-normalized tables on the read-side. 
+
+If you capture changes in your write-model as events, your can save all 
+of your changes simply by appending those events to your database or 
+data store on the write-side using only **Insert** operations. 
+
+You can also use those same events to push your changes to the 
+read-side. You can use those events to build projections that contain 
+the data required by the queries on the read-side. 
+
+## Eventual Consistency
+
+If you use a single database in your application, your locking scheme 
+determines what version of a record is returned by a query. This can be 
+very complex if a query joins records from multiple tables. 
+
+> **MarkusPersona:** Think about the complexities of how transaction
+> isolation levels determine the locking behavior in a database.
+
+Additionally, in a web application you have to consider that as soon as 
+data is rendered in the UI it is potentially out of date because some 
+other process or user could change it. 
+
+If you segregate your data into a write-side store and a read-side 
+store, you are now making it explicit in your architecture that when you 
+query data it may be out of date, but that the data on the read-side 
+will be *eventually consistent* with the data on the write-side. This 
+helps you to simplify the design of the application and makes it easier 
+to implement collaborative applications where multiple users may be 
+trying to modify the same data simultaneously on the write-side. 
+
 # The Domain Model  
 
 <div style="margin-left:20px;margin-right:20px;">
@@ -13,7 +112,9 @@
 
 # Commands and CommandHandlers 
 
-This section describes the role of commands and command handlers in a CQRS implementation and shows an outline of how they might be implemented in the C# language.
+This section describes the role of commands and command handlers in a 
+CQRS implementation and shows an outline of how they might be 
+implemented in the C# language. 
 
 ## Commands
 
@@ -22,7 +123,11 @@ perform a task or action. For example, "book two places on conference X"
 or "allocate speaker Y to room Z." Commands are usually processed just 
 once, by a single recipient.
 
-Both the sender and the receiver of a Command should be in the same bounded context. You should not send a Command to another bounded context because you would be instructing that other bounded context, which has separate responsibilities in another consistency boundary, to perform some work for you.
+Both the sender and the receiver of a Command should be in the same 
+bounded context. You should not send a Command to another bounded 
+context because you would be instructing that other bounded context, 
+which has separate responsibilities in another consistency boundary, to 
+perform some work for you. 
 
 > I think that in MOST circumstances (if not all), the command should 
 > succeed (and that makes the async story WAY easier and practical). You 
@@ -38,7 +143,9 @@ Both the sender and the receiver of a Command should be in the same bounded cont
 
 ### Example Code
 
-The following code sample shows a command and the **ICommand** interface that it implements. Notice that a command is a simple *Data Transfer Object* and that every instance of a Command has a unique Id.
+The following code sample shows a command and the **ICommand** interface 
+that it implements. Notice that a command is a simple *Data Transfer 
+Object* and that every instance of a Command has a unique Id. 
 
 ```Cs
 using System;
