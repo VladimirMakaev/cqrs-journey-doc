@@ -978,6 +978,10 @@ as complete and it is removed from the queue or topic. If the message
 does not get marked as complete, the lock on the message times out and 
 it becomes available to read again. 
 
+> **PoePersona:** If a message still cannot be processed after a number
+> of retries, it is typically sent to a dead-letter queue for further
+> investigation.
+
 # Task-based UIs 
 
 # Taking Advantage of Windows Azure

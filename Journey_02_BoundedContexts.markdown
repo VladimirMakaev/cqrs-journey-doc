@@ -51,7 +51,7 @@ other registrants to reserve.
 <div style="margin-left:20px;margin-right:20px;">
   <span style="background-color:yellow;">
     <b>Comment [DRB]:</b>
-	At the moment the value of _n_ is hardcoded - this may change in the future and become a parameter than can be set by the Business Customer.
+    At the moment the value of _n_ is hardcoded - this may change in the future and become a parameter than can be set by the Business Customer.
   </span>
 </div>
 
@@ -65,7 +65,7 @@ other registrants to reserve.
 
 ## Relationships Between the Bounded Contexts
 
-Figure 1 shows the five bounded contexts that make up the Contoso Conference Management System. The arrows on the diagram indicate the flow of data as events between them.
+Figure 1 shows the six bounded contexts that make up the Contoso Conference Management System. The arrows on the diagram indicate the flow of data as events between them.
 
 ![Figure 1][fig1]
 
@@ -75,55 +75,73 @@ The following table lists the events that are associated with each of the number
 
 <table border="1">
   <tr>
-    <th>Arrow</th><th>Events</th>
+    <th>Integration #</th><th>Messages</th>
   </tr>
   <tr>
     <td>1</td>
-	<td>
-	  **ConferenceCreated**<br/>
-	  **ConferenceUpdated**<br/>
-	  **ConferencePublished**<br/>
-	  **ConferenceUnpublished**<br/>
-	  **SeatCreated**<br/>
-	  **SeatUpdated**<br/>
-	  **SeatsAdded**<br/>
-	  **SeatsRemoved**<br/>
-	</td>
+    <td><b>ConferenceCreated</b> (Event)<br/>
+      <b>ConferenceUpdated</b> (Event)<br/>
+      <b>ConferencePublished</b> (Event)<br/>
+      <b>ConferenceUnpublished</b> (Event)<br/>
+      <b>SeatCreated</b> (Event)<br/>
+      <b>SeatUpdated</b> (Event)<br/>
+      <b>SeatsAdded</b> (Event)<br/>
+      <b>SeatsRemoved</b> (Event)<br/>
+    </td>
   </tr>
   <tr>
     <td>2</td>
-	<td>
-	  **GetConferenceDescription** (request from client)<br/>
-	  ??
-	</td>
+    <td>Attendee information - TBD</td>
   </tr>
   <tr>
     <td>3</td>
-	<td>
-	  ??
-	</td>
+    <td>
+      <b>InitiateInvoicePayment</b> (Command sent from Registration MVC controller)<br/>
+      <b>InitiateThirdPartyProcessorPayment</b> (Command sent from Registration MVC controller)<br/>
+    </td>
   </tr>
   <tr>
     <td>4</td>
-	<td>
-	  **AttendeeCheckedIn** (sent from client)<br/>
-	  **RegistrationUpdated** (sent from client)<br/>
-	  **GetConferenceStatus** (request from client)<br/>
-	  **RegistrationAddedOrUpdated** (sent from server)<br/>
-	  **RegistrationRemoved** (sent from server)<br/>
-	  **AttendeeCheckedIn** (sent from server)<br/>
-	</td>
+    <td>
+      <b>PaymentCompleted</b> (Event)<br/>
+      <b>PaymentRejected</b> (Event)<br/>
+    </td>
   </tr>
   <tr>
     <td>5</td>
-	<td>
-	  **InitiateInvoicePayment** (sent to Payments bounded context)<br/>
-	  **InitiateThirdPartyProcessorPayment (sent to Payments bounded context)<br/>
-	  **PaymentCompleted** (sent from Payments bounded context)<br/>
-	  **PaymentRejected** (sent from Payments bounded context)<br/>
-	</td>
+    <td>
+      <b>GetConferenceDescription</b> (request from client)<br/>
+      ??
+    </td>
   </tr>
-
+  <tr>
+    <td>6</td>
+    <td>
+      <b>AttendeeCheckedIn</b> (Event)<br/>
+      <b>RegistrationUpdated</b> (Event)<br/>
+      <b>GetConferenceStatus</b> (request from client)<br/>
+    </td>
+  </tr>
+  <tr>
+    <td>7</td>
+    <td>
+      <b>RegistrationAddedOrUpdated</b> (Event)<br/>
+      <b>RegistrationRemoved</b> (Event)<br/>
+      <b>AttendeeCheckedIn</b> (Event)<br/>
+    </td>
+  </tr>
+  <tr>
+    <td>8</td>
+    <td>??</td>
+  </tr>
+  <tr>
+    <td>9</td>
+    <td>??</td>
+  </tr>
+  <tr>
+    <td>10</td>
+    <td>??</td>
+  </tr>
 </table>
 
 # Why Did We Choose These Bounded Contexts? 

@@ -42,7 +42,7 @@ approach.
 > organization, the developers, and the technical platforms we rely on."
   
 ![Markus][personamarkus]
-Markus is a software developer who is new to the CQRS patter. He is 
+Markus is a software developer who is new to the CQRS pattern. He is 
 analytical, detail-oriented, and methodical. He's focused on the task at 
 hand, which is building a great application. He knows that he's the 
 person who's ultimately responsible for the code. 
