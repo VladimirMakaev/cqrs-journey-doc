@@ -6,7 +6,7 @@
 
 This chapter begins with a brief recap of some of the key points from 
 the previous chapters before exploring in more detail the key concepts 
-related to CQRS and Event Sourcing (ES). 
+that relate to CQRS and Event Sourcing (ES). 
 
 ## Read-models and Write-models
 
@@ -17,27 +17,32 @@ segregation is to clarify and simplify your code by applying the
 single-responsibilty principle: objects are responsible either for 
 modifying data or querying data. 
 
-However, the most important benefit of this segregation is that it is an 
-enabler for making other changes to your application. 
+However, the most important benefit of this segregation of 
+responsibility for reading and writing to different sets of classes is 
+that it is an enabler for making further changes to your application 
+that will provide additional benefits. 
 
 ## Commands and Data Transfer Objects
 
 A typical approach to enabling a user to edit data is to use DTOs: the 
 UI retrieves the data to be edited from the application as a DTO, a user 
 edits the DTO in the UI, the UI sends the modified DTO back to the 
-application, the application then applies those changes to the data in 
-the database. 
+application, and then the application applies those changes to the data
+in the database. 
 
 This approach is data-centric and tends to use standard CRUD operations 
 throughout. In the UI, the user performs operations that are essentially
-CRUD operations.
+CRUD operations on the data in the DTO.
 
 This is a simple, well understood aproach that works well for many 
 applications. However, for some applications it is more useful if the UI 
 sends commands instead of DTOs back to the application to make changes 
 to the data. Commands are behavior-centric instead of data-centric, 
-maybe more intuitive to users, and can capture the user's intent more
-effectively than DTOs. 
+directly represent operations in the domain, maybe more intuitive to
+users, and can capture the user's intent more effectively than DTOs.
+
+In a typical CQRS implementation, the read-model returns data to the UI
+as DTOs. The UI sends commands to the write-model.
 
 ## Domain-driven Design (DDD) and Aggregates
 
@@ -67,18 +72,20 @@ can be read-only.
 
 ## Events and Event Sourcing
 
-If you use databases on both the read-side and write-side you will still 
-be performing CRUD operations on the database tables on the write-side 
-and you will need a mechanism to push the changes from your normalized 
-tables on the write-side to your de-normalized tables on the read-side. 
+If you use relational databases on both the read-side and write-side you 
+will still be performing CRUD operations on the database tables on the 
+write-side and you will need a mechanism to push the changes from your 
+normalized tables on the write-side to your de-normalized tables on the 
+read-side. 
 
 If you capture changes in your write-model as events, your can save all 
 of your changes simply by appending those events to your database or 
 data store on the write-side using only **Insert** operations. 
 
 You can also use those same events to push your changes to the 
-read-side. You can use those events to build projections that contain 
-the data required by the queries on the read-side. 
+read-side. You can use those events to build projections of the data
+that contain the data structured to support the queries on the
+read-side. 
 
 ## Eventual Consistency
 
@@ -87,11 +94,13 @@ determines what version of a record is returned by a query. This can be
 very complex if a query joins records from multiple tables. 
 
 > **MarkusPersona:** Think about the complexities of how transaction
-> isolation levels determine the locking behavior in a database.
+> isolation levels (read uncommitted, read committed, repeatable reads,
+> serializable) determine the locking behavior in a database and the
+> differences between pessimistic and optimistic concurrency behavior.
 
 Additionally, in a web application you have to consider that as soon as 
 data is rendered in the UI it is potentially out of date because some 
-other process or user could change it. 
+other process or user could change it in the data store. 
 
 If you segregate your data into a write-side store and a read-side 
 store, you are now making it explicit in your architecture that when you 
@@ -881,41 +890,93 @@ instance.
 > on case-by-case basis." 
 > Rinat Abdullin (CQRS Advisors Mail List)
 
-# Messaging
+# Messaging and CQRS
 
+CQRS and Event Sourcing use two types of messages: Commands and Events. 
+Typically, systems that implement the CQRS pattern are large-scale, 
+distributed systems and therefore you need a reliable, distributed 
+messaging infrastructure to transport the messages between your 
+senders/publishers and receivers/subscribers. 
 
+For commands that have a single recipient you will typically use a 
+queue topology. For events, that may have multiple recipients you will 
+typically use a pub/sub topology. 
 
-## Messaging and CQRS 
-
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	Discuss role of messaging infrastructure and CQRS. Transport for commands and events. Topologies: queues and pub/sub.
-  </span>
-</div> 
+The reference implementation that accompanies this guide uses the 
+Windows Azure Service Bus for messaging. [Technologies Used in the 
+Reference Implementation][r_chapter9] provides additional information 
+about the Windows Azure Service Bus. Windows Azure Service Bus brokered
+messaging offers a distributed messaging infrastructure in the cloud
+that supports both queue and pub/sub topologies.
 
 ## Messaging Considerations 
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	Problems that arise with out of order messages, duplicate messages, lost messages. Strategies for dealing with these issues. 
-	Need to discuss issues of dropped, multiple, out of order delivery here. <br />
-	Multiple delivery of messages or lost messages. This is a general messaging issueIt is possible that due to a problem in the messaging infrastructureIf it is possible that the read-side could receive multiple copies of a single event, for example because of a problem in the messaging infrastructure, you must ensure that your system state remains correct. For example, an individual subscriber could receive multiple copies introducing a temporary error that you could fix by replaying the events. For example, if a reservation event is delivered twice, then you may end up with an inaccurate figure for the total number of bookings for a conference. Designing event messages to be idempotent or assigning messages unique identifiers are possible strategies to help address this problem. Similar problems can result from subscribers not receiving messages. <br />
-	Out of order delivery. In some scenarios, the specific ordering of a set of event messages may be significant. Again, it may be that your messaging infrastructure does not guarantee ordered delivery. Assigning sequence numbers to messages, using batches, or using sagas are all possible strategies for addressing this problem. The chapter "A CQRS/ES Deep Dive" includes a discussion of sagas. <br />
-  </span>
-</div> 
+Whenever you use messaging, there are a number of issues to consider. 
+This section describes some of the most significant issues when you are
+working with commands and events in a CQRS implementation. 
 
+### Duplicate Messages
 
-## Messaging Infrastructure 
+An error in the messaging infrastructure or in the message receiving 
+code may cause a message to be delivered multiple times to its 
+recipient. 
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	What to expect from an infrastructure messaging service. <br />
-	Reference Windows Azure Service Bus section below, but mention other products. 
-  </span>
-</div>
+There are two potential approaches to handling this scenario.
+
+1. Design your messages to be idempotent so that duplicate messages have
+   no impact on the consistency of your data.
+2. Implement duplicate message detection. Some messaging infrastructures
+   provide a configurable duplicate detection strategy that you can use
+   instead of implementing it yourself.
+
+> **JanaPersona:** Some messaging infrastructures offer a guarantee of
+> at least once delivery. This implies that you should explicitly handle
+> the duplicate message delivery scenario in your application code. 
+
+### Lost Messages
+
+An error in the messaging infrastructure may cause a message not to be 
+delivered to its recipient. 
+
+Many messaging infrastructures offer guarantees that messages are not 
+lost and are delivered at least once to their recipient. Alternative 
+strategies that you could implement to detect when messages have been 
+lost include a handshake process to acknowledge receipt of a message to 
+the sender, or assigning sequence numbers to messages so that the 
+recipient can determine if it has not received a message. 
+
+### Out of Order Messages
+
+The messaging infrastructure may deliver messages to a recipient in a 
+different order to the order that the sender sent the messages. 
+
+In some scenarios, the order that messages are recieved is not 
+significant. If message ordering is important, some messaging 
+infrastructures can guarantee ordering. Otherwise, you can detect out of 
+order messages by assigning sequence numbers to messages as they are 
+sent. You could also implement a workflow process in the reciever that 
+can hold out of order messages until it can re-assemble messages into 
+the correct order. 
+
+If messages need to be ordered within a group, you may be able to send 
+the related messages as a single batch. 
+
+### Unprocessed Messages
+
+A client may retrieve a message from a queue and then fail while it is 
+processing the message. When the client restarts the message has been 
+lost. 
+
+Some messaging infrastructures allow to include the read of the message 
+from the infrastructure as part of a distributed transaction that you 
+can roll back if the message processing fails. 
+
+Another approach, offered by some messaging infrastructures, is to make 
+reading a message a two-phase operation. First you lock and read the 
+message, then when you have finished processing the message you mark it 
+as complete and it is removed from the queue or topic. If the message 
+does not get marked as complete, the lock on the message times out and 
+it becomes available to read again. 
 
 # Task-based UIs 
 
@@ -952,16 +1013,22 @@ information about how to automatically scale roles in Windows Azure, see
 
 ## Implementing an Event Store Using Windows Azure Table Storage 
 
+Will be covered in the Journey doc.
+Need to add a brief section to the technologies chapter describing significatn features of table storage.
+
 ## Implementing a Messaging Infrastructure Using the Windows Azure Service Bus 
+
+Will be covered in the Journey doc.
 
 
 [r_chapter1]:     Reference_01_CQRSContext.markdown
 [r_chapter2]:     Reference_02_CQRSIntroduction.markdown
 [r_chapter4]:     Reference_04_DeepDive.markdown
+[r_chapter9]:     Reference_09_Technologies.markdown
 
 
-[captheorem]:	  http://en.wikipedia.org/wiki/CAP_theorem
-[aab]:			  http://msdn.microsoft.com/en-us/library/hh680892(PandP.50).aspx
+[captheorem]:     http://en.wikipedia.org/wiki/CAP_theorem
+[aab]:            http://msdn.microsoft.com/en-us/library/hh680892(PandP.50).aspx
 [youngeventual]:  http://codebetter.com/gregyoung/2010/04/14/quick-thoughts-on-eventual-consistency/
 
 [fig1]:           images/Reference_04_Consistency_01.png?raw=true
