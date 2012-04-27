@@ -101,6 +101,161 @@ for each attendee.
 
 What are the key architectural features? Server-side, UI, multi-tier, cloud, etc.
 
+Figure 1 illustrates the key architectural elements of the Contoso Conference Management System in the V1 release. The application consists of two web sites and three bounded contexts. The infrastructure includes SQL databases, an event store, and messaging infrastructure.
+
+The first table that follows figure 1 lists all of the messages that the elements shown on the diagram exchange with each other.
+
+![Figure 1][fig1]
+
+**Architecture of the V1 release**
+
+
+<table border="1">
+  <thead>
+    <tr>
+      <th align="left">Element</th>
+      <th align="left">Type</th>
+      <th align="left">Sends</th>
+      <th align="left">Recieves</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr>
+      <td align="left">ConferenceController</td>
+      <td align="left">MVC Controller</td>
+      <td align="left">N/A</td>
+      <td align="left">ConferenceDescriptionDTO</td>
+    </tr>
+
+    <tr>
+      <td align="left">OrderController</td>
+      <td align="left">MVC Controller</td>
+      <td align="left">N/A</td>
+      <td align="left">OrderDTO</td>
+    </tr>
+
+    <tr>
+      <td align="left">RegistrationController</td>
+      <td align="left">MVC Controller</td>
+      <td align="left">RegisterToConference<br/>
+                       AssignRegistrantDetails<br/>
+                       InitiateThirdPartyPaymentProcessorPayment<br/>
+                       InitiateInvoicePayment</td>
+      <td align="left">OrderDTO</td>
+    </tr>
+
+    <tr>
+      <td align="left">PaymentController</td>
+      <td align="left">MVC Controller</td>
+      <td align="left">CompleteThirdPartyProcessorPayment<br/>
+                       CancelThirdPartyProcessorPayment</td>
+      <td align="left">ThirdPartyProcessorPaymentDetailsDTO<br/>
+                       InvoiceProcessorPaymentDetailsDTO</td>
+    </tr>
+
+    <tr>
+      <td align="left">Conference Management</td>
+      <td align="left">CRUD Bounded Context</td>
+      <td align="left">ConferenceCreated<br/>
+                       ConferenceUpdated<br/>
+                       ConferencePublished<br/>
+                       ConferenceUnpublished<br/>
+                       SeatCreated<br/>
+                       SeatUpdated<br/>
+                       SeatsAdded<br/>
+                       SeatsRemoved</td>
+      <td align="left">N/A</td>
+    </tr>
+
+    <tr>
+      <td align="left">Order</td>
+      <td align="left">Aggregate</td>
+      <td align="left">OrderPlaced<br/>
+                      *OrderExpired<br/>
+                      *OrderUpdated<br/>
+                      *OrderPartiallyReserved<br/>
+                      *OrderReservationCompleted<br/>
+                      *OrderPaymentConfirmed<br/>
+                      *OrderRegistrantAssigned</td>
+      <td align="left">RegisterToConference<br/>
+                       MarkSeatsAsReserved<br/>
+                       RejectOrder AssignRegistrantDetails</td>
+    </tr>
+
+    <tr>
+      <td align="left">SeatsAvailability</td>
+      <td align="left">Aggregate</td>
+      <td align="left">SeatsReserved<br/>
+                       *AvailableSeatsChanged<br/>
+                       *SeatsReservationCommitted<br/>
+                       *SeatsReservationCancelled</td>
+      <td align="left">MakeSeatReservation<br/>
+                       CancelSeatReservation<br/>
+                       CommitSeatReservation<br/>
+                       SeatsAdded<br/>
+                       SeatsRemoved</td>
+    </tr>
+
+    <tr>
+      <td align="left">RegistrationProcess</td>
+      <td align="left">Workflow</td>
+      <td align="left">MakeSeatReservation<br/>
+                       ExpireRegistrationProcess<br/>
+                       MarkSeatsAsReserved<br/>
+                       CancelSeatReservation<br/>
+                       RejectOrder<br/>
+                       CommitSeatReservation<br/>
+                       ConfirmOrderPayment</td>
+      <td align="left">OrderPlaced<br/>
+                       PaymentCompleted<br/>
+                       SeatsReserved<br/>
+                       ExpireRegistrationProcess</td>
+    </tr>
+
+    <tr>
+      <td align="left">OrderViewModelGenerator</td>
+      <td align="left">Handler</td>
+      <td align="left">OrderDTO</td>
+      <td align="left">OrderPlaced<br/>
+                       OrderUpdated<br/>
+                       OrderPartiallyReserved<br/>
+                       OrderReservationCompleted<br/>
+                       OrderRegistrantAssigned</td>
+    </tr>
+
+    <tr>
+      <td align="left">ConferenceViewModelGenerator</td>
+      <td align="left">Handler</td>
+      <td align="left">ConferenceDTO</td>
+      <td align="left">ConferenceCreated<br/>
+                       ConferenceUpdated<br/>
+                       ConferencePublished<br/>
+                       ConferenceUnpublished<br/>
+                       SeatCreated<br/>
+                       SeatUpdated</td>
+    </tr>
+
+    <tr>
+      <td align="left">ThirdPartyPaymentProcessor</td>
+      <td align="left">Aggregate</td>
+      <td align="left">PaymentCompleted<br/>
+                       PaymentRejected</td>
+      <td align="left">InitiateThirdPartyProcessorPayment<br/>
+                       CompleteThirdPartyProcessorPayment<br/>
+                       CancelThirdPartyProcessorPayment</td>
+    </tr>
+  </tbody>
+</table>
+
+\* These events are only used for persisting aggregate state using event sourcing.
+
+**Summary of messages in the Contoso Conference Management System**
+
+* All events use the past tense the naming convention.  
+* All commands use the imperative naming convention.  
+* All DTOs have a DTO suffix.
+
 ### Conference Management Bounded Context
 
 The Conference Management bounded context is a simple two-tier, 
@@ -163,9 +318,9 @@ Another factor that affects the design and usability of the UI is how
 the UI communicates with the rest of the application. If the application 
 is based on a CRUD-style architecture, this can leak through to the UI. 
 If the developers focus on CRUD-style operations, this can result in a 
-UI as shown in the first screen design in Figure 1. 
+UI as shown in the first screen design in Figure 2. 
 
-![Figure 1][fig1]
+![Figure 2][fig2]
 
 **Example UIs for conference registration**
 
@@ -193,11 +348,11 @@ part of the domain model on the write-side. In a bounded context that
 implements the CQRS pattern, the UI typically queries the read-side and 
 receives a DTO, and sends commands to the write-side. 
 
-![Figure 2][fig2]
+![Figure 3][fig3]
 
 **Task-based UI flow**
 
-Figure 2 shows a sequence of pages that enable the registrant to 
+Figure 3 shows a sequence of pages that enable the registrant to 
 complete the "purchase seats at a conference" task. On the first page, 
 the registrant selects the type and quantity of seats. On the second 
 page, the registrant can review the seats she has reserved, enter her 
@@ -207,7 +362,7 @@ completes successfully, the system displays the third page. The third
 page shows a summary of the order and provides a link to pages where the 
 registrant can start additional tasks. 
 
-The sequence shown in Figure 2 is deliberately simplified in order to 
+The sequence shown in Figure 3 is deliberately simplified in order to 
 highlight the roles of the commands and queries in a task-based UI. For 
 example, the real flow includes pages that the system will display based 
 on the payment type selected by the registrant, and error pages that the 
@@ -512,12 +667,12 @@ third-party payments processor (that mimics the behavior of systems such
 as PayPal) or by an invoicing system. The external systems can report 
 either that a payment was successful or that a payment failed. 
 
-The sequence diagram in figure 3 illustrates how the key elements that 
+The sequence diagram in figure 4 illustrates how the key elements that 
 are involved in the payments process interact with each other. The 
 diagram is shows a simplified view, for example by ignoring the handler 
 classes to better describe the process. 
 
-![Figure 3][fig3]
+![Figure 4][fig4]
 
 **Overview of the payment process**
 
@@ -528,7 +683,7 @@ using a third-party payments processing service, however for reason of
 simplicity, the diagram does not show this option. 
 
 The Registrant makes a payment as a part of the overall flow in the UI 
-as shown in figure 2. The **PaymentController** controller class does 
+as shown in figure 3. The **PaymentController** controller class does 
 not display a view unless it has to wait for the system to create the 
 **ThirdPartyProcessorPayment** aggregate instance. Its role is to 
 forward to payment information collected from the Registrant to the 
@@ -559,10 +714,10 @@ The read-side model is also implemented using Entity Framework. The
 **PaymentDao** class exposes the payment data on the read-side. For an 
 example, see the **GetThirdPartyProcessorPaymentDetails** method. 
 
-Figure 4 illustrates the different parts that make up the read-side and 
+Figure 5 illustrates the different parts that make up the read-side and 
 the write-side of the Payments bounded context. 
 
-![Figure 4][fig4]
+![Figure 5][fig5]
 
 **The read-side and the write-side in the Payments bounded context**
 
@@ -953,15 +1108,17 @@ between the implementations.
 Describe any special considerations that relate to testing for this bounded context.  
 
 
-[j_chapter4]:		Journey_04_ExtendingEnhancing.markdown
-[r_chapter9]: 		Reference_09_Technologies.markdown
+[j_chapter3]:       Journey_03_OrdersBC.markdown
+[j_chapter4]:       Journey_04_ExtendingEnhancing.markdown
+[r_chapter9]:       Reference_09_Technologies.markdown
 
-[fig1]:             images/Journey_05_UIs.png?raw=true
-[fig2]:             images/Journey_05_Tasks.png?raw=true
-[fig3]:             images/Journey_05_Payments.png?raw=true
-[fig4]:             images/Journey_05_PaymentBC.png?raw=true
+[fig1]:             images/Journey_05_Architecture.png?raw=true
+[fig2]:             images/Journey_05_UIs.png?raw=true
+[fig3]:             images/Journey_05_Tasks.png?raw=true
+[fig4]:             images/Journey_05_Payments.png?raw=true
+[fig5]:             images/Journey_05_PaymentBC.png?raw=true
 
-[inductiveui]:		http://msdn.microsoft.com/en-us/library/ms997506.aspx
-[metroux]:			http://msdn.microsoft.com/en-us/library/windows/apps/hh465424.aspx
-[unity]:			http://msdn.microsoft.com/en-us/library/ff647202.aspx
-[appfabsdk]:		http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=27421
+[inductiveui]:      http://msdn.microsoft.com/en-us/library/ms997506.aspx
+[metroux]:          http://msdn.microsoft.com/en-us/library/windows/apps/hh465424.aspx
+[unity]:            http://msdn.microsoft.com/en-us/library/ff647202.aspx
+[appfabsdk]:        http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=27421
