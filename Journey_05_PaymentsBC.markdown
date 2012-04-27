@@ -262,8 +262,8 @@ The Conference Management bounded context is a simple two-tier,
 CRUD-style web application. It is implemented using MVC 4 and Entity 
 Framework. 
 
-**JanaPersona:** The team implemented this bounded context after it 
-implemented the public Conference Management web-site that uses MVC 3.
+> **JanaPersona:** The team implemented this bounded context after it
+> implemented the public Conference Management web-site that uses MVC 3.
 
 This bounded context must integrate with other bounded contexts that 
 implement the CQRS pattern. 
@@ -280,7 +280,7 @@ implement the CQRS pattern.
 
 ## Event Sourcing
 
-The team at Contoso originally implemented the Orders and Reservations 
+The team at Contoso originally implemented the Orders and Registrations 
 bounded context without using event sourcing. However, during the 
 implementation it became clear that using event sourcing would help to 
 simplify this bounded context. 

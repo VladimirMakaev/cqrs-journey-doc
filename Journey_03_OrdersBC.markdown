@@ -1,13 +1,13 @@
 ## Chapter 3
-# Orders and Reservations Bounded Context 
+# Orders and Registrations Bounded Context 
 
 _The first stopping point on our CQRS journey._
 
-# A Description of the Orders and Reservations Bounded Context
+# A Description of the Orders and Registrations Bounded Context
 
-The **Orders and Reservations** bounded context is partially responsible 
+The **Orders and Registrations** bounded context is partially responsible 
 for the booking process for attendees planning to attend a conference. 
-In the **Orders and Reservations** bounded context, a person (the 
+In the **Orders and Registrations** bounded context, a person (the 
 registrant) purchases seats at a particular conference. In the 
 **Registrations** bounded context, described in [To Do Identify 
 Chapter][todo1], the registrant assigns names of attendees to the 
@@ -459,7 +459,7 @@ bounded context.
 # Implementation Details
 
 This section describes some of the significant features of the 
-implementation of the orders and reservations bounded context. You may 
+implementation of the Orders and Registrations bounded context. You may 
 find it useful to have a copy of the code so you can follow along. You 
 can download a copy of the code from the repository on github: 
 [mspnp/cqrs-journey-code][repourl]. 

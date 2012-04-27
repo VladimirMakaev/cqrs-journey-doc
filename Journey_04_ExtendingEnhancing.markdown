@@ -3,9 +3,9 @@
 
 *Exploring further*
 
-# A Description of the Orders and Reservations Bounded Context 
+# A Description of the Orders and Registrations Bounded Context 
 
-The Orders and Reservations Bounded Context was described in some detail 
+The Orders and Registrations Bounded Context was described in some detail 
 in the previous chapter. This chapter describes some changes that the 
 team made in this bounded context during the second stage of their CQRS 
 journey. 
@@ -87,7 +87,7 @@ subscribe to events.
 
 This chapter discusses the implementation of two user stories in 
 addition to describing some changes and enhancements to the **Orders and 
-Reservations** bounded context. 
+Registrations** bounded context. 
 
 ### Implement a Login using a Record Locator
 
@@ -340,7 +340,7 @@ view tables.
 
 > **BharathPersona:** If you look ahead to the next chapter, [Preparing
 > for the V1 Release][j_chapter5], you'll see that the team extended the
-> use of events and migrated the **Orders and Reservations** bounded
+> use of events and migrated the **Orders and Registrations** bounded
 > context to use event sourcing. 
 
 ## CQRS Command Validation
@@ -390,7 +390,7 @@ the data that is available from the read-model.
 # Implementation Details 
 
 This section describes some of the significant features of the 
-implementation of the orders and reservations bounded context that are 
+implementation of the Orders and Registrations bounded context that are 
 described in this chapter. You may find it useful to have a copy of the 
 code so you can follow along. You can download a copy of the code from 
 the repository on github: [mspnp/cqrs-journey-code][repourl]. 
