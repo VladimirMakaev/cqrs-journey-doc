@@ -304,9 +304,9 @@ and the implementation of the Orders and Registrations becomes simpler.
 
 > **PoePersona:** As a practical problem, the team had limited time
 > before the V1 release to implement a production quality event store.
-> They created a simple, basic event store based on SQL Server as an
-> interim solution. However, they will face the problem in the future
-> of migrating from one event store to another.
+> They created a simple, basic event store based on Windows Azure tables
+> as an interim solution. However, they will potentially face the
+> problem in the future of migrating from one event store to another.
 
 ## Task-based UI
 
@@ -923,8 +923,12 @@ public void Handle(MarkSeatsAsReserved command)
 ```
 
 The following code sample shows how the **SqlEventSourcedRepository**
-class loads the event stream associated with the aggregate. 
+class loads the event stream associated with the aggregate.
 
+> **JanaPersona:** The team later developed a simple event store using
+> Windows Azure tables instead of the **SqlEventSourcedRepository**. The
+> next section describes this Windows Azure table storage based
+> implementation.
 
 ```Cs
 public T Find(Guid id)
@@ -996,6 +1000,117 @@ production quality implementation.
 3. There are no optimizations in place for aggregate instances that have
    a large number of events in their event stream. This could result in
    performance problems when replaying events.
+   
+## Windows Azure Table Storage Based Event Store
+
+The Windows Azure table storage based event store addresses some of the 
+short-comings of the simple SQL-based event store. Howevere, at this 
+point on time, it is still _not_ a production quality implementation. 
+
+The team designed this implementation to guarantee that events are both 
+persisted to storage and published on the message bus. To achieve this, 
+it uses the transactional capabilities of Windows Azure tables. 
+
+> **MarkusPersona:** Windows Azure table storage supports transactions
+> across records that share the same partition key.
+
+The **EventStore** class initially saves two copies of every event to be 
+persisted. One copy is the permanent record of that event, and the other 
+copy becomes part of a virtual queue of events that must be published on 
+the Windows Azure Service Bus. The following code sample shows the 
+**Save** method in the **EventStore** class. The prefix "Unpublished" 
+identifies the copy of the event that is part of the virtual queue of 
+unpublished events. 
+
+```Cs
+public void Save(string partitionKey, IEnumerable<EventData> events)
+{
+    var context = this.tableClient.GetDataServiceContext();
+    foreach (var eventData in events)
+    {
+        var formattedVersion = eventData.Version.ToString("D10");
+        context.AddObject(
+            this.tableName,
+            new EventTableServiceEntity
+                {
+                    PartitionKey = partitionKey,
+                    RowKey = formattedVersion,
+                    SourceId = eventData.SourceId,
+                    SourceType = eventData.SourceType,
+                    EventType = eventData.EventType,
+                    Payload = eventData.Payload
+                });
+
+        // Add a duplicate of this event to the Unpublished "queue"
+        context.AddObject(
+            this.tableName,
+            new EventTableServiceEntity
+            {
+                PartitionKey = partitionKey,
+                RowKey = UnpublishedRowKeyPrefix + formattedVersion,
+                SourceId = eventData.SourceId,
+                SourceType = eventData.SourceType,
+                EventType = eventData.EventType,
+                Payload = eventData.Payload
+            });
+
+    }
+
+    try
+    {
+        this.eventStoreRetryPolicy.ExecuteAction(() => context.SaveChanges(SaveChangesOptions.Batch));
+    }
+    catch (DataServiceRequestException ex)
+    {
+        var inner = ex.InnerException as DataServiceClientException;
+        if (inner != null && inner.StatusCode == (int)HttpStatusCode.Conflict)
+        {
+            throw new ConcurrencyException();
+        }
+
+        throw;
+    }
+}
+```
+
+> **Note:** This code sample also illustrates how a duplicate key error
+> is used to identify a concurrency error.
+
+The **Save** method in the repository class is shown below. This method 
+is invoked by the event handler classes, invokes the **Save** method 
+shown in the previous code sample, and also invokes the **SendAsync** 
+method of the **EventStoreBusPublisher** class. 
+
+```Cs
+public void Save(T eventSourced)
+{
+    var events = eventSourced.Events.ToArray();
+    var serialized = events.Select(this.Serialize);
+
+    var partitionKey = this.GetPartitionKey(eventSourced.Id);
+    this.eventStore.Save(partitionKey, serialized);
+
+    this.publisher.SendAsync(partitionKey);
+}
+```
+
+The **EventStoreBusPublisher** class is responsible for reading the 
+unpublished events for the aggregate from the virtual queue in the 
+Windows Azure table store, publishing the event on the Windows Azure 
+Service Bus, and then deleting the unpublished event from the virtual 
+queue. 
+
+If the system fails between publishing the event on the Windows Azure 
+Service Bus and deleting the event from the virtual queue then, when the 
+application restarts, the event is published a second time. To avoid 
+problems caused by duplicate events, the Windows Azure Service Bus is 
+configured to detect duplicate messages and ignore them. 
+
+> **MarkusPersona:** In the case of a failure, the system must include a
+> mechanism for scanning all of the partitions in table storage for
+> aggregates with unpublished events and then publishing those events.
+> This process will take some time to run, but will only need to run
+> when the application restarts.
 
 # Running the Applications
 

@@ -1017,8 +1017,213 @@ information about how to automatically scale roles in Windows Azure, see
 
 ## Implementing an Event Store Using Windows Azure Table Storage 
 
-Will be covered in the Journey doc.
-Need to add a brief section to the technologies chapter describing significatn features of table storage.
+This section shows an event store implementation using Windows Azure table storage. It is not intended to show production quality code, but to suggest an approach. An event store should:
+
+* Persist events to a reliable storage medium.
+* Enable an individual aggregate to retrieve its stream of events in the order that they were originally persisted.
+* Guarantee to publish each event "at least once" to a message infrastructure. 
+
+Windows Azure tables have two fields that together define the uniqueness of a record: the partition key and the row key.
+
+This implementation uses the value of the aggregate's unique identifier as the partition key, and the event version number as the row key. Partition keys enable you to retrieve all of the records with the same partition key very quickly, and use transactions across rows that share the same partition key.
+
+For more information about Windows Azure table storage see [Data Storage Offerings in Windows Azure][azurestorage].
+
+### Persisting Events
+
+The following code sample shows how the implementation persists an event to Windows Azure table storage.
+
+```Cs
+public void Save(string partitionKey, IEnumerable<EventData> events)
+{
+    var context = this.tableClient.GetDataServiceContext();
+    foreach (var eventData in events)
+    {
+        var formattedVersion = eventData.Version.ToString("D10");
+        context.AddObject(
+            this.tableName,
+            new EventTableServiceEntity
+                {
+                    PartitionKey = partitionKey,
+                    RowKey = formattedVersion,
+                    SourceId = eventData.SourceId,
+                    SourceType = eventData.SourceType,
+                    EventType = eventData.EventType,
+                    Payload = eventData.Payload
+                });
+
+        ...
+
+    }
+
+    try
+    {
+        this.eventStoreRetryPolicy.ExecuteAction(() => context.SaveChanges(SaveChangesOptions.Batch));
+    }
+    catch (DataServiceRequestException ex)
+    {
+        var inner = ex.InnerException as DataServiceClientException;
+        if (inner != null && inner.StatusCode == (int)HttpStatusCode.Conflict)
+        {
+            throw new ConcurrencyException();
+        }
+
+        throw;
+    }
+}
+```
+
+There are two things to note about this code sample:
+
+1. An attempt to save a duplicate event (same aggregate id and same
+   event version) results in a concurrency exception.
+2. This example uses a retry policy to handle transient faults and to
+   improve the reliability of the save operation. See [The Transient
+   Fault Handling Application Block][topaz].
+
+
+### Retrieving Events
+
+The following code sample shows how to retrieve the list of events associated with an aggregate.
+
+```Cs
+public IEnumerable<EventData> Load(string partitionKey, int version)
+{
+    var minRowKey = version.ToString("D10");
+    var query = this.GetEntitiesQuery(partitionKey, minRowKey, RowKeyVersionUpperLimit);
+    var all = this.eventStoreRetryPolicy.ExecuteAction(() => query.Execute());
+    return all.Select(x => new EventData
+                                {
+                                    Version = int.Parse(x.RowKey),
+                                    SourceId = x.SourceId,
+                                    SourceType = x.SourceType,
+                                    EventType = x.EventType,
+                                    Payload = x.Payload
+                                });
+}
+```
+The events are returned in the correct order because the version number is used as the row key.
+
+### Publishing Events
+
+To guarantee that every event is published as well as persisted, you can use the transactional behaviour of Windows Azure table partitions. When you save an event, you also add a copy of the event to a virtual queue on the same partition as part of a transaction. The following code sample shows a complete version of the save method that saves two copies of the event.
+
+```Cs
+public void Save(string partitionKey, IEnumerable<EventData> events)
+{
+    var context = this.tableClient.GetDataServiceContext();
+    foreach (var eventData in events)
+    {
+        var formattedVersion = eventData.Version.ToString("D10");
+        context.AddObject(
+            this.tableName,
+            new EventTableServiceEntity
+                {
+                    PartitionKey = partitionKey,
+                    RowKey = formattedVersion,
+                    SourceId = eventData.SourceId,
+                    SourceType = eventData.SourceType,
+                    EventType = eventData.EventType,
+                    Payload = eventData.Payload
+                });
+
+        // Add a duplicate of this event to the Unpublished "queue"
+        context.AddObject(
+            this.tableName,
+            new EventTableServiceEntity
+            {
+                PartitionKey = partitionKey,
+                RowKey = UnpublishedRowKeyPrefix + formattedVersion,
+                SourceId = eventData.SourceId,
+                SourceType = eventData.SourceType,
+                EventType = eventData.EventType,
+                Payload = eventData.Payload
+            });
+
+    }
+
+    try
+    {
+        this.eventStoreRetryPolicy.ExecuteAction(() => context.SaveChanges(SaveChangesOptions.Batch));
+    }
+    catch (DataServiceRequestException ex)
+    {
+        var inner = ex.InnerException as DataServiceClientException;
+        if (inner != null && inner.StatusCode == (int)HttpStatusCode.Conflict)
+        {
+            throw new ConcurrencyException();
+        }
+
+        throw;
+    }
+}
+```
+
+You can use a task to process the unpublished events: read the unpublished event from the virtual queue, publish the event on the messaging infrastructure, and delete the copy of the event from the unpublished queue. The following code sample shows a possible implementation of this behavior.
+
+```Cs
+private readonly BlockingCollection<string> enqueuedKeys;
+
+public void SendAsync(string partitionKey)
+{
+    this.enqueuedKeys.Add(partitionKey);
+}
+
+public void Start(CancellationToken cancellationToken)
+{
+    Task.Factory.StartNew(
+        () =>
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        this.ProcessNewPartition(cancellationToken);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
+                }
+            },
+        TaskCreationOptions.LongRunning);
+}
+
+private void ProcessNewPartition(CancellationToken cancellationToken)
+{
+    string key = this.enqueuedKeys.Take(cancellationToken);
+    if (key != null)
+    {
+        try
+        {
+            var pending = this.queue.GetPending(key).AsCachedAnyEnumerable();
+            if (pending.Any())
+            {
+                foreach (var record in pending)
+                {
+                    var item = record;
+                    this.sender.Send(() => BuildMessage(item));
+                    this.queue.DeletePending(item.PartitionKey, item.RowKey);
+                }
+            }
+        }
+        catch
+        {
+            this.enqueuedKeys.Add(key);
+            throw;
+        }
+    }
+}
+```
+There are three points to note about this sample implementation:
+
+1. It is not optimized.
+2. Potentially it could fail between publishing a message and deleting
+   it from the unpublished queue. You could use duplicate message
+   detection in your messaging infrastructure when the message is resent
+   after a restart.
+3. After a restart, you need code to scan all your partitions for
+   unpublished events.
 
 ## Implementing a Messaging Infrastructure Using the Windows Azure Service Bus 
 
@@ -1034,6 +1239,8 @@ Will be covered in the Journey doc.
 [captheorem]:     http://en.wikipedia.org/wiki/CAP_theorem
 [aab]:            http://msdn.microsoft.com/en-us/library/hh680892(PandP.50).aspx
 [youngeventual]:  http://codebetter.com/gregyoung/2010/04/14/quick-thoughts-on-eventual-consistency/
+[topaz]:          http://msdn.microsoft.com/en-us/library/hh680934(PandP.50).aspx
+[azurestorage]:   https://www.windowsazure.com/en-us/develop/net/fundamentals/cloud-storage/
 
 [fig1]:           images/Reference_04_Consistency_01.png?raw=true
 [fig2]:           images/Reference_04_Consistency_02.png?raw=true
