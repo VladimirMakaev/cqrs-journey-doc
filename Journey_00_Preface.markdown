@@ -31,17 +31,21 @@ space.
 
 ## A CQRS Journey
 
-This section is most closely related to the RI. It has chapters that 
-describe the key sub-systems, or bounded contexts in the terminology we 
-will use throughout the guide, of the RI. Each of these chapters will 
-discuss how and why particular CQRS patterns and concepts apply to the 
-design and development of this bounded context, will describe the 
+This section is closely related to the RI and the chapters follow the 
+chronology of the project to develop the RI. Each chapter describes 
+relevant features of the domain model, infrastructure elements, 
+architecture, and UI that the team were concerned with during that phase 
+of the project. Some parts of the system are discussed in several 
+chapters and this reflects the fact that the team revisited certain 
+areas during later stages. Each of these chapters will discuss how and 
+why particular CQRS patterns and concepts apply to the design and 
+development of particular bounded contexts, will describe the 
 implementation, and will highlight any implications for testing. 
 
 There are also chapters that look at the big picture. For example, there 
 is a chapter that explains the rationale for splitting the RI into the 
 bounded contexts we chose, another chapter analyzes the implications of 
-our approach for versioning the system, and another chapter looks at how 
+our approach for versioning the system, and other chapters looks at how 
 the different bounded contexts in the RI communicate with each other. 
 
 This section describes our journey as we learned about CQRS, and how we 
