@@ -162,9 +162,7 @@ The first table that follows figure 1 lists all of the messages that the element
                        ConferencePublished<br/>
                        ConferenceUnpublished<br/>
                        SeatCreated<br/>
-                       SeatUpdated<br/>
-                       SeatsAdded<br/>
-                       SeatsRemoved</td>
+                       SeatUpdated<br/></td>
       <td align="left">N/A</td>
     </tr>
 
@@ -193,8 +191,8 @@ The first table that follows figure 1 lists all of the messages that the element
       <td align="left">MakeSeatReservation<br/>
                        CancelSeatReservation<br/>
                        CommitSeatReservation<br/>
-                       SeatsAdded<br/>
-                       SeatsRemoved</td>
+                       AddSeats<br/>
+                       RemoveSeats<br/></td>
     </tr>
 
     <tr>
@@ -227,13 +225,15 @@ The first table that follows figure 1 lists all of the messages that the element
     <tr>
       <td align="left">ConferenceViewModelGenerator</td>
       <td align="left">Handler</td>
-      <td align="left">ConferenceDTO</td>
+      <td align="left">ConferenceDTO<br/>
+                       AddSeats<br/>
+                       RemoveSeats<br/></td>
       <td align="left">ConferenceCreated<br/>
                        ConferenceUpdated<br/>
                        ConferencePublished<br/>
                        ConferenceUnpublished<br/>
-                       SeatCreated<br/>
-                       SeatUpdated</td>
+                       **SeatCreated<br/>
+                       **SeatUpdated</td>
     </tr>
 
     <tr>
@@ -249,6 +249,8 @@ The first table that follows figure 1 lists all of the messages that the element
 </table>
 
 \* These events are only used for persisting aggregate state using event sourcing.
+
+\*\* The **ConferenceViewModelGenerator** creates these commands from the **SeatCreated** and **SeatUpdated** events that it handles from the Conference Management bounded context.
 
 **Summary of messages in the Contoso Conference Management System**
 
@@ -643,10 +645,6 @@ changes to conferences by publishing the following events.
   Business Customer defines a new seat type.
 * **SeatsAdded:** The bounded context publishes this event whenever a
   Business Customer increase the quota of a seat type.
-* **SeatsAdded:** The bounded context publishes this event whenever a
-  Business Customer increase the quota of a seat type.
-* **SeatsRemoved:** The bounded context publishes this event whenever a
-  Business Customer decreases the quota of a seat type.
   
 The **ConferenceService** class in the Conference project publishes 
 these events to the event bus. 

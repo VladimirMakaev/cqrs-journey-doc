@@ -85,8 +85,6 @@ The following table lists the events that are associated with each of the number
       <b>ConferenceUnpublished</b> (Event)<br/>
       <b>SeatCreated</b> (Event)<br/>
       <b>SeatUpdated</b> (Event)<br/>
-      <b>SeatsAdded</b> (Event)<br/>
-      <b>SeatsRemoved</b> (Event)<br/>
     </td>
   </tr>
   <tr>
