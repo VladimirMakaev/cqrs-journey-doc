@@ -325,6 +325,37 @@ events.
 > that lower your costs, for example by using caching to reduce the
 > number of storage transactions.
 
+### Identifying Aggegates
+
+In the Windows Azure table storage based implementation of the event 
+store that the team created for the V1 release, they used the aggregate 
+id as the partition key. This makes it efficient to locate the partition 
+that holds the events for any particular aggregate. 
+
+In some cases the system must locate related aggregates. For example, an 
+order aggregate may have a related registrations aggregate that holds 
+details of the attendees assigned to specific seats. In this scenario, 
+the team decided to reuse the same aggregate id for the related pair of 
+aggregates, the order and registration, in order to facilitate look-ups. 
+
+> **BharathPersona:** You want to consider in this case whether you
+> should have two aggregates. You could model the registrations as an
+> entity inside the order aggregate.
+
+A more common scenario is to have a one-to-many relationship between 
+aggregates instead of a one-to-one. In this case it is not possible to 
+share aggregate ids: instead the aggregate on the one-side can store a 
+list of the ids of the aggregates on the many-side, and each aggregate 
+on the many-side can store the id of the aggregate on the one-side. 
+
+> Sharing aggregate ids is common when the aggregates exist in different
+> bounded contexts. If you have aggregates in different bounded contexts
+> that model different facets of the same real-world entity, it makes
+> sense for them to share the same id. This makes it easier to follow a
+> real-world entity as it is processed by different bounded contexts in
+> your system.  
+> Greg Young - Conversation with the PnP team.
+
 ## Task-based UI
 
 The design of UIs has improved greatly over the last decade: 
