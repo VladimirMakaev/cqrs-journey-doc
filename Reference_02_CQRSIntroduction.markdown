@@ -98,6 +98,14 @@ There are several motivations for this segregation including:
   splitting the data store and enabling you to select from a range of 
   storage mechanisms.
   
+Figure 1 might also suggest a one-to-one relationship between the 
+write-side and the read-side. This is not necessarily the case. It can 
+be useful to consolidate the data from multiple write-models into a 
+single read-model if your UI needs to display consolidated data. The 
+point of the read-side model is to simplify what happens on the 
+read-side, and you may be able to simplify the implementation of your UI 
+if the data that you need to display has already been combined. 
+
 There are some questions that might occur to you about the 
 practicalities of adopting architecture such as the one shown in 
 figure 1.
