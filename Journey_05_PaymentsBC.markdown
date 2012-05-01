@@ -509,6 +509,33 @@ in planning how this integration should be implemented.
 > two-phase commit and it can be implemented without making any changes
 > to the application code.
 
+A further issue relates to when and where to persist integration events. 
+In the example discussed above, the events are raised in the Conference 
+Management bounded context and handled in the Orders and Registrations 
+bounded context that uses them to populate its read-model. If a failure 
+occurs that causes the system to loose the read-model data, then without 
+saving the events there is no way to re-create this read-model data. 
+
+Whether you need to persist these integration events will depend on the 
+specific requirements and implementation of your application. For 
+example: 
+
+* Integration events may be handled in the write-model (and not on the
+  read-side as in the current example) and will then result in changes
+  on the write-side that are persisted as other events.
+* Integration events may represent transient data that does not need to
+  be persisted.
+* Integration events from a CRUD-style bounded context may contain state
+  data so that only the last event is needed. For example if the event
+  from the Conference Management bounded context includes the current
+  seat quota, you may not be interested in previous values.
+
+> Another approach to consider is to use an event-store that is shared
+> by multiple bounded contexts. In this way the originating bounded
+> context (for example the CRUD-style Conference Management bounded
+> context) could be responsible for persisting the integration events.  
+> Greg Young - Conversation with the PnP team.
+
 ### Some Comments on Windows Azure Service Bus
 
 The previous discussion suggested a way to avoid using a distributed 
