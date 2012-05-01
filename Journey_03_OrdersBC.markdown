@@ -1042,7 +1042,7 @@ bus.
 To transport Command and Event messages, the team decided to use the 
 Windows Azure Service Bus to provide the basic, low-level messaging 
 infrastructure. This section describes how the system uses the Windows 
-Azure Service Busand some of the alternatives and trade-offs the team 
+Azure Service Bus and some of the alternatives and trade-offs the team 
 considered considered during the design phase. 
 
 > **JanaPersona:** The team at Contoso desided to use the Windows Azure
@@ -1274,6 +1274,14 @@ The Contoso Conference Management System uses the [Json.NET][jsonnet]
 serializer. For details of how this serializer is used within the 
 application, see [Technologies Used in the Reference 
 Implementation][r_chapter9] in the Reference Guide. 
+
+> You should consider whether you really need to use the Windows Azure
+> Service Bus for commands. Commands are typically used within a bounded
+> context and you may not need to send them across a process boundary
+> (on the write-side you may not need additional tiers), in which case
+> you can use an in memory queue to deliver your commands.
+  
+> Greg Young - Conversation with the PnP team.
 
 # Testing
 Because this was the first bounded context the team tackled, one of the 
