@@ -83,6 +83,19 @@ shows the relationships between the different bounded contexts that make
 the complete system and as such it provides a high-level overview of how 
 the system is put together. 
 
+> **BharathPersona:** A frequent comment about CQRS projects is the
+> difficulty in understanding how all of the pieces fit together,
+> especially if there are a large number of commands an events in the
+> system. Often, you can perform some static analysis on the code to
+> determine where events and commands are handled, but it is more
+> difficult to automatically determine where they originate. At a
+> high-level, a context map can help to understand the the integration
+> between the different bounded contexts and the events involved.
+> Maintaining up to date documentation about the commands and events can
+> offer a more detailed view. Additionally, if you have tests that use
+> commands as inputs and then check for events, you can examine the
+> tests to understand the expected consequences of particular commands.
+
 Figure 1 shows the six bounded contexts that make up the Contoso 
 Conference Management System. The arrows on the diagram indicate the 
 flow of data as events between them. 
