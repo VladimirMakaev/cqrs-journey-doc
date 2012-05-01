@@ -291,7 +291,7 @@ separate aggregates.
 The numbers in the diagram correspond to the following steps:
 
 1. The UI sends a command to register attendees X and Y onto conference
-   #157. The command is routed to a new **Order** aggregate.
+   157. The command is routed to a new **Order** aggregate.
 2. The **Order** aggregate invokes a method on a **Conference Seats
    Availability** aggregate.
 3. The **Conference Seats Availability** aggregate with an ID of 157 is
@@ -313,7 +313,7 @@ single aggregate in place of two.
 The numbers in the diagram correspond to the following steps:
 
 1. The UI sends a command to register attendees X and Y onto conference
-   #157. The command is routed to the **Conference** aggregate with an
+   157. The command is routed to the **Conference** aggregate with an
    ID of 157.
 2. The **Conference** aggregate with an ID of 157 is re-hydrated from
    the data store.

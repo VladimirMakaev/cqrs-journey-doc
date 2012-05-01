@@ -23,10 +23,23 @@ Tackling Complexity in the Heart of Software" by Eric Evans. In brief,
 this concept is introduced as a way to decompose a large, complex system 
 into more manageable pieces: a large system is composed of multiple 
 bounded contexts. Each bounded context is the context for its own 
-self-contained domain model, and has its own ubiquitous language. You 
-can also view a bounded context as autonomous business component 
-defining clear consistency boundaries: one bounded context may only 
-communicate with another bounded context by raising events. 
+self-contained domain model, and has its own **Ubiquitous Language**.
+You can also view a bounded context as autonomous business component 
+defining clear consistency boundaries: one bounded context typically 
+communicates with another bounded context by raising events.
+
+> **BharathPersona:** When you use the CQRS pattern, you often use
+> events to communicate between bounded contexts. There are alternative
+> approaches to integration such as sharing data at the database level.
+
+## Context Map
+
+<div style="margin-left:20px;margin-right:20px;">
+  <span style="background-color:yellow;">
+    <b>Comment [DRB]:</b>
+	To do - expand this section and add a definition in the Reference Guide.
+  </span>
+</div>  
 
 # Bounded Contexts in the Conference Management System 
 
@@ -63,9 +76,16 @@ other registrants to reserve.
 
 ## The Conference Feedback Bounded Context
 
-## Relationships Between the Bounded Contexts
+## The Context Map for the Contoso Conference Management System
 
-Figure 1 shows the six bounded contexts that make up the Contoso Conference Management System. The arrows on the diagram indicate the flow of data as events between them.
+Figure 1 and the table that follows it provides a **Context Map** that 
+shows the relationships between the different bounded contexts that make 
+the complete system and as such it provides a high-level overview of how 
+the system is put together. 
+
+Figure 1 shows the six bounded contexts that make up the Contoso 
+Conference Management System. The arrows on the diagram indicate the 
+flow of data as events between them. 
 
 ![Figure 1][fig1]
 

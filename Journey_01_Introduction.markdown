@@ -12,6 +12,13 @@
 * In-house design/development skills 
 * Use of DDD 
 
+<div style="margin-left:20px;margin-right:20px;">
+  <span style="background-color:yellow;">
+    <b>Comment [DRB]:</b>
+	To do - expand this section.
+  </span>
+</div> 
+
 
 # Who Is Coming With Us On the Journey? 
 
@@ -93,6 +100,13 @@ the specialists whose interests align with yours.
 * Non-functional requirements 
 * Related systems and integration requirements 
 * Greenfield/brownfield development 
+
+<div style="margin-left:20px;margin-right:20px;">
+  <span style="background-color:yellow;">
+    <b>Comment [DRB]:</b>
+	To do - some of these bullets need expanding below.
+  </span>
+</div> 
 
 ## Overview of the System
 

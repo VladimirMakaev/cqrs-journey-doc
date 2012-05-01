@@ -5,6 +5,13 @@ _Why are we embarking on this journey?_
 
 # What Are the Motivations for Creating This Guidance Now?
 
+<div style="margin-left:20px;margin-right:20px;">
+  <span style="background-color:yellow;">
+    <b>Comment [DRB]:</b>
+	To do - needs to hook readers in to the guide.
+  </span>
+</div> 
+
 # How is This Guidance Structured?
 
 There are two, closely related, parts to this guidance: 
