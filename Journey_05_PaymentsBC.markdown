@@ -308,6 +308,23 @@ and the implementation of the Orders and Registrations becomes simpler.
 > as an interim solution. However, they will potentially face the
 > problem in the future of migrating from one event store to another.
 
+The team implemented the basic event store using Windows Azure table 
+storage. If you are hosting your application in Windows Azure you could 
+also consider using Windows Azure blobs or SQL Azure to store your 
+events. 
+
+> **JanaPersona:** One of the issues to consider when choosing between
+> storage mechanisms in Windows Azure is cost. If you use SQL Azure you
+> are billed based on the size of the database, if you use Windows Azure
+> table or blob storage you are billed based on the amount of storage
+> you use and the number of storage transactions. You need to carefully
+> evaluate the usage patterns on the different aggregates in your system
+> to determine which storage mechanism is the most cost effective. It
+> may turn out that different storage mechanisms make sense for
+> different aggregate types. You may be able to intoduce optimizations
+> that lower your costs, for example by using caching to reduce the
+> number of storage transactions.
+
 ## Task-based UI
 
 The design of UIs has improved greatly over the last decade: 
