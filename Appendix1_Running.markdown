@@ -32,6 +32,7 @@ These instructions describe five different scenarios for running the RI:
 # Prerequisites
 
 Before you begin, you should install the following pre-requisites:
+
 * Visual Studio 2010 or later
 * SQL Server 2008 Express or later
 * ASP.NET MVC 3 (Visual Studio 2010)
@@ -211,8 +212,8 @@ Deploy the **Conference.Azure** Windows Azure project to your Windows
 Azure account. 
 
 > **Note:** You must also ensure that you have created **Conference**
-> database in SQL Azure using the **Install-Database.ps1** in the scripts
-> folder. You must also modify the connection strings in all
+> database in SQL Azure using the **Install-Database.ps1** in the
+> scripts folder. You must also modify the connection strings in all
 > configuration files in the solution to point to your SQL Azure
 > **Conference** database instead of your local SQL Express
 > **Conference** database.
@@ -250,6 +251,18 @@ acceptance tests are run against either the local SQL-based messaging
 infrastructure and event store or the Windows Azure Service Bus
 messaging infrastructure and Windows Azure table storage based event
 store. 
+
+# Known Issues
+
+When you run the application in debug mode you will see an error in the
+**Conference.Web.Public** web application:
+
+```
+Activation error occured while trying to get instance of type IControllerFactory
+```
+
+Click in the **Continue** button and the application will run as
+expected.
 
 [source]:   https://github.com/mspnp/cqrs-journey-code
 [xunit]:    http://xunit.codeplex.com/
