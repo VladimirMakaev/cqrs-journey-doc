@@ -714,6 +714,28 @@ systems.
 > pricing information, and that new pricing information being used to
 > calculate order totals.
 
+## Approaches to Implementing the Read-side
+
+In the discussions of the read-side in the previous chapters, you saw 
+how the team used a SQL-based store for the denormalized projections of 
+the data from the write-side. 
+
+You can use other storage mechanisms for the read-model data, for 
+example the file system or in Windows Azure table or blob storage. In 
+the Orders and Registrations bounded context, the system uses Windows 
+Azure blobs to store information about the seat assignments. 
+
+> **BharathPersona:** When you are choosing the underlying storage
+> mechanism for the read-side you should consider the costs associated
+> with the storage (especially in the cloud) in addition to the
+> requirement that the read-side data should be easy and efficient to
+> access using the queries on the read-side.
+
+> **Note:** See the **SeatAssignmentsViewModelGenerator** class to
+> understand how the data is persisted to blob storage and the
+> **SetaAssignmentsDao** class to understand how the UI retrieves the
+> data for display.
+
 # Implementation Details 
 
 Describe significant features of the implementation with references to the code. Highlight any specific technologies (including any relevant trade-offs and alternatives). 
