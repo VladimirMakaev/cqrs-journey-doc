@@ -85,7 +85,7 @@ the system is put together.
 
 > **BharathPersona:** A frequent comment about CQRS projects is the
 > difficulty in understanding how all of the pieces fit together,
-> especially if there are a large number of commands an events in the
+> especially if there is a large number of commands and events in the
 > system. Often, you can perform some static analysis on the code to
 > determine where events and commands are handled, but it is more
 > difficult to automatically determine where they originate. At a
@@ -174,6 +174,11 @@ The following table lists the events that are associated with each of the number
     <td>??</td>
   </tr>
 </table>
+
+> **BharathPersona:** Some of the events raised from the Conference
+> Management bounded context are coarse-grained and contain multiple
+> fields. Remember that Conference Management is a CRUD-style bounded
+> context and does not raise fine-grained domain-style events.
 
 # Why Did We Choose These Bounded Contexts? 
 
