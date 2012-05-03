@@ -4,8 +4,7 @@
 
 This appendix describes how to obtain, build and run the RI.
 
-These instructions describe five different scenarios for running run the
-RI:
+These instructions describe five different scenarios for running the RI:
 
 1. Running the application on a local web server and using a local
    message bus and event store.
@@ -39,9 +38,9 @@ Before you begin, you should install the following pre-requisites:
 * ASP.NET MVC 4 Installer (Visual Studio 2010)
 * Windows Azure SDK for .NET - November 2011 or later.
 
-**Note:** Currently the RI requires the Windows Azure runtime libraries 
-in order to compile. This is true even for scenario 1. The Windows Azure 
-SDK includes these libraries. 
+> **Note:** Currently the RI requires the Windows Azure runtime
+> libraries in order to compile. This is true even for scenario 1. The
+> Windows Azure SDK includes these libraries. 
 
 You can download and install all of these except for Visual Studio and 
 IIS by using the Web Platform Installer 4.0. 
@@ -80,6 +79,7 @@ the scripts folder.
 
 For scenario 5, you must create a SQL Azure database called
 **Conference**.
+
 TODO - add more details here.
 
 The projects in the solution use this database to store application 
@@ -87,18 +87,18 @@ data. The SQL-based message bus and event store also use this database.
 
 # Creating the Settings.xml File
 
-Before you can build the solution you must create a `Settings.xml` file 
-in the `Infrastructure Projects\Azure` solution folder. You can copy the 
-`Settings.Template.xml` in this solution folder to create a 
-`Settings.xml` file. 
+Before you can build the solution you must create a **Settings.xml** file 
+in the **Infrastructure Projects\Azure** solution folder. You can copy the 
+**Settings.Template.xml** in this solution folder to create a 
+**Settings.xml** file. 
 
 If you plan to use the Windows Azure Service Bus and the Windows Azure 
-table storage based event store then you must edit the `Settings.xml` 
-file in the `Infrastructure Projects\Azure` solution folder to include 
+table storage based event store then you must edit the **Settings.xml** 
+file in the **Infrastructure Projects\Azure** solution folder to include 
 details of your Windows Azure storage account and a Windows Azure 
 Service Bus namespace. 
 
-> **Note:** See the contents of the `Settings.Template.xml` for details
+> **Note:** See the contents of the **Settings.Template.xml** for details
 > of the configuration information that is required.
 
 > **Note:** You cannot currently use the Windows Azure storage emulator
@@ -146,7 +146,7 @@ table storage (scenarios 2 and 4).
 
 Use the **DebugLocal** build configuration if you plan either to deploy 
 your application locally to the Windows Azure compute emulator or run 
-the application locally and stand-alone in IIS without using the Windows 
+the application on a local web server without using the Windows 
 Azure compute emulator. 
 
 This solution uses a local messaging infrastructure and event store 
@@ -203,7 +203,7 @@ Deploy the **Conference.Azure** Windows Azure project to your Windows
 Azure account. 
 
 > **Note:** You must also ensure that you have created **Conference**
-> database in SQL Azure using the `Install-Database.ps1` in the scripts
+> database in SQL Azure using the **Install-Database.ps1** in the scripts
 > folder. You must also modify the connection strings in all
 > configuration files in the solution to point to your SQL Azure
 > **Conference** database instead of your local SQL Express
