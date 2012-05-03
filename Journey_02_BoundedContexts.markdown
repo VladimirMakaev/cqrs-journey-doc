@@ -94,7 +94,10 @@ the system is put together.
 > Maintaining up to date documentation about the commands and events can
 > offer a more detailed view. Additionally, if you have tests that use
 > commands as inputs and then check for events, you can examine the
-> tests to understand the expected consequences of particular commands.
+> tests to understand the expected consequences of particular commands
+> (see the section on testing in [Extending and Enhancing the Orders and
+> Registrations Bounded Contexts][j_chapter4] for an example of this
+> style of test.
 
 Figure 1 shows the six bounded contexts that make up the Contoso 
 Conference Management System. The arrows on the diagram indicate the 
@@ -184,6 +187,7 @@ The following table lists the events that are associated with each of the number
 
 
 [j_chapter1]:     Journey_01_Introduction.markdown
+[j_chapter4]:     Journey_04_ExtendingEnhancing.markdown
 [r_chapter1]:     Reference_01_CQRSInContext.markdown
 
 [fig1]:           images/Journey_02_BCs.png?raw=true

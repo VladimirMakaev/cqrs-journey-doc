@@ -859,7 +859,99 @@ then handles the event when its handler invokes the **AddSeats** method.
 
 # Testing 
 
-Describe any special considerations that relate to testing for this bounded context.  
+A common comment about implementations that use the CQRS pattern or that 
+use messaging extensively is the difficulty in understanding how all of 
+the different pieces of the application fit together through sending and 
+receiving commands and events. You can help someone to understand your 
+code base through appropriately designed unit tests. 
+
+Consider this first example of a unit test for the **Order** aggregate:
+
+```Cs
+public class given_placed_order
+{
+    ...
+
+    private Order sut;
+
+    public given_placed_order()
+    {
+        this.sut = new Order(
+            OrderId, new[] 
+            {
+                new OrderPlaced 
+                { 
+                    ConferenceId = ConferenceId,
+                    Seats = new[] { new SeatQuantity(SeatTypeId, 5) },
+                    ReservationAutoExpiration = DateTime.UtcNow
+                }
+            });
+    }
+
+    [Fact]
+    public void when_updating_seats_then_updates_order_with_new_seats()
+    {
+        this.sut.UpdateSeats(new[] { new OrderItem(SeatTypeId, 20) });
+
+        var @event = (OrderUpdated)sut.Events.Single();
+        Assert.Equal(OrderId, @event.SourceId);
+        Assert.Equal(1, @event.Seats.Count());
+        Assert.Equal(20, @event.Seats.ElementAt(0).Quantity);
+    }
+
+    ...
+}
+``` 
+
+This unit test creates an **Order** instance and directly invokes the 
+**UpdateSeats** method. It does not provide any information to the 
+person reading the test code about the command or event that causes this 
+method to be invoked. 
+
+Consider this second example that performs the same test, but in this 
+case it does so by sending a command. 
+
+```Cs
+public class given_placed_order
+{
+    ...
+    
+    private EventSourcingTestHelper<Order> sut;
+
+    public given_placed_order()
+    {
+        this.sut = new EventSourcingTestHelper<Order>();
+        this.sut.Setup(new OrderCommandHandler(sut.Repository, pricingService.Object));
+
+        this.sut.Given(
+                new OrderPlaced 
+                { 
+                    SourceId = OrderId,
+                    ConferenceId = ConferenceId,
+                    Seats = new[] { new SeatQuantity(SeatTypeId, 5) },
+                    ReservationAutoExpiration = DateTime.UtcNow
+                });
+    }
+
+    [Fact]
+    public void when_updating_seats_then_updates_order_with_new_seats()
+    {
+        this.sut.When(new RegisterToConference { ConferenceId = ConferenceId, OrderId = OrderId, Seats = new[] { new SeatQuantity(SeatTypeId, 20) }});
+
+        var @event = sut.ThenHasSingle<OrderUpdated>();
+        Assert.Equal(OrderId, @event.SourceId);
+        Assert.Equal(1, @event.Seats.Count());
+        Assert.Equal(20, @event.Seats.ElementAt(0).Quantity);
+    }
+    
+    ...
+}
+```
+
+This example uses a helper class that enables you to send a command to 
+the **Order** instance. Now someone reading the test can see that when 
+you send a **RegisterToConference** command you expect to see an 
+**OrderUpdated** event. 
 
 [j_chapter5]:       Journey_05_PaymentsBC.markdown
 [r_chapter4]:       Reference_04_DeepDive.markdown
