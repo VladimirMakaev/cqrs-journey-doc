@@ -74,13 +74,18 @@ install [SpecFlow][specflow].
 # Creating the Databases
 
 For scenarios 1,2,3 and 4 you can create a local SQL Express database 
-called **Conference** by running the script `Install-Database.ps1` in 
+called **Conference** by running the script **Install-Database.ps1** in 
 the scripts folder. 
 
 For scenario 5, you must create a SQL Azure database called
-**Conference**.
+**Conference** by running the script **Install-Database.ps1** in 
+the scripts folder.
 
-TODO - add more details here.
+The follow command will populate a SQL Azure database called **Conference** with the tables and views required to support the RI:
+
+```
+.\Install-Database.ps1 -ServerName [your-sql-azure-server].database.windows.net -DoNotCreateDatabase -DoNotAddNetworkServiceUser -UseSqlServerAuthentication -UserName [your-sql-azure-username]
+```
 
 The projects in the solution use this database to store application 
 data. The SQL-based message bus and event store also use this database. 
