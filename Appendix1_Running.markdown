@@ -42,8 +42,11 @@ Before you begin, you should install the following pre-requisites:
 > libraries in order to compile. This is true even for scenario 1. The
 > Windows Azure SDK includes these libraries. 
 
-You can download and install all of these except for Visual Studio and 
-IIS by using the Web Platform Installer 4.0. 
+You can download and install all of these except for Visual Studio by
+using the Web Platform Installer 4.0. 
+
+You can install the remaining dependencies from NuGet by running the
+script **install-packages.ps1** included with the downloadable source.
 
 If you plan to deploy the RI to Windows Azure, you must have a Windows 
 Azure subscription, a SQL Azure subscription, and a Windows Azure 
@@ -81,7 +84,8 @@ For scenario 5, you must create a SQL Azure database called
 **Conference** by running the script **Install-Database.ps1** in 
 the scripts folder.
 
-The follow command will populate a SQL Azure database called **Conference** with the tables and views required to support the RI:
+The follow command will populate a SQL Azure database called 
+**Conference** with the tables and views required to support the RI: 
 
 ```
 .\Install-Database.ps1 -ServerName [your-sql-azure-server].database.windows.net -DoNotCreateDatabase -DoNotAddNetworkServiceUser -UseSqlServerAuthentication -UserName [your-sql-azure-username]
@@ -115,10 +119,9 @@ Service Bus namespace.
 Open the **Conference** Visual Studio solution file in the code 
 repository that you downloaded and un-zipped. 
 
-You can use NuGet to download and install all of the dependencies:
-
-* In Solution Explorer, right-click on the **Conference** solution.
-* Click **Enable NuGet package restore**. Then click **Yes**. 
+You can use NuGet to download and install all of the dependencies by
+running the script **install-packages.ps1** before building the
+solution.
 
 ## Build Configurations
 
@@ -232,15 +235,12 @@ For more information about how you can run these tests please visit the
 The acceptance tests are located in the Visual Studio solution in the 
 **Conference.AcceptanceTests** folder. 
 
-You can use NuGet to download and install all of the dependencies before 
-you build this project: 
-
-* In Solution Explorer, right-click on the **Conference** solution.
-* Click **Enable NuGet package restore**. Then click **Yes**. 
+You can use NuGet to download and install all of the dependencies by
+running the script **install-packages.ps1** before building this
+solution.
 
 The acceptance tests are created using SpecFlow. For more information 
-about SpecFlow and to download the installer, please visit 
-[SpecFlow][specflow]. 
+about SpecFlow, please visit [SpecFlow][specflow]. 
 
 The SpecFlow tests are implemented using **xUnit.net**.
 
