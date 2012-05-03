@@ -132,7 +132,23 @@ the order before continuing to the payment process.
 
 ## Architecture 
 
-What are the key architectural features? Server-side, UI, multi-tier, cloud, etc. 
+The application is designed to deploy to Windows Azure. At this stage in 
+the journey, the application consists of a web role that contains the 
+MVC web application and a worker role that contains the message handlers 
+and domain objects. The application uses SQL Azure databases for data 
+storage, both on the write-side and the read-side. The application uses 
+the Windows Azure Service Bus to provide its messaging infrastructure. 
+
+While you are exploring and testing the solution, you can run it 
+locally, either using the Windows Azure compute emulator or by running 
+the MVC web application directly and running a console application that 
+hosts the handlers and domain objects. When you run the application 
+locally, you can use a local SQL Express database instead of SQL Azure, 
+and use a simple messaging infrastructure implemented in a SQL Express 
+database. 
+
+For more information about the options for running the application, see 
+[Appendix 1][appendix1]. 
 
 # Patterns and Concepts 
 
@@ -847,6 +863,7 @@ Describe any special considerations that relate to testing for this bounded cont
 
 [j_chapter5]:       Journey_05_PaymentsBC.markdown
 [r_chapter4]:       Reference_04_DeepDive.markdown
+[appendix1]:        Appendix1_Running.markdown
 
 [fig1]:             images/Journey_04_ViewRepository.png?raw=true
 [fig2]:             images/Journey_04_Architecture.png?raw=true

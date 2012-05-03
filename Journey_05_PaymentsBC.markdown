@@ -258,6 +258,33 @@ The first table that follows figure 1 lists all of the messages that the element
 * All commands use the imperative naming convention.  
 * All DTOs have a DTO suffix.
 
+The application is designed to deploy to Windows Azure. At this stage in 
+the journey, the application consists of two web roles that contains the 
+MVC web applications and a worker role that contains the message 
+handlers and domain objects. The application uses SQL Azure databases 
+for data storage, both on the write-side and the read-side. The Orders 
+and Registrations bounded context now uses an event store to persist the 
+state from the write-side. This event store is implemented using Windows 
+Azure table storage to store the events. The application uses the 
+Windows Azure Service Bus to provide its messaging infrastructure. 
+
+While you are exploring and testing the solution, you can run it 
+locally, either using the Windows Azure compute emulator or by running 
+the MVC web application directly and running a console application that 
+hosts the handlers and domain objects. When you run the application 
+locally, you can use a local SQL Express database instead of SQL Azure, 
+use a simple messaging infrastructure implemented in a SQL Express 
+database, and a simple event store also implemented using a SQL Express 
+database. 
+
+> **Note:** The SQL-based implementations of the event store and the
+> messaging infrastructure are only intended to facilitate running the
+> application locally for understanding and testing. They are not
+> intended to illustrate a production-ready approach.
+
+For more information about the options for running the application, see 
+[Appendix 1][appendix1].
+
 ### Conference Management Bounded Context
 
 The Conference Management bounded context is a simple two-tier, 
@@ -1299,6 +1326,7 @@ Describe any special considerations that relate to testing for this bounded cont
 [j_chapter3]:       Journey_03_OrdersBC.markdown
 [j_chapter4]:       Journey_04_ExtendingEnhancing.markdown
 [r_chapter9]:       Reference_09_Technologies.markdown
+[appendix1]:        Appendix1_Running.markdown
 
 [fig1]:             images/Journey_05_Architecture.png?raw=true
 [fig2]:             images/Journey_05_UIs.png?raw=true

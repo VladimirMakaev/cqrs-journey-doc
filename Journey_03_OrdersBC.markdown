@@ -242,14 +242,23 @@ illustrates how the team arrived at a definition of the term
 
 ## Architecture
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	What are the key architectural features? Server-side, UI, multi-tier, 
-    cloud, etc. <br/>
-	MVC, Windows Azure Service Bus
-  </span>
-</div>
+The application is designed to deploy to Windows Azure. At this stage in 
+the journey, the application consists of a web role that contains the 
+MVC web application and a worker role that contains the message handlers 
+and domain objects. The application uses SQL Azure databases for data 
+storage, both on the write-side and the read-side. The application uses 
+the Windows Azure Service Bus to provide its messaging infrastructure. 
+
+While you are exploring and testing the solution, you can run it 
+locally, either using the Windows Azure compute emulator or by running 
+the MVC web application directly and running a console application that 
+hosts the handlers and domain objects. When you run the application 
+locally, you can use a local SQL Express database instead of SQL Azure, 
+and use a simple messaging infrastructure implemented in a SQL Express 
+database. 
+
+For more information about the options for running the application, see 
+[Appendix 1][appendix1]. 
 
 # Patterns and Concepts <a name="patternsandconcepts"/>
 
@@ -1446,6 +1455,7 @@ reservation.
 [r_chapter4]:     Reference_04_DeepDive.markdown
 [r_chapter6]:     Reference_06_Sagas.markdown
 [r_chapter9]:     Reference_09_Technologies.markdown
+[appendix1]:      Appendix1_Running.markdown
 
 [tddstyle]:       http://martinfowler.com/articles/mocksArentStubs.html
 [repourl]:        https://github.com/mspnp/cqrs-journey-code
