@@ -705,7 +705,10 @@ information, or call another service that performs the calculation.
 The choice between the two alternatives is a business decision. The 
 specific business requirements of your scenario should determine which 
 approach to take. Autonomy is often the preference for large, online 
-systems. 
+systems.
+
+The way that the Conference Management System calculates the total for 
+an order provides an example of choosing autonomy over authority. 
 
 > **CarlosPersona:** For Contoso, the clear choice is for autonomy.
 > It's a serious problem if Registrants can't purchase seats because
@@ -713,6 +716,9 @@ systems.
 > there's a short lag between the Business Customer modifying the
 > pricing information, and that new pricing information being used to
 > calculate order totals.
+
+The section [Calculating Totals](#totals) below describes how the system
+performs this calculation. 
 
 ## Approaches to Implementing the Read-side
 
@@ -1235,6 +1241,30 @@ configured to detect duplicate messages and ignore them.
 > aggregates with unpublished events and then publishing those events.
 > This process will take some time to run, but will only need to run
 > when the application restarts.
+
+## Calculating Totals
+
+<a name="totals" />
+
+To ensure the autonomy of the Orders and Registrations bounded context 
+it calculates order totals without accessing the Conference Management 
+bounded context. The Conference Management bounded context is 
+responsible for maintaining the prices of seats for conferences. 
+
+Whenever a Business Customer adds a new seat type or changes the price 
+of a seat, the Conference Management bounded context raises an event. 
+The Orders and Registrations bounded context handles these events and 
+persists the information in as part of its read-model (see the 
+**ConferenceViewModelGenerator** class for details). 
+
+When the **Order** aggregate calculates the order total, it uses the 
+data provided by the read-model. See the **MarkAsReserved** method in 
+the **Order** aggregate and the **PricingService** class for details. 
+
+> **JanaPersona:** The UI also displays a dynamically calculated total
+> as the registrant adds seats to an order. The application calculates
+> this value using Javascript. When the registrant makes a payment, the
+> system uses the total that was calculated by the **Order** aggregate.
 
 # Testing
 
