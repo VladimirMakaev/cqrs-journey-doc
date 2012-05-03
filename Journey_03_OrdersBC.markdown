@@ -1339,6 +1339,9 @@ are implementing the CQRS pattern without ES.**
 For more information about the two approaches to testing discussed here, 
 see Martin Fowler's article [Mocks Aren't Stubs][tddstyle]. 
 
+> **Note:** The tests included in the solution are written using
+> xUnit.net.
+
 The following code sample shows two examples of tests written using the 
 behavioural approach discussed above. 
 
