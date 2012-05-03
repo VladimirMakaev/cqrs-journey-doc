@@ -125,14 +125,14 @@ The first table that follows figure 1 lists all of the messages that the element
       <td align="left">ConferenceController</td>
       <td align="left">MVC Controller</td>
       <td align="left">N/A</td>
-      <td align="left">ConferenceDescriptionDTO</td>
+      <td align="left">ConferenceDetails</td>
     </tr>
 
     <tr>
       <td align="left">OrderController</td>
       <td align="left">MVC Controller</td>
       <td align="left">N/A</td>
-      <td align="left">OrderDTO</td>
+      <td align="left">DraftOrder</td>
     </tr>
 
     <tr>
@@ -142,7 +142,7 @@ The first table that follows figure 1 lists all of the messages that the element
                        AssignRegistrantDetails<br/>
                        InitiateThirdPartyPaymentProcessorPayment<br/>
                        InitiateInvoicePayment</td>
-      <td align="left">OrderDTO</td>
+      <td align="left">DraftOrder</td>
     </tr>
 
     <tr>
@@ -150,8 +150,8 @@ The first table that follows figure 1 lists all of the messages that the element
       <td align="left">MVC Controller</td>
       <td align="left">CompleteThirdPartyProcessorPayment<br/>
                        CancelThirdPartyProcessorPayment</td>
-      <td align="left">ThirdPartyProcessorPaymentDetailsDTO<br/>
-                       InvoiceProcessorPaymentDetailsDTO</td>
+      <td align="left">ThirdPartyProcessorPaymentDetails<br/>
+                       InvoiceProcessorPaymentDetails</td>
     </tr>
 
     <tr>
@@ -214,7 +214,7 @@ The first table that follows figure 1 lists all of the messages that the element
     <tr>
       <td align="left">OrderViewModelGenerator</td>
       <td align="left">Handler</td>
-      <td align="left">OrderDTO</td>
+      <td align="left">DraftOrder</td>
       <td align="left">OrderPlaced<br/>
                        OrderUpdated<br/>
                        OrderPartiallyReserved<br/>
@@ -225,7 +225,7 @@ The first table that follows figure 1 lists all of the messages that the element
     <tr>
       <td align="left">ConferenceViewModelGenerator</td>
       <td align="left">Handler</td>
-      <td align="left">ConferenceDTO<br/>
+      <td align="left">Conference<br/>
                        AddSeats<br/>
                        RemoveSeats<br/></td>
       <td align="left">ConferenceCreated<br/>
@@ -256,7 +256,7 @@ The first table that follows figure 1 lists all of the messages that the element
 
 * All events use the past tense the naming convention.  
 * All commands use the imperative naming convention.  
-* All DTOs have a DTO suffix.
+* All DTOs are nouns.
 
 The application is designed to deploy to Windows Azure. At this stage in 
 the journey, the application consists of two web roles that contains the 

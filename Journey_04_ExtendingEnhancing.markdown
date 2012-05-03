@@ -223,8 +223,8 @@ from many ORMs such as Entity Framework or NHibernate. The following
 code snippet illustrates how the client can submit such queries. 
 
 ```Cs
-var ordersummaryDTO = repository.Query<OrderSummaryDTO>().Where(LINQ query to retrieve order summary);
-var orderdetailsDTO = repository.Query<OrderDetailsDTO>().Where(LINQ query to retrieve order details);
+var ordersummary = repository.Query<OrderSummary>().Where(LINQ query to retrieve order summary);
+var orderdetails = repository.Query<OrderDetails>().Where(LINQ query to retrieve order details);
 ```
 
 This approach has a number of advantages:
@@ -268,16 +268,16 @@ An alternative approach is to have the **ViewRepository** expose custom
 **Find** and **Get** methods as shown in the following code snippets. 
 
 ```Cs
-var ordersummaryDTO = dao.FindAllSummarizedOrders(userId);
-var orderdetailsDTO = dao.GetOrderDetails(orderId);
+var ordersummary = dao.FindAllSummarizedOrders(userId);
+var orderdetails = dao.GetOrderDetails(orderId);
 ```
 
 You could also choose to use different DAO classes. This would make it 
 easier to access different data sources. 
 
 ```Cs
-var ordersummaryDTO = OrderSummaryDAO.FindAll(userId);
-var orderdetailsDTO = OrderDetailsDAO.Get(orderId);
+var ordersummary = OrderSummaryDAO.FindAll(userId);
+var orderdetails = OrderDetailsDAO.Get(orderId);
 ```
 
 This approach has a number of advantages:
@@ -351,7 +351,7 @@ pushes changes to the read-side by raising events.
 The **OrderPlaced**, **OrderUpdated**, **OrderPartiallyReserved**, 
 **OrderRegistrantAssigned**, and **OrderReservationCompleted** events 
 are handled by the **OrderViewModelGenerator** class that uses 
-**OrderDTO** and **OrderItemDTO** instances to persist changes to the 
+**DraftOrder** and **DraftOrderItem** instances to persist changes to the 
 view tables. 
 
 > **BharathPersona:** If you look ahead to the next chapter, [Preparing
@@ -454,7 +454,7 @@ public ActionResult Find(string conferenceCode, string email, string accessCode)
 	var repo = this.repositoryFactory();
 	using (repo as IDisposable)
 	{
-		var order = repo.Query<OrderDTO>()
+		var order = repo.Query<DraftOrder>()
 			.Where(o => o.RegistrantEmail == email && o.AccessCode == accessCode)
 			.FirstOrDefault();
 
@@ -517,7 +517,7 @@ public void MarkAsReserved(DateTime expirationDate, IEnumerable<SeatQuantity> se
 > aggregate in the **MarkSeatsAsReserved** command.
 
 The MVC **RegistrationController** class retrieves the order information 
-on the read-side. The **OrderDTO** class includes the reservation expiry 
+on the read-side. The **DraftOrder** class includes the reservation expiry 
 time that is then passed to the view using the **ViewBag** class, as 
 shown in the following code sample. 
 
@@ -528,14 +528,14 @@ public ActionResult SpecifyRegistrantDetails(string conferenceCode, Guid orderId
 	var repo = this.repositoryFactory();
 	using (repo as IDisposable)
 	{
-		var orderDTO = repo.Find<OrderDTO>(orderId);
-		var conferenceDTO = repo.Query<ConferenceDTO>()
+		var draftOrder = repo.Find<DraftOrder>(orderId);
+		var conference = repo.Query<Conference>()
 			.Where(c => c.Code == conferenceCode)
 			.FirstOrDefault();
 
-		this.ViewBag.ConferenceName = conferenceDTO.Name;
-		this.ViewBag.ConferenceCode = conferenceDTO.Code;
-		this.ViewBag.ExpirationDateUTCMilliseconds = orderDTO.BookingExpirationDate.HasValue ? ((orderDTO.BookingExpirationDate.Value.Ticks - EpochTicks) / 10000L) : 0L;
+		this.ViewBag.ConferenceName = conference.Name;
+		this.ViewBag.ConferenceCode = conference.Code;
+		this.ViewBag.ExpirationDateUTCMilliseconds = draftOrder.BookingExpirationDate.HasValue ? ((draftOrder.BookingExpirationDate.Value.Ticks - EpochTicks) / 10000L) : 0L;
 		this.ViewBag.OrderId = orderId;
 
 		return View(new AssignRegistrantDetails { OrderId = orderId });
@@ -707,11 +707,11 @@ public class OrderViewModelGenerator :
     {
         using (var repository = this.contextFactory.Invoke())
         {
-            var dto = new OrderDTO(@event.SourceId, OrderDTO.States.Created)
+            var dto = new DraftOrder(@event.SourceId, DraftOrder.States.Created)
             {
                 AccessCode = @event.AccessCode,
             };
-            dto.Lines.AddRange(@event.Seats.Select(seat => new OrderItemDTO(seat.SeatType, seat.Quantity)));
+            dto.Lines.AddRange(@event.Seats.Select(seat => new DraftOrderItem(seat.SeatType, seat.Quantity)));
 
             repository.Save(dto);
         }
@@ -790,20 +790,24 @@ public class ConferenceDao : IConferenceDao
         this.contextFactory = contextFactory;
     }
 
-    public ConferenceDescriptionDTO GetDescription(string conferenceCode)
+    public ConferenceDetails GetConferenceDetails(string conferenceCode)
     {
         using (var repository = this.contextFactory.Invoke())
         {
-            return repository.Query<ConferenceDescriptionDTO>().Where(dto => dto.Code == conferenceCode).FirstOrDefault();
+            return repository
+                .Query<Conference>()
+                .Where(dto => dto.Code == conferenceCode)
+                .Select(x => new ConferenceDetails { Id = x.Id, Code = x.Code, Name = x.Name, Description = x.Description, StartDate = x.StartDate })
+                .FirstOrDefault();
         }
     }
 
-    public ConferenceAliasDTO GetConferenceAlias(string conferenceCode)
+    public ConferenceAlias GetConferenceAlias(string conferenceCode)
     {
         ...
     }
 
-    public IList<ConferenceSeatTypeDTO> GetPublishedSeatTypes(Guid conferenceId)
+    public IList<SeatType> GetPublishedSeatTypes(Guid conferenceId)
     {
         ...
     }

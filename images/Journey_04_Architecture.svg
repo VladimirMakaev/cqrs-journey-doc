@@ -466,7 +466,7 @@
          id="tspan5537-9-8-9"
          x="260.31454"
          y="535.80579"
-         style="font-size:14px;font-weight:bold;-inkscape-font-specification:Segoe Print Bold">OrderDTO</tspan></text>
+         style="font-size:14px;font-weight:bold;-inkscape-font-specification:Segoe Print Bold">DraftOrder</tspan></text>
     <path
        style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
        id="path5369-1"
@@ -483,7 +483,7 @@
          id="tspan5537-9-8-9-5"
          x="325.65335"
          y="663.04742"
-         style="font-size:14px;font-weight:bold;-inkscape-font-specification:Segoe Print Bold">OrderItemDTO</tspan></text>
+         style="font-size:14px;font-weight:bold;-inkscape-font-specification:Segoe Print Bold">DraftOrderItem</tspan></text>
     <path
        style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
        id="path5754"
@@ -622,7 +622,7 @@
          x="744.31055"
          y="585.37396"
          style="font-size:12px;font-weight:bold;-inkscape-font-specification:Segoe Print Bold"
-         id="tspan5880-6">Query&lt;OrderDTO&gt;</tspan></text>
+         id="tspan5880-6">Query&lt;DraftOrder&gt;</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print"
@@ -634,7 +634,7 @@
          x="769.56287"
          y="633.66229"
          style="font-size:12px;font-weight:bold;-inkscape-font-specification:Segoe Print Bold"
-         id="tspan5880-6-1">Find&lt;OrderDTO&gt;</tspan></text>
+         id="tspan5880-6-1">Find&lt;DraftOrder&gt;</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print"
@@ -698,7 +698,7 @@
          x="570.61011"
          y="715.34052"
          style="font-size:12px;font-weight:bold;-inkscape-font-specification:Segoe Print Bold"
-         id="tspan5880-6-1-4">Find&lt;OrderDTO&gt;</tspan></text>
+         id="tspan5880-6-1-4">Find&lt;DraftOrder&gt;</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print"
@@ -727,7 +727,7 @@
          x="507.73788"
          y="544.13025"
          style="font-size:12px;font-weight:bold;-inkscape-font-specification:Segoe Print Bold"
-         id="tspan5880-6-17">Save&lt;OrderDTO&gt;</tspan></text>
+         id="tspan5880-6-17">Save&lt;DraftOrder&gt;</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print"

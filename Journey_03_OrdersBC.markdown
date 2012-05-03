@@ -518,10 +518,10 @@ private Conference.Web.Public.Models.Conference GetConference(string conferenceC
 	var repo = this.repositoryFactory();
 	using (repo as IDisposable)
 	{
-		var conferenceDTO = repo.Query<ConferenceDTO>().First(c => c.Code == conferenceCode);
+		var conference = repo.Query<Conference>().First(c => c.Code == conferenceCode);
 
 		var conference =
-			new Conference.Web.Public.Models.Conference { Code = conferenceDTO.Code, Name = conferenceDTO.Name, Description = conferenceDTO.Description };
+			new Conference.Web.Public.Models.Conference { Code = conference.Code, Name = conference.Name, Description = conference.Description };
 
 		return conference;
 	}
@@ -632,15 +632,15 @@ public ActionResult StartRegistration(string conferenceCode, OrderViewModel cont
 	
 	this.commandBus.Send(command);
 
-    var orderDTO = this.WaitUntilUpdated(viewModel.Id);
+    var draftOrder = this.WaitUntilUpdated(viewModel.Id);
 
-    if (orderDTO != null)
+    if (draftOrder != null)
     {
-        if (orderDTO.State == "Booked")
+        if (draftOrder.State == "Booked")
         {
             return RedirectToAction("SpecifyPaymentDetails", new { conferenceCode = conferenceCode, orderId = viewModel.Id });
         }
-        else if (orderDTO.State == "Rejected")
+        else if (draftOrder.State == "Rejected")
         {
             return View("ReservationRejected", viewModel);
         }
@@ -676,7 +676,7 @@ repository before returning a view.
 [HttpGet]
 public ActionResult SpecifyRegistrantDetails(string conferenceCode, Guid orderId)
 {
-    var orderDTO = this.WaitUntilUpdated(orderId);
+    var draftOrder = this.WaitUntilUpdated(orderId);
     
 	...
 }
