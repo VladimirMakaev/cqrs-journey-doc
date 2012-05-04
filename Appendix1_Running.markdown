@@ -87,12 +87,16 @@ install [SpecFlow][specflow].
 
 # Creating the Databases
 
+## SQL Express Database
+
 For scenarios 1,2,3 and 4 you can create a local SQL Express database 
 called **Conference** by running the script **Install-Database.ps1** in 
 the scripts folder. 
 
 The projects in the solution use this database to store application 
 data. The SQL-based message bus and event store also use this database. 
+
+## SQL Azure Database
 
 For scenario 5, you must create a SQL Azure database called
 **Conference** by running the script **Install-Database.ps1** in 
