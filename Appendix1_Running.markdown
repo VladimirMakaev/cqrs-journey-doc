@@ -321,7 +321,7 @@ Currently, there is no validation to:
 * Check that the end date for a conference is later than the start date.
 * Check that email addresses are in a valid format.
 
-## Other Know Issues
+## Other Known Issues
 
 * No security features have been implemented yet. 
 * No performance or localizability tests have been performed yet.
