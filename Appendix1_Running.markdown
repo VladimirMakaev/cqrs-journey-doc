@@ -314,6 +314,13 @@ Exception Details: System.Net.Sockets.SocketException: A connection attempt fail
 
 For help resolving this issue see [Azure: A connection attempt failed...][connectionerror]
 
+## Missing Validation
+
+Currently, there is no validation to:
+
+* Check that the end date for a conference is later than the start date.
+* Check that email addresses are in a valid format.
+
 [source]:          https://github.com/mspnp/cqrs-journey-code
 [xunit]:           http://xunit.codeplex.com/
 [specflow]:        http://www.specflow.org/
