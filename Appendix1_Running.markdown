@@ -256,6 +256,8 @@ store.
 
 # Known Issues
 
+## Runtime Activation Error in Debug Mode
+
 When you run the application in debug mode you will see an error in the
 **Conference.Web.Public** web application:
 
@@ -266,6 +268,22 @@ Activation error occured while trying to get instance of type IControllerFactory
 Click in the **Continue** button and the application will run as
 expected.
 
-[source]:   https://github.com/mspnp/cqrs-journey-code
-[xunit]:    http://xunit.codeplex.com/
-[specflow]: http://www.specflow.org/
+## Server Error in '/' Application
+
+When you run the application in using the Debug build configuration you see
+
+```
+Server Error in '/' Application.
+A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond ...
+
+Description: An unhandled exception occurred during the execution of the current web request. Please review the stack trace for more information about the error and where it originated in the code.
+
+Exception Details: System.Net.Sockets.SocketException: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond ...
+```
+
+For help resolving this issue see [Azure: A connection attempt failed...][connectionerror]
+
+[source]:          https://github.com/mspnp/cqrs-journey-code
+[xunit]:           http://xunit.codeplex.com/
+[specflow]:        http://www.specflow.org/
+[connectionerror]: http://blogs.msdn.com/b/narahari/archive/2011/12/21/azure-a-connection-attempt-failed-because-the-connected-party-did-not-properly-respond-after-a-period-of-time-or-established-connection-failed-because-connected-host-has-failed-to-respond-x-x-x-x-x-quot.aspx
