@@ -6,6 +6,7 @@ http://cqrsjourney.github.com
 ## Appendix 1
 
 4th May 2012
+
 These release notes apply to the Psuedo-Production Release (V1) of the 
 Contoso Conference Management System.
 
@@ -106,35 +107,57 @@ database in SQL Azure):
 .\Install-Database.ps1 -ServerName [your-sql-azure-server].database.windows.net -DoNotCreateDatabase -DoNotAddNetworkServiceUser -UseSqlServerAuthentication -UserName [your-sql-azure-username]
 ```
 
-You must then replace the existing SQLEXPRESS connection strings with the following connection string in all of the locations listed below.
+You must then modify the ServiceConfiguration.Cloud.cscfg file in the Conference.Azure project to use the following connection strings.
+
+**SQL Azure Connection String**
 
 ```
 Server=tcp:[your-sql-azure-server].database.windows.net;Database=myDataBase;User ID=[your-sql-azure-username]@[your-sql-azure-server];Password=[your-sql-azure-password];Trusted_Connection=False;Encrypt=True; MultipleActiveResultSets=True;
 ```
 
-* Conference\Registration\App.config
-    * **entityFramework** section
-* Conference\Conference\App.config
-    * **entityFramework** section
-* Conference\Payments\App.config: **entityFramework**
-* Conference\Conference.Web.Public\Web.config
-    * **DbContext.ConferenceRegistration**
-    * **DbContext.Payments**
-    * **entityFramework** section
-* Conference\Conference.Web\Web.config
-    * **DefaultConnection**
-    * **DbContext.ConferenceManagement**
-    * **entityFramework** section
-* Conference.Azure\ServiceConfiguration.Cloud.cscfg
-    * **DbContext.ConferenceManagement**
-    * **DbContext.ConferenceRegistration**
-    * **DbContext.Payments**
-    * **DbContext.ConferenceRegistrationProcesses**
-* WorkerRoleCommandProcessor\app.config
-    * **DbContext.ConferenceManagement**
-    * **DbContext.ConferenceRegistration**
-    * **DbContext.Payments**
-    * **DbContext.ConferenceRegistrationProcesses**
+**Windows Azure Connection String**
+
+```
+DefaultEndpointsProtocol=https;AccountName=[your-windows-azure-storage-account-name];AccountKey=[your-windows-azure-storage-account-key]
+```
+
+**Conference.Azure\ServiceConfiguration.Cloud.cscfg**
+
+```
+<?xml version="1.0" encoding="utf-8"?>
+<ServiceConfiguration serviceName="Conference.Azure" xmlns="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceConfiguration" osFamily="1" osVersion="*">
+  <Role name="Conference.Web.Admin">
+    <Instances count="1" />
+    <ConfigurationSettings>
+      <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="[your-windows-azure-connection-string]" />
+      <Setting name="DbContext.ConferenceManagement" value="[your-sql-azure-connection-string]" />
+      <Setting name="DbContext.SqlBus" value="[your-sql-azure-connection-string] />
+    </ConfigurationSettings>
+  </Role>
+  <Role name="Conference.Web.Public">
+    <Instances count="1" />
+    <ConfigurationSettings>
+      <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="[your-windows-azure-connection-string]" />
+      <Setting name="DbContext.Payments" value="[your-sql-azure-connection-string]" />
+      <Setting name="DbContext.ConferenceRegistration" value="[your-sql-azure-connection-string]" />
+      <Setting name="DbContext.SqlBus" value="[your-sql-azure-connection-string]" />
+      <Setting name="DbContext.BlobStorage" value="[your-sql-azure-connection-string]" />
+    </ConfigurationSettings>
+  </Role>
+  <Role name="WorkerRoleCommandProcessor">
+    <Instances count="1" />
+    <ConfigurationSettings>
+      <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="[your-windows-azure-connection-string]" />
+      <Setting name="DbContext.Payments" value="[your-sql-azure-connection-string]" />
+      <Setting name="DbContext.EventStore" value="[your-sql-azure-connection-string]" />
+      <Setting name="DbContext.ConferenceRegistrationProcesses" value="[your-sql-azure-connection-string]" />
+      <Setting name="DbContext.ConferenceRegistration" value="[your-sql-azure-connection-string]" />
+      <Setting name="DbContext.SqlBus" value="[your-sql-azure-connection-string]" />
+      <Setting name="DbContext.BlobStorage" value="[your-sql-azure-connection-string]" />
+    </ConfigurationSettings>
+  </Role>
+</ServiceConfiguration>
+```
 
 # Creating the Settings.xml File
 
