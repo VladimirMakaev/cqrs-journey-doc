@@ -195,6 +195,14 @@ built using SQL Server (scenarios 1 and 3).
 
 # Running the RI
 
+When you run the RI, you should first create a conference, add at least
+one seat type, and then publish the conference using the 
+**Conference.Web.Admin** site.
+
+After you have published the conference you will then be able to use the
+site to order seats and use the simulated the payment process using the 
+**Conference.Web** site.
+
 The following sections describe how to run the RI using in the different 
 scenarios. 
 
