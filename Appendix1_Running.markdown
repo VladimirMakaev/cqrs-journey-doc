@@ -81,6 +81,9 @@ For scenarios 1,2,3 and 4 you can create a local SQL Express database
 called **Conference** by running the script **Install-Database.ps1** in 
 the scripts folder. 
 
+The projects in the solution use this database to store application 
+data. The SQL-based message bus and event store also use this database. 
+
 For scenario 5, you must create a SQL Azure database called
 **Conference** by running the script **Install-Database.ps1** in 
 the scripts folder.
@@ -94,8 +97,35 @@ database in SQL Azure):
 .\Install-Database.ps1 -ServerName [your-sql-azure-server].database.windows.net -DoNotCreateDatabase -DoNotAddNetworkServiceUser -UseSqlServerAuthentication -UserName [your-sql-azure-username]
 ```
 
-The projects in the solution use this database to store application 
-data. The SQL-based message bus and event store also use this database. 
+You must then replace the existing SQLEXPRESS connection strings with the following connection string in all of the locations listed below.
+
+```
+Server=tcp:[your-sql-azure-server].database.windows.net;Database=myDataBase;User ID=[your-sql-azure-username]@[your-sql-azure-server];Password=[your-sql-azure-password];Trusted_Connection=False;Encrypt=True; MultipleActiveResultSets=True;
+```
+
+* Conference\Registration\App.config
+    * **entityFramework** section
+* Conference\Conference\App.config
+    * **entityFramework** section
+* Conference\Payments\App.config: **entityFramework**
+* Conference\Conference.Web.Public\Web.config
+    * **DbContext.ConferenceRegistration**
+    * **DbContext.Payments**
+    * **entityFramework** section
+* Conference\Conference.Web\Web.config
+    * **DefaultConnection**
+    * **DbContext.ConferenceManagement**
+    * **entityFramework** section
+* Conference.Azure\ServiceConfiguration.Cloud.cscfg
+    * **DbContext.ConferenceManagement**
+    * **DbContext.ConferenceRegistration**
+    * **DbContext.Payments**
+    * **DbContext.ConferenceRegistrationProcesses**
+* WorkerRoleCommandProcessor\app.config
+    * **DbContext.ConferenceManagement**
+    * **DbContext.ConferenceRegistration**
+    * **DbContext.Payments**
+    * **DbContext.ConferenceRegistrationProcesses**
 
 # Creating the Settings.xml File
 
@@ -215,10 +245,11 @@ Azure account.
 
 > **Note:** You must also ensure that you have created **Conference**
 > database in SQL Azure using the **Install-Database.ps1** in the
-> scripts folder. You must also modify the connection strings in all
+> scripts folder as described above. You must also ensure that you have 
+> modified the connection strings in the
 > configuration files in the solution to point to your SQL Azure
 > **Conference** database instead of your local SQL Express
-> **Conference** database.
+> **Conference** database as described above.
 
 # Running the Tests
 
