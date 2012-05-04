@@ -321,7 +321,17 @@ Currently, there is no validation to:
 * Check that the end date for a conference is later than the start date.
 * Check that email addresses are in a valid format.
 
+## Other Know Issues
+
+* No security features have been implemented yet. 
+* No performance or localizability tests have been performed yet.
+* The UI is still a work in progress.
+* Validation in the UI is not yet complete. 
+* You see a list of outstanding issues for the V1 release [here][v1outstanding].
+
+
 [source]:          https://github.com/mspnp/cqrs-journey-code
 [xunit]:           http://xunit.codeplex.com/
 [specflow]:        http://www.specflow.org/
 [connectionerror]: http://blogs.msdn.com/b/narahari/archive/2011/12/21/azure-a-connection-attempt-failed-because-the-connected-party-did-not-properly-respond-after-a-period-of-time-or-established-connection-failed-because-connected-host-has-failed-to-respond-x-x-x-x-x-quot.aspx
+[v1outstanding]:   https://github.com/mspnp/cqrs-journey-code/issues/search?utf8=%E2%9C%93&q=v1
