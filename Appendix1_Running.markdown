@@ -86,7 +86,9 @@ For scenario 5, you must create a SQL Azure database called
 the scripts folder.
 
 The follow command will populate a SQL Azure database called 
-**Conference** with the tables and views required to support the RI: 
+**Conference** with the tables and views required to support the RI
+(this script assumes that you have already created the **Conference**
+database in SQL Azure): 
 
 ```
 .\Install-Database.ps1 -ServerName [your-sql-azure-server].database.windows.net -DoNotCreateDatabase -DoNotAddNetworkServiceUser -UseSqlServerAuthentication -UserName [your-sql-azure-username]
