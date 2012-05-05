@@ -158,6 +158,7 @@ DefaultEndpointsProtocol=https;AccountName=[your-windows-azure-storage-account-n
       <Setting name="DbContext.ConferenceRegistration" value="[your-sql-azure-connection-string]" />
       <Setting name="DbContext.SqlBus" value="[your-sql-azure-connection-string]" />
       <Setting name="DbContext.BlobStorage" value="[your-sql-azure-connection-string]" />
+      <Setting name="DbContext.ConferenceManagement" value="your-sql-azure-connection-string]" />
     </ConfigurationSettings>
   </Role>
 </ServiceConfiguration>
