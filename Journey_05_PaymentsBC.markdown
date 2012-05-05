@@ -131,8 +131,11 @@ The first table that follows figure 1 lists all of the messages that the element
     <tr>
       <td align="left">OrderController</td>
       <td align="left">MVC Controller</td>
-      <td align="left">N/A</td>
-      <td align="left">DraftOrder</td>
+      <td align="left">AssignSeat<br/>
+                       UnassignSeat</td>
+      <td align="left">DraftOrder<br/>
+                       OrderSeats<br/>
+                       PricedOrder</td>
     </tr>
 
     <tr>
@@ -140,9 +143,10 @@ The first table that follows figure 1 lists all of the messages that the element
       <td align="left">MVC Controller</td>
       <td align="left">RegisterToConference<br/>
                        AssignRegistrantDetails<br/>
-                       InitiateThirdPartyPaymentProcessorPayment<br/>
-                       InitiateInvoicePayment</td>
-      <td align="left">DraftOrder</td>
+                       InitiateThirdPartyProcessorPayment</td>
+      <td align="left">DraftOrder<br/>
+                       PricedOrder<br/>
+                       SeatType</td>
     </tr>
 
     <tr>
@@ -163,7 +167,13 @@ The first table that follows figure 1 lists all of the messages that the element
                        ConferenceUnpublished<br/>
                        SeatCreated<br/>
                        SeatUpdated<br/></td>
-      <td align="left">N/A</td>
+      <td align="left">OrderPlaced<br/>
+                       OrderRegistrantAssigned<br/>
+                       OrderTotalsCalculated<br/>
+                       OrderPaymentConfirmed<br/>
+                       SeatAssigned<br/>
+                       SeatAssignmentUpdated<br/>
+                       SeatUnassigned</td>
     </tr>
 
     <tr>
@@ -178,7 +188,9 @@ The first table that follows figure 1 lists all of the messages that the element
                       *OrderRegistrantAssigned</td>
       <td align="left">RegisterToConference<br/>
                        MarkSeatsAsReserved<br/>
-                       RejectOrder AssignRegistrantDetails</td>
+                       RejectOrder<br/>
+                       AssignRegistrantDetails<br>
+                       ConfirmOrderPayment</td>
     </tr>
 
     <tr>
@@ -192,9 +204,20 @@ The first table that follows figure 1 lists all of the messages that the element
                        CancelSeatReservation<br/>
                        CommitSeatReservation<br/>
                        AddSeats<br/>
-                       RemoveSeats<br/></td>
+                       RemoveSeats</td>
     </tr>
 
+    <tr>
+      <td align="left">SeatAssignments</td>
+      <td align="left">Aggregate</td>
+      <td align="left">*SeatAssignmentsCreated<br/>
+                       *SeatAssigned<br/>
+                       *SeatUnassigned<br/>
+                       *SeatAssignmentUpdated</td>
+      <td align="left">AssignSeat<br/>
+                       UnassignSeat</td>
+    </tr>
+    
     <tr>
       <td align="left">RegistrationProcess</td>
       <td align="left">Workflow</td>
@@ -223,6 +246,13 @@ The first table that follows figure 1 lists all of the messages that the element
     </tr>
 
     <tr>
+      <td align="left">PricedOrderViewModelGenerator</td>
+      <td align="left">Handler</td>
+      <td align="left">N/A</td>
+      <td align="left">SeatTypeName</td>
+    </tr>
+
+    <tr>
       <td align="left">ConferenceViewModelGenerator</td>
       <td align="left">Handler</td>
       <td align="left">Conference<br/>
@@ -237,10 +267,11 @@ The first table that follows figure 1 lists all of the messages that the element
     </tr>
 
     <tr>
-      <td align="left">ThirdPartyPaymentProcessor</td>
+      <td align="left">ThirdPartyProcessorPayment</td>
       <td align="left">Aggregate</td>
       <td align="left">PaymentCompleted<br/>
-                       PaymentRejected</td>
+                       PaymentRejected<br/>
+                       PaymentInitiated</td>
       <td align="left">InitiateThirdPartyProcessorPayment<br/>
                        CompleteThirdPartyProcessorPayment<br/>
                        CancelThirdPartyProcessorPayment</td>

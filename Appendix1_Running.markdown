@@ -7,7 +7,7 @@ http://cqrsjourney.github.com
 
 4th May 2012
 
-These release notes apply to the Psuedo-Production Release (V1) of the 
+These release notes apply to the Pseudo-Production Release (V1) of the 
 Contoso Conference Management System.
 
 # Building and Running the Sample Code (RI)
