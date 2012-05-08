@@ -499,10 +499,12 @@ context using a traditional two-tier, CRUD-style architecture.
 The Conference Management bounded context needs to integrate with the 
 Orders and Registrations bounded context. For example, if the business 
 customer changes the quota for a seat type in the Conference Management 
-bounded context, this change needs to be propagated to the Orders and 
+bounded context, this change must be propagated to the Orders and 
 Registrations bounded context. Also, if a registrant adds a new attendee 
 to a conference, the business customer must be able to view details of 
 the attendee in the list in the Conference Management web-site. 
+
+### Pushing Changes from the Conference Management Bounded Context
 
 The following conversation between several developers and the domain 
 expert highlights some of the key issues that the team needed to address 
@@ -625,7 +627,7 @@ example:
 > context) could be responsible for persisting the integration events.  
 > Greg Young - Conversation with the PnP team.
 
-### Some Comments on Windows Azure Service Bus
+#### Some Comments on Windows Azure Service Bus
 
 The previous discussion suggested a way to avoid using a distributed 
 two-phase commit in the Conference Management bounded context. However, 
@@ -647,6 +649,46 @@ Bus, see the sample in the [Windows Azure AppFabric SDK][appfabsdk].
 For more information about the Windows Azure Service Bus, see 
 [Technologies Used in the Reference Implementation][r_chapter9] in the 
 Reference Guide. 
+
+### Pushing Changes to the Conference Management Bounded Context
+
+Pushing information about completed orders and registrations from the 
+Orders and Registrations bounded context to the Conference Management 
+bounded context raised a different set of issues. 
+
+The Orders and Registrations bounded context typically raises many of 
+the following events during the creation of an order: **OrderPlaced**, 
+**OrderRegistrantAssigned**, **OrderTotalsCalculated**, 
+**OrderPaymentConfirmed**, **SeatAssignmentsCreated**, 
+**SeatAssignmentUpdated**, **SeatAssigned**, and **SeatUnassigned**. The 
+bounded context uses these events to communicate between aggregates and 
+for event sourcing. 
+
+For the Conference Management bounded context to capture the information 
+that it requires to display information about registrations and 
+attendees, it must handle all of these events. It can use the 
+information that these events contain to create a de-normalized SQL 
+table of the data, that the business customer can then view in the UI. 
+
+The issue with this approach is that the Conference Management bounded 
+context needs to understand a complex set of events from another bounded 
+context. It is a brittle solution because a change in the Orders and 
+Registrations bounded context may break this feature in the Conference 
+Management bounded context. 
+
+Contoso plans to keep this solution for the V1 release of the system, 
+but will evaluate alternatives during the next stage of the journey. 
+These alternative approaches will include: 
+
+1. Modify the Orders and Registrations bounded context to generate more
+   useful events that are designed explicitly for integration.
+2. Generate the de-normalized data in the Orders and Registrations
+   bounded context and notify the Conference Management bounded context
+   when the data is ready. The Conference Management bounded context can
+   then request the information through a service call.
+   
+> **Note:** To see how the current approach works, look at the
+> **OrderEventHandler** class in the **Conference** project.
 
 ## Distributed Transactions and Event Sourcing
 
@@ -770,7 +812,7 @@ Azure blobs to store information about the seat assignments.
 
 > **Note:** See the **SeatAssignmentsViewModelGenerator** class to
 > understand how the data is persisted to blob storage and the
-> **SetaAssignmentsDao** class to understand how the UI retrieves the
+> **SeatAssignmentsDao** class to understand how the UI retrieves the
 > data for display.
 
 # Implementation Details 
