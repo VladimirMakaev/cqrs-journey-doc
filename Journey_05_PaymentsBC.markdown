@@ -934,8 +934,7 @@ The core elements of this basic event sourcing solution are:
 
 * Whenever the state of an aggregate instance changes, the instance
   raises an event that fully describes the state change.
-* The system persists these events in an event store. This solution uses
-  a SQL database to store the events.
+* The system persists these events in an event store.
 * An aggregate can rebuild its state by replaying its past stream of
   events.
 * Other aggregates and workflows (possibly in different bounded
@@ -1083,6 +1082,13 @@ public void Handle(MarkSeatsAsReserved command)
 
 The following code sample shows the initial, simple implementation of 
 the **Save** method in the **SqlEventSourcedRepository** class. 
+
+> **Note:** These examples refer to a SQL-based event store. This was
+> the initial approach that was later replaced with an implementation
+> based on Windows Azure table storage. The SQL-based event store
+> remains in the solution as a convenience: you can run the application
+> locally and use this implementation to avoid any dependencies on
+> Windows Azure.
 
 
 ```Cs
