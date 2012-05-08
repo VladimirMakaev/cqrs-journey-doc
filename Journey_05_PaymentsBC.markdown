@@ -379,7 +379,7 @@ events.
 > evaluate the usage patterns on the different aggregates in your system
 > to determine which storage mechanism is the most cost effective. It
 > may turn out that different storage mechanisms make sense for
-> different aggregate types. You may be able to intoduce optimizations
+> different aggregate types. You may be able to introduce optimizations
 > that lower your costs, for example by using caching to reduce the
 > number of storage transactions.
 

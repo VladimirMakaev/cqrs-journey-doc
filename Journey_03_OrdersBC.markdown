@@ -299,9 +299,9 @@ separate aggregates.
 
 The numbers in the diagram correspond to the following steps:
 
-1. The UI sends a command to register attendees X and Y onto conference
-   157. The command is routed to a new **Order** aggregate.
-2. The **Order** aggregate invokes a method on a **Conference Seats
+1. The UI sends a command to register attendees X and Y onto
+   conference 157. The command is routed to a new **Order** aggregate.
+2. The **Order** aggregate sends a command to a **Conference Seats
    Availability** aggregate.
 3. The **Conference Seats Availability** aggregate with an ID of 157 is
    re-hydrated from the data store.
@@ -321,9 +321,9 @@ single aggregate in place of two.
 
 The numbers in the diagram correspond to the following steps:
 
-1. The UI sends a command to register attendees X and Y onto conference
-   157. The command is routed to the **Conference** aggregate with an
-   ID of 157.
+1. The UI sends a command to register attendees X and Y onto
+   conference 157. The command is routed to the **Conference** aggregate
+   with an ID of 157.
 2. The **Conference** aggregate with an ID of 157 is re-hydrated from
    the data store.
 3. The **Order** entity validates the booking (it queries the 
@@ -344,14 +344,14 @@ workflow to coordinate the interaction between two aggregates.
 
 The numbers in the diagram correspond to the following steps:
 
-1. The UI sends a command to register attendees X and Y onto conference
-   #157. The command is routed to a new **Order** aggregate.
+1. The UI sends a command to register attendees X and Y onto
+   conference 157. The command is routed to a new **Order** aggregate.
 2. The new **Order** aggregate, with an ID of 4239,  is persisted to
    the data store.
 3. The **Order** aggregate raises an event that is handled by the
    **RegistrationProcess** workflow.
-4. The **RegistrationProcess** workflow determines that a command should be
-   sent to the **SeatsAvailability** aggregate with an ID of
+4. The **RegistrationProcess** workflow determines that a command should
+   be sent to the **SeatsAvailability** aggregate with an ID of
    157.
 5. The **SeatsAvailability** aggregate is re-hydrated from the
    data store.
