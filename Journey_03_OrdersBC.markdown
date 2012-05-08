@@ -279,6 +279,11 @@ and questions about the alternative approaches they could take with a
 simple conference seat reservation scenario to try and understand the
 pros and cons of alternative approaches.
 
+> **BharathPersona:** These diagrams deliberately exclude details of how
+> the commands and events are delivered through command and event
+> handlers. The diagrams focus on the logical relationships between the
+> aggregates in the domain.
+
 This scenario considers what happens when a registrant tries to book
 several seats at a conference. The system must:
 
