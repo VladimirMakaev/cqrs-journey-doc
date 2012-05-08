@@ -61,7 +61,7 @@ problem analysis.
 The team implemented the user stories listed below during this phase of 
 the project. 
 
-### Conference Management User Stories
+### Ubiquitous Language Definitions
 
 The **Business Customer** represents the organization that is using the 
 conference management system to run its conference. 
@@ -69,6 +69,12 @@ conference management system to run its conference.
 A **Seat** represents a space at a conference or access to a specific 
 session at the conference such as a cocktail party, a tutorial, or a 
 workshop. 
+
+A **Registrant** is a person who interacts with the system to make 
+Orders and to make payments for those Orders. A Registrant also creates 
+the Registrations associated with an Order. 
+
+### Conference Management User Stories
 
 A business customer can create new conferences and manage them. After a 
 business customer creates a new conference, he can access the details of 
@@ -93,17 +99,38 @@ a list of attendees.
 
 ### Ordering and Registration User Stories
 
+When a registrant creates an order, it may not be possible to completely 
+fulfill the order. For example, a registrant may request a registrant 
+may request five seats for the full conference, five seats for the 
+drinks reception, and three seats for the pre-conference workshop. There 
+may only be three seats available and one seat for the drinks reception, 
+but more than three seats available for the pre-conference workshop. The 
+system displays this information to the registrant and gives the 
+registrant the opportunity to adjust the number of each type of seat in 
+the order before continuing to the payment process.
+
+After a registrant has selected the quantity of each seat type, the 
+system calculates the total to pay for the order, and the registrant can 
+then pay for those seats using an online payment service. 
+
+> **Note:** In this version of the system, the actual payment is
+> simulated.
+
 After a registrant has purchased seats at a conference, she can assign 
 attendees to those seats. The system stores the name and contact details 
-for each attendee. 
+for each attendee.
 
 ## Architecture 
 
 What are the key architectural features? Server-side, UI, multi-tier, cloud, etc.
 
-Figure 1 illustrates the key architectural elements of the Contoso Conference Management System in the V1 release. The application consists of two web sites and three bounded contexts. The infrastructure includes SQL databases, an event store, and messaging infrastructure.
+Figure 1 illustrates the key architectural elements of the Contoso 
+Conference Management System in the V1 release. The application consists 
+of two web sites and three bounded contexts. The infrastructure includes 
+SQL databases, an event store, and messaging infrastructure. 
 
-The first table that follows figure 1 lists all of the messages that the elements shown on the diagram exchange with each other.
+The first table that follows figure 1 lists all of the messages that the 
+elements shown on the diagram exchange with each other. 
 
 ![Figure 1][fig1]
 

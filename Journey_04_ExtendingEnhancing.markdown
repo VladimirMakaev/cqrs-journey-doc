@@ -27,9 +27,6 @@ The specific topics described in this chapter include:
   a registrant requests five seats for pre-conference event and eight
   seats for the full conference. This adds more complex business logic
   into the write-side.
-* Supporting partially fulfilled orders where the only some of the
-  seats that the registrant requests are available. This adds more
-  complex business logic into the write-side.
 * CQRS command validation using MVC. This illustrates how to make use
   of the model validation feature in MVC to validate your CQRS commands
   before you send them to the domain.
@@ -117,18 +114,6 @@ When a registrant creates an order, the registrant may request different
 numbers of different seat types. For example, a registrant may request 
 five seats for the full conference and three seats for the 
 pre-conference workshop. 
-
-### Handling Partially Fulfilled Orders
-
-When a registrant creates an order, it may not be possible to completely 
-fulfill the order. For example, a registrant may request a registrant 
-may request five seats for the full conference, five seats for the 
-drinks reception, and three seats for the pre-conference workshop. There 
-may only be three seats available and one seat for the drinks reception, 
-but more than three seats available for the pre-conference workshop. The 
-system displays this information to the registrant and gives the 
-registrant the opportunity to adjust the number of each type of seat in 
-the order before continuing to the payment process. 
 
 ## Architecture 
 
