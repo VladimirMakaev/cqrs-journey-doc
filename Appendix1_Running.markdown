@@ -60,11 +60,13 @@ You can install the remaining dependencies from NuGet by running the
 script **install-packages.ps1** included with the downloadable source.
 
 If you plan to deploy the RI to Windows Azure, you must have a Windows 
-Azure subscription, a SQL Azure subscription, and a Windows Azure 
-Service Bus subscription. You should be aware, that depending on your 
-Windows Azure subscription type, you may incur usage charges when you 
-use the Windows Azure Service Bus, Windows Azure table storage, and when 
-you deploy and run the RI in Windows Azure. 
+Azure subscription. You will need to configure a Windows Azure storage 
+account, a Windows Azure Service Bus namespace, and a SQL Azure database 
+in the same Windows Azure subscription where you deploy the 
+application.You should be aware, that depending on your Windows Azure 
+subscription type, you may incur usage charges when you use the Windows 
+Azure Service Bus, Windows Azure table storage, and when you deploy and 
+run the RI in Windows Azure. 
 
 At the time of writing, you can sign-up for a Windows Azure free trial 
 that enables you to run the RI in Windows Azure. 
@@ -346,7 +348,7 @@ expected.
 
 ## Server Error in '/' Application
 
-When you run the application in using the Debug build configuration you see
+When you run the application locally and you are using a proxy server you see:
 
 ```
 Server Error in '/' Application.
