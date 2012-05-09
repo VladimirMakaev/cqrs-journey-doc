@@ -172,7 +172,10 @@ the same database as the normalized tables that the write model uses.
 
 > **JanaPersona:** The team will split the database into two and explore
 > options for pushing changes from the normalized write-side to the
-> de-normalized read-side in a later stage of the journey.
+> de-normalized read-side in a later stage of the journey. For an 
+> example of using Windows Azure blob storage instead of SQL tables for
+> storing the read-side data, see the 
+> **SeatAssignmentsViewModelGenerator** class.
 
 ### Storing De-normalized Views in a Database
 
