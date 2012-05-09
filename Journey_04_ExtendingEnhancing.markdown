@@ -501,6 +501,54 @@ public void MarkAsReserved(DateTime expirationDate, IEnumerable<SeatQuantity> se
 > are actually made. It is this time the workflow sends to the **Order**
 > aggregate in the **MarkSeatsAsReserved** command.
 
+When the **RegistrationProcess** sends the **MarkSeatsAsReserved** 
+command to the **Order** aggregate with the expiry time that will be 
+displayed in the UI, it also sends a command to itself to initate the 
+process of releasing the reserved seats. This 
+**ExpireRegistrationProcess** command is held for the expiry duration 
+plus a buffer of five minutes. This buffer ensures that time differences 
+between the servers don't cause the **RegistrationProcess** workflow to 
+release the reserved seats before the timer in UI counts down to zero. 
+In the following code sample from the **RegistrationProcess** workflow, 
+the **Expiration** property in the **MarkSeatsAsReserved** command is 
+used by the UI to display the countdown timer, and the **Delay** 
+property in the **ExpireRegistrationProcess** command determines when 
+the reserved seats are released. 
+
+```Cs
+public void Handle(SeatsReserved message)
+{
+    if (this.State == ProcessState.AwaitingReservationConfirmation)
+    {
+        var expirationTime = this.ReservationAutoExpiration.Value;
+        this.State = ProcessState.ReservationConfirmationReceived;
+
+        if (this.ExpirationCommandId == Guid.Empty)
+        {
+            var bufferTime = TimeSpan.FromMinutes(5);
+
+            var expirationCommand = new ExpireRegistrationProcess { ProcessId = this.Id };
+            this.ExpirationCommandId = expirationCommand.Id;
+
+            this.AddCommand(new Envelope<ICommand>(expirationCommand)
+            {
+                Delay = expirationTime.Subtract(DateTime.UtcNow).Add(bufferTime),
+            });
+        }
+
+
+        this.AddCommand(new MarkSeatsAsReserved
+        {
+            OrderId = this.OrderId,
+            Seats = message.ReservationDetails.ToList(),
+            Expiration = expirationTime,
+        });
+    }
+	
+    ...
+}
+```
+
 The MVC **RegistrationController** class retrieves the order information 
 on the read-side. The **DraftOrder** class includes the reservation expiry 
 time that is then passed to the view using the **ViewBag** class, as 
@@ -777,9 +825,9 @@ public class ConferenceDao : IConferenceDao
 
     public ConferenceDetails GetConferenceDetails(string conferenceCode)
     {
-        using (var repository = this.contextFactory.Invoke())
+        using (var context = this.contextFactory.Invoke())
         {
-            return repository
+            return context
                 .Query<Conference>()
                 .Where(dto => dto.Code == conferenceCode)
                 .Select(x => new ConferenceDetails { Id = x.Id, Code = x.Code, Name = x.Name, Description = x.Description, StartDate = x.StartDate })
