@@ -111,7 +111,13 @@ the order before continuing to the payment process.
 
 After a registrant has selected the quantity of each seat type, the 
 system calculates the total to pay for the order, and the registrant can 
-then pay for those seats using an online payment service. 
+then pay for those seats using an online payment service. Contoso does
+not handle payments on behalf of its customers: each business customer
+must have a mechanism for accepting payments through an online payments
+service. In a later stage of the project, Contoso will add support for
+business customers to integrate their invoicing systems with the
+Conference Management System. At some future time, Contoso may offer a
+service to collect payments on behalf of customers.
 
 > **Note:** In this version of the system, the actual payment is
 > simulated.
@@ -948,6 +954,31 @@ the write-side of the Payments bounded context.
 ![Figure 5][fig5]
 
 **The read-side and the write-side in the Payments bounded context**
+
+### Notes on Integration with Online Payment Services
+
+Typically, online payment services offer two levels of integration with
+your site:
+
+* The simple approach, for which you don't need a merchant account with
+  the payments provider, works through a simple redirect mechanism. You
+  redirect your customer to the payment service. The payment service
+  takes the payment, and then redirects the customer back to a page on
+  your site along with an acknowledgement code. 
+* The more sophisticated approach, for which you do need a merchant
+  account, is based on an API. It typically uses two steps. First, the
+  payment service verifies that your customer can pay the required
+  amount, and sends you a token. Second, you can use the token within a
+  fixed time to complete the payment by sending th token back to the
+  payment service. 
+
+Contoso assumes that its business customers do not have a merchant 
+account and must use the simple approach. One consequence of this is 
+that a seat reservation could expire while the customer is completing 
+the payment. If this happens, the system tries to re-acquire the 
+seats after the customer makes the payment. In the event that the seats 
+cannot be re-acquired, the system notifies the business customer of the 
+problem and the business customer must resolve the situation manually. 
 
 ## Event Sourcing
 
