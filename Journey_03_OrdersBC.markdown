@@ -279,6 +279,13 @@ and questions about the alternative approaches they could take with a
 simple conference seat reservation scenario to try and understand the
 pros and cons of alternative approaches.
 
+> A value I think developers would benefit greatly from recognizing is
+> the de-emphasis on the means and methods for persistence of objects in
+> terms of relational storage. Teach them to avoid modeling the domain
+> as if it were a relational store, and I think it will be easier to
+> introduce and understand both DDD and CQRS.  
+> Josh Elster - CQRS Advisors Mail List
+
 > **BharathPersona:** These diagrams deliberately exclude details of how
 > the commands and events are delivered through command and event
 > handlers. The diagrams focus on the logical relationships between the

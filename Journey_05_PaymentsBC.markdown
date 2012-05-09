@@ -723,6 +723,29 @@ These alternative approaches will include:
 > **Note:** To see how the current approach works, look at the
 > **OrderEventHandler** class in the **Conference** project.
 
+### Choosing When to Update the Read-side Data
+
+In the Conference Management bounded context, the business customer can 
+change the description of a seat type. This results in a **SeatUpdated 
+** event that is handled in the Orders and Registrations bounded context 
+by the **ConferenceViewModelGenerator** class that updates the 
+read-model data to reflect the new information about the seat type. The 
+UI displays the new seat description when a registrant is making an 
+order. 
+
+However, if a registrant views a previously created order (for example 
+to assign attendees to seats), the registrant sees the original seat 
+description. 
+
+> **CarlosPersona:** This is a deliberate business decision: we don't
+> want to confuse registrants by changing the seat description after
+> they create an order.
+
+> **BharathPersona:** If we did want to update the seat description on
+> existing orders, we would need to modify the
+> **PricedOrderViewModelGenerator** class to handle the **SeatUpdated**
+> and adjust its view model.
+
 ## Distributed Transactions and Event Sourcing
 
 The previous section that discussed the integration options for the 
@@ -824,7 +847,7 @@ an order provides an example of choosing autonomy over authority.
 > calculate order totals.
 
 The section [Calculating Totals](#totals) below describes how the system
-performs this calculation. 
+performs this calculation.
 
 ## Approaches to Implementing the Read-side
 
