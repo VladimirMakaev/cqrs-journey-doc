@@ -264,6 +264,26 @@ requirements and the constraints on your project:
 >
 >   Eric Evans, "Domain-Driven Design," p383. 
 
+## Context Maps
+
+A large complex system can have multiple bounded contexts that interact 
+with one another in various ways. A **Context Map** is the documentation 
+that describes the relationships between these bounded contexts. It 
+might might be in the form of diagrams or tables or text. 
+
+A **Context Map** helps to visualize the system at a high level, showing 
+how some of the key parts relate to each other. It also helps to clarify 
+the boundaries between the bounded contexts: it shows where and how the 
+bounded contexts exchange data and share data, and also where you must 
+translate data as it moves from one domain model to another.
+
+A business entity such as a Customer might exist in the different 
+bounded contexts. However it may may need to expose different facets or 
+properties that are relevant to a particular bounded context. As a 
+Customer entity moves from one bounded context to another you may need 
+to translate it so that it exposes the relevant facets or properties for 
+its current context. 
+
 ## Bounded Contexts and Multiple Architectures 
 A bounded context typically represents a slice of the overall system 
 with clearly defined boundaries separating it from other bounded 

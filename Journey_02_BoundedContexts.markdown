@@ -34,12 +34,15 @@ communicates with another bounded context by raising events.
 
 ## Context Map
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	To do - expand this section and add a definition in the Reference Guide.
-  </span>
-</div>  
+According to Eric Evans in "Domain-Driven Design: Tackling Complexity in
+the Heart of Software" you should:
+
+> Describe the points of contact between the models, outlining explicit
+> translation for any communication and highlighting any sharing.
+
+This **Context Map** serves several purposes that include providing 
+an overview of the whole system and helping people to understand the 
+details of how different bounded contexts interact with each other. 
 
 # Bounded Contexts in the Conference Management System 
 
@@ -70,9 +73,42 @@ other registrants to reserve.
 
 ## The Conference Management Bounded Context
 
+A business customer can create new conferences and manage them. After a 
+business customer creates a new conference, he can access the details of 
+the conference by using his email address and conference locator access 
+code. The system generates the access code when the business customer 
+creates the conference. 
+
+The business customer can specify the following information about a 
+conference: 
+
+* The name, description, and slug (part of the URL used to access the
+  conference).
+* The start and end dates of the conference.
+* The different types and quotas of seats available at the conference.
+
+Additionally, the business customer can control the visibility of the 
+conference on the public web-site by either publishing or un-publishing 
+the conference. 
+
+The business customer can use the conference management web-site to view 
+a list of orders and attendees. 
+
 ## The On-site Client Application Bounded Context 
 
 ## The Payments Bounded Context 
+
+The Payments bounded context is responsible for managing the 
+interactions between the Conference Management System and external 
+payments systems. It forwards the necessary payment information to the 
+external system and receives an acknowledgement that the payment was 
+either accepted or rejected. It reports the success or failure of the 
+payment back to the Conference Management System. 
+
+Initially, the Payments bounded context will assume that the Business 
+Customer has an account with the third-party payment system (although 
+not necessarily a merchant account), or that the Business Customer will 
+accept payment by invoice. 
 
 ## The Conference Feedback Bounded Context
 
@@ -107,76 +143,24 @@ flow of data as events between them.
 
 **Bounded Contexts in the Contoso Conference Management System**
 
-The following table lists the events that are associated with each of the numbered arrows.
+The following list provides more information about the arrows in figure 1. You can find additional detail in the chapters that discuss the individual bounded contexts. 
 
-<table border="1">
-  <tr>
-    <th>Integration #</th><th>Messages</th>
-  </tr>
-  <tr>
-    <td>1</td>
-    <td><b>ConferenceCreated</b> (Event)<br/>
-      <b>ConferenceUpdated</b> (Event)<br/>
-      <b>ConferencePublished</b> (Event)<br/>
-      <b>ConferenceUnpublished</b> (Event)<br/>
-      <b>SeatCreated</b> (Event)<br/>
-      <b>SeatUpdated</b> (Event)<br/>
-    </td>
-  </tr>
-  <tr>
-    <td>2</td>
-    <td>Attendee information - TBD</td>
-  </tr>
-  <tr>
-    <td>3</td>
-    <td>
-      <b>InitiateInvoicePayment</b> (Command sent from Registration MVC controller)<br/>
-      <b>InitiateThirdPartyProcessorPayment</b> (Command sent from Registration MVC controller)<br/>
-    </td>
-  </tr>
-  <tr>
-    <td>4</td>
-    <td>
-      <b>PaymentCompleted</b> (Event)<br/>
-      <b>PaymentRejected</b> (Event)<br/>
-    </td>
-  </tr>
-  <tr>
-    <td>5</td>
-    <td>
-      <b>GetConferenceDescription</b> (request from client)<br/>
-      ??
-    </td>
-  </tr>
-  <tr>
-    <td>6</td>
-    <td>
-      <b>AttendeeCheckedIn</b> (Event)<br/>
-      <b>RegistrationUpdated</b> (Event)<br/>
-      <b>GetConferenceStatus</b> (request from client)<br/>
-    </td>
-  </tr>
-  <tr>
-    <td>7</td>
-    <td>
-      <b>RegistrationAddedOrUpdated</b> (Event)<br/>
-      <b>RegistrationRemoved</b> (Event)<br/>
-      <b>AttendeeCheckedIn</b> (Event)<br/>
-    </td>
-  </tr>
-  <tr>
-    <td>8</td>
-    <td>??</td>
-  </tr>
-  <tr>
-    <td>9</td>
-    <td>??</td>
-  </tr>
-  <tr>
-    <td>10</td>
-    <td>??</td>
-  </tr>
-</table>
+1. Events that report when conferences have been created, updated, and
+   published. Events that report when seat types have been created or
+   updated.
+2. Events that report when orders have been created and updated. Events
+   that report when attendees have been assigned to seats.
+3. Requests for a payment to be made.
+4. Acknowledgement of the success or failure of the payment.
+5. Events that report when conferences have been created, updated, and
+   published. Events that report when seat types have been created or
+   updated.
+6. Events that report when orders have been created and updated.
+7. Events that report when orders have been created and updated.
+8. Events that report when discounts have been created or modified.
+9. Events that report the calculation of totals based on discounts.
+10. Events that report when conferences have been created, updated, and
+   published.
 
 > **BharathPersona:** Some of the events raised from the Conference
 > Management bounded context are coarse-grained and contain multiple

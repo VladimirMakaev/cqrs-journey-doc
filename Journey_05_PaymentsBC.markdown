@@ -95,7 +95,7 @@ conference on the public web-site by either publishing or un-publishing
 the conference. 
 
 The business customer can use the conference management web-site to view 
-a list of attendees. 
+a list of orders and attendees. 
 
 ### Ordering and Registration User Stories
 
@@ -398,6 +398,11 @@ and the implementation of the Orders and Registrations becomes simpler.
 > They created a simple, basic event store based on Windows Azure tables
 > as an interim solution. However, they will potentially face the
 > problem in the future of migrating from one event store to another.
+
+> Evolution is key here; for example one could show how implementing
+> event sourcing allows you to get rid of those tedious data migrations,
+> and even allows you to build reports from the past.  
+> Tom Janssens - CQRS Advisors Mail List
 
 The team implemented the basic event store using Windows Azure table 
 storage. If you are hosting your application in Windows Azure you could 
