@@ -1379,6 +1379,11 @@ the **Order** aggregate and the **PricingService** class for details.
 > implement the CQRS pattern. You need to test that they all work
 > correctly together.
 
+> **MarkusPersona:** Don't forget to create unit tests for your
+> read-models. Contoso discovered a bug just prior to the V1 release
+> where order items were removed when an order was updated through a
+> unit test on the read model generator.
+
 Describe any special considerations that relate to testing for this bounded context.  
 
 
