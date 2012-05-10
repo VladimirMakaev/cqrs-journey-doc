@@ -1443,8 +1443,26 @@ the **Order** aggregate and the **PricingService** class for details.
 > where order items were removed when an order was updated through a
 > unit test on the read model generator.
 
-Describe any special considerations that relate to testing for this bounded context.  
+## Timing Issues
 
+One of the acceptance tests verifies the behavior of the system when a 
+business customer creates new seat types. The key steps in the test 
+create a conference, create a new seat type for the conference, and then 
+publishes the conference. This raises the corresponding sequence of 
+events: **ConferenceCreated**, **SeatCreated**, and 
+**ConferencePublished**. 
+
+These are integration events that are handled in the Orders and 
+Registrations bounded context. The test determined that the events were 
+received by the Orders and Registrations bounded context in a different 
+order. 
+
+The Windows Azure Service Bus guarantees that events are delivered in 
+the order that they were sent, so in this scenario the issue must be 
+caused by the time it takes for the steps in the test to create the 
+messages and deliver them to the Windows Azure Service Bus. The problem 
+was solved by introducing an artificial delay between the steps in the 
+test.. 
 
 [j_chapter3]:       Journey_03_OrdersBC.markdown
 [j_chapter4]:       Journey_04_ExtendingEnhancing.markdown
