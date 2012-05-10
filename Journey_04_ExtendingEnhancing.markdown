@@ -698,23 +698,23 @@ database: the **OrdersView** and **OrderItemsView** tables. The
 contains data that only exists on the read-side. 
 
 <table border="1">
-	<tr><th>Column</th><th>Description</th><tr>
-	<tr><td>OrderId</td><td>A unique identifier for the Order</td><tr>
-	<tr><td>ReservationExpirationDate</td><td>The time when the seat reservations expire</td><tr>
-	<tr><td>StateValue</td><td>The state of the Order: Created, PartiallyReserved, ReservationCompleted, Rejected, Confirmed</td><tr>
-	<tr><td>RegistrantEmail</td><td>The email address of the Registrant</td><tr>
-	<tr><td>AccessCode</td><td>The Access Code that the Registrant can use to access the Order</td><tr>
+	<tr><th>Column</th><th>Description</th></tr>
+	<tr><td>OrderId</td><td>A unique identifier for the Order</td></tr>
+	<tr><td>ReservationExpirationDate</td><td>The time when the seat reservations expire</td></tr>
+	<tr><td>StateValue</td><td>The state of the Order: Created, PartiallyReserved, ReservationCompleted, Rejected, Confirmed</td></tr>
+	<tr><td>RegistrantEmail</td><td>The email address of the Registrant</td></tr>
+	<tr><td>AccessCode</td><td>The Access Code that the Registrant can use to access the Order</td></tr>
 </table>
 
 **OrdersView Table**
 
 <table border="1">
-	<tr><th>Column</th><th>Description</th><tr>
-	<tr><td>OrderItemId</td><td>A unique identifier for the Order Item</td><tr>
-	<tr><td>SeatType</td><td>The type of Seat requested</td><tr>
-	<tr><td>RequestedSeats</td><td>The number of seats requested</td><tr>
-	<tr><td>ReservedSeats</td><td>The number of seats reserved</td><tr>
-	<tr><td>OrderID</td><td>The OrderId in the parent OrdersView table</td><tr>
+	<tr><th>Column</th><th>Description</th></tr>
+	<tr><td>OrderItemId</td><td>A unique identifier for the Order Item</td></tr>
+	<tr><td>SeatType</td><td>The type of Seat requested</td></tr>
+	<tr><td>RequestedSeats</td><td>The number of seats requested</td></tr>
+	<tr><td>ReservedSeats</td><td>The number of seats reserved</td></tr>
+	<tr><td>OrderID</td><td>The OrderId in the parent OrdersView table</td></tr>
 </table>
 
 **OrderItemsView Table**
