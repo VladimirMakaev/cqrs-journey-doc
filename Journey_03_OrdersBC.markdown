@@ -258,7 +258,16 @@ and use a simple messaging infrastructure implemented in a SQL Express
 database. 
 
 For more information about the options for running the application, see 
-[Appendix 1][appendix1]. 
+[Appendix 1][appendix1].
+
+> **BharathPersona:** A frequent claim for the CQRS pattern is that it
+> enables you to scale the read-side and write-side independently to
+> support the different usage patterns. In the this bounded context, the
+> number of read operations from the UI is not likely to hugely
+> out-number the write-operations: the bounded context focuses on
+> registrants creating orders. Therefore the read-side and the
+> write-side are deployed to the same Windows Azure worker role rather
+> than to two separate worker roles that could be scaled independently.
 
 # Patterns and Concepts <a name="patternsandconcepts"/>
 
@@ -313,7 +322,8 @@ The numbers in the diagram correspond to the following steps:
 
 1. The UI sends a command to register attendees X and Y onto
    conference 157. The command is routed to a new **Order** aggregate.
-2. The **Order** aggregate sends a command to a **Conference Seats
+2. The **Order** aggregate raises an event that reports that an order
+   has been created. The event is routed to the **Conference Seats
    Availability** aggregate.
 3. The **Conference Seats Availability** aggregate with an ID of 157 is
    re-hydrated from the data store.
@@ -409,9 +419,11 @@ In the first model, the validation must take place in either the
 **Order** or **SeatsAvailability** aggregate. If it is the 
 former, the **Order** aggregate must discover the current seat 
 availability from the **SeatsAvailability** aggregate before 
-the reservation is made. If it is the later, the 
-**SeatsAvailability** aggregate must return a success or 
-failure code to the **Order** aggregate. 
+the reservation is made and before it raises the event. If it is the 
+later, the **SeatsAvailability** aggregate must somehow notify the
+**Order** aggregate that the seats could not be reserved, and the
+**Order** aggregate must undo (or compensate for) any work that it has
+completed so far.
 
 The second model behaves similarly, except that it is **Order** and 
 **SeatsAvailability** entities cooperating within a 
