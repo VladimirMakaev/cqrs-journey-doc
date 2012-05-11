@@ -1457,12 +1457,18 @@ Registrations bounded context. The test determined that the events were
 received by the Orders and Registrations bounded context in a different 
 order. 
 
-The Windows Azure Service Bus guarantees that events are delivered in 
-the order that they were sent, so in this scenario the issue must be 
-caused by the time it takes for the steps in the test to create the 
-messages and deliver them to the Windows Azure Service Bus. The problem 
-was solved by introducing an artificial delay between the steps in the 
-test.. 
+The Windows Azure Service Bus only offers best-effort FIFO, therefore it 
+may not deliver events in the order that they were sent, it is also 
+possible in this scenario that the issue occurs because of the different 
+times it takes for the steps in the test to create the messages and 
+deliver them to the Windows Azure Service Bus. The problem was solved 
+temporarily by introducing an artificial delay between the steps in the 
+test. 
+
+In the V2 release, the team plans to address the general issue of 
+messaging ordering and either modify the infrastructure to guarantee 
+ordering or make the system more robust if messages do arrive out of 
+order. 
 
 [j_chapter3]:       Journey_03_OrdersBC.markdown
 [j_chapter4]:       Journey_04_ExtendingEnhancing.markdown
