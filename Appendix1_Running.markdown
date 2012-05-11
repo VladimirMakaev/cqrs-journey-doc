@@ -368,6 +368,18 @@ Currently, there is no validation to:
 * Check that the end date for a conference is later than the start date.
 * Check that email addresses are in a valid format.
 
+## Switching between Debug and DebugLocal Builds
+
+If you run the application after building using the Debug configuration 
+and create some data and then re-build using the DebugLocal 
+configuration you will see errors when you run the application. This 
+scenario is not supported. 
+
+The problem arises because the two build configurations only share some 
+data sources, so after the switch there are inconsistencies in the data. 
+You should re-create all the data sources if you switch from one build 
+configuration to another. 
+
 ## Other Known Issues
 
 * No security features have been implemented yet. 
