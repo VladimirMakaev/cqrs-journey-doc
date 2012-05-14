@@ -407,7 +407,11 @@ and the implementation of the Orders and Registrations becomes simpler.
 The team implemented the basic event store using Windows Azure table 
 storage. If you are hosting your application in Windows Azure you could 
 also consider using Windows Azure blobs or SQL Azure to store your 
-events. 
+events.
+
+When choosing the underlying technology for your event store, you should 
+ensure that your choice can deliver the required level of consistency, 
+reliability, scale, and performance for your application. 
 
 > **JanaPersona:** One of the issues to consider when choosing between
 > storage mechanisms in Windows Azure is cost. If you use SQL Azure you
@@ -420,6 +424,13 @@ events.
 > different aggregate types. You may be able to introduce optimizations
 > that lower your costs, for example by using caching to reduce the
 > number of storage transactions.
+
+> My rule of thumb is that if you’re doing greenfield development, you
+> need very good arguments in order to choose SQL Azure. Windows Azure
+> Storage Services should be the default choice. However, if you already
+> have an existing SQL Server database that you want to move to the
+> cloud, it’s a different case...  
+> Mark Seeman - CQRS Advisors Mail List
 
 ### Identifying Aggegates
 
@@ -983,7 +994,7 @@ the write-side of the Payments bounded context.
 
 **The read-side and the write-side in the Payments bounded context**
 
-### Notes on Integration with Online Payment Services
+### Integration with Online Payment Services, Eventual Consistency, and Command Validation
 
 Typically, online payment services offer two levels of integration with
 your site:
@@ -1006,7 +1017,59 @@ that a seat reservation could expire while the customer is completing
 the payment. If this happens, the system tries to re-acquire the 
 seats after the customer makes the payment. In the event that the seats 
 cannot be re-acquired, the system notifies the business customer of the 
-problem and the business customer must resolve the situation manually. 
+problem and the business customer must resolve the situation manually.
+
+This specific scenario, where the system cannot make itself fully consistent without a manual intervention by a user (in this case the business owner must initiate a refund or override the seat quota) illustrates a more general point in relation to eventual consistency and command validation.
+
+A key benefit of embracing eventual consistency is to remove the requirement for using distributed transactions that have a significant, negative impact on the scalability and performance of large systems as a consequence of the number and duration of locks that they must hold in the system. In this specific scenario, you could take steps to avoid the potential problem of accepting payment without seats being available in two ways:
+
+* Change the system to re-check the seat availability just before
+  completing the payment. This is not possible because of the way that
+  the integration with the payments system works without a merchant
+  account.
+* Keep the seats reserved (locked) until the payment is complete. This
+  is difficult because you do not know how long the payment process will
+  take: you must reserve (lock) the seats for an indeterminate period
+  while you wait for the registrant to complete the payment.
+
+The approach the team chose to allow the possibility that a registrant 
+could pay for seats only to find that they are no longer available, in 
+addition to being very unlikely to happen in practice (a timeout 
+occuring while a registrant is paying for the very last seats), also has 
+the least impact on the system because it doesn't require a long-term 
+reservation (lock) on any seats. 
+
+In more general terms, you could re-state the two options above as:
+
+* Validate commands just before they execute to try to ensure that the
+  command will succeed.
+* Lock all the resources until the command completes.
+
+If the command only affects a single aggregate and does not need to 
+reference anything outside of the consistency boundary defined by the 
+aggregate, then there is no problem because all of the information 
+required to validate the command is within the aggregate. This is not 
+the case in the current scenario: if you could validate that the seats 
+were still available just before you made the payment, this check would 
+involve checking information outside of the current aggregate. 
+
+If, in order to validate the command, you need to look at data outside 
+of the aggregate, for example by querying a read model, or looking in a 
+cache, this is going to impact the scalability of the system. Also, if 
+you are querying a read-model remember that read-models are eventually 
+consistent. In the current scenario, you would need to query an 
+eventually consistent read-model to check on the seats avaialbility. 
+
+If you decide to lock all of the relevant resources until the command 
+completes, be aware of the impact this will have on the scalability of 
+your system. 
+
+> It is far better to handle such a problem from a business perspective
+> than to make large architectural constraints upon our system.  
+> Greg Young - [Q/A Greg Young's Blog][gregyoungqa]
+
+For a detailed discussion of this issue, see
+[Q/A Greg Young's Blog][gregyoungqa].
 
 ## Event Sourcing
 
@@ -1501,3 +1564,4 @@ new conference or alternate page.
 [metroux]:          http://msdn.microsoft.com/en-us/library/windows/apps/hh465424.aspx
 [unity]:            http://msdn.microsoft.com/en-us/library/ff647202.aspx
 [appfabsdk]:        http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=27421
+[gregyoungqa]:      http://goodenoughsoftware.net/2012/05/08/qa/
