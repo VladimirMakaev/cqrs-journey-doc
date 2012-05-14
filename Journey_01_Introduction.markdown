@@ -110,7 +110,9 @@ the specialists whose interests align with yours.
 
 ## Overview of the System
 
-Contoso plans to build an online conference management system that will enable Contoso's customers to plan and manage conferences that are held at a physical location. The system will enable Contoso's customers to:
+Contoso plans to build an online conference management system that will 
+enable Contoso's customers to plan and manage conferences that are held 
+at a physical location. The system will enable Contoso's customers to: 
 
 * Manage the sale of different seat types for the conference.
 * Manage the conference on site, including badge printing and attendee
