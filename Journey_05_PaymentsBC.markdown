@@ -1267,9 +1267,19 @@ public void Save(T eventSourced)
 
 ### Replaying Events to Re-build State
 
-When a handler class loads an aggregate instance from storage, it loads the state of the instance by replaying the stored event stream.
+When a handler class loads an aggregate instance from storage, it loads 
+the state of the instance by replaying the stored event stream.
 
-The following code sample from the **OrderCommandHandler** class shows how this process is initiated by calling the **Find** method in the repository.
+> **PoePersona:** We later found that using event sourcing and being
+> able to replay events was invaluable as a technique for analyzing bugs
+> in the production system running in the cloud. We could make a local
+> copy of the event store and then replay the event stream locally and
+> debug the application in Visual Studio to undestand exactly what
+> happened in the production system.
+
+The following code sample from the **OrderCommandHandler** class shows 
+how this process is initiated by calling the **Find** method in the 
+repository. 
 
 ```Cs
 public void Handle(MarkSeatsAsReserved command)
