@@ -165,13 +165,16 @@ The following list provides more information about the arrows in figure 1. You c
 > **BharathPersona:** Some of the events raised from the Conference
 > Management bounded context are coarse-grained and contain multiple
 > fields. Remember that Conference Management is a CRUD-style bounded
-> context and does not raise fine-grained domain-style events.
+> context and does not raise fine-grained domain-style events. For more
+> information, see
+> [Chapter 5, Preparing for the V1 Release][j_chapter5]
 
 # Why Did We Choose These Bounded Contexts? 
 
 
 [j_chapter1]:     Journey_01_Introduction.markdown
 [j_chapter4]:     Journey_04_ExtendingEnhancing.markdown
+[j_chapter5]:     Journey_05_PaymentsBC.markdown
 [r_chapter1]:     Reference_01_CQRSInContext.markdown
 
 [fig1]:           images/Journey_02_BCs.png?raw=true
