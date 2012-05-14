@@ -465,6 +465,34 @@ stream.
 > command, then these events are published when the repository saves the
 > aggregate instance.
 
+## Commands and Optimistic Concurrency
+
+A common scenario for commands is that some of the information included 
+in the command is provided by the user of the system through the UI, and 
+some of the information is retrieved from the read-model. For example, 
+the UI builds a list of orders by querying the read-model, the user 
+selects one of those orders and modifies the list of attendees 
+associated with that order. The UI then sends the command that contains 
+the list of attendees associated with the order to the write-model for 
+processing. 
+
+However, because of eventual consistency, it is possible that the 
+information that the UI retrieves from the read-side is not yet fully 
+consistent with changes that have just been made on the write-side 
+(perhaps by another user of the system). This raises the possibility 
+that the command that is sent to update the list of attendees results in 
+an inconsistent change to the write-mode. For example, someone else 
+could have deleted the order, or already modified the list of attendees. 
+
+A solution to this problem is to use version numbers in the read-model 
+and the commands. Whenever the write-model sends details of a change to 
+the read-model, it includes the current version number of the aggregate. 
+When the UI queries the read-model it receives the version number and 
+includes it in the command that it sends to the write-model. The 
+write-model can compare the version number in the command with the 
+current version number of the aggregate and if they are different it can 
+raise a concurrency error and reject the change. 
+
 # Events and EventHandlers 
 
 Events can play two different roles in a CQRS implementation.
