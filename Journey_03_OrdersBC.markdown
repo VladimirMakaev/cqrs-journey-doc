@@ -9,29 +9,17 @@ The **Orders and Registrations** bounded context is partially responsible
 for the booking process for attendees planning to attend a conference. 
 In the **Orders and Registrations** bounded context, a person (the 
 registrant) purchases seats at a particular conference. In the 
-**Registrations** bounded context, described in [To Do Identify 
-Chapter][todo1], the registrant assigns names of attendees to the 
-purchased seats. 
-
-The ordering process must support wait listing, [To Do Identify 
-Chapter][todo2], whereby requests for seats are placed on a wait-list if 
-there are not sufficient seats available. The ordering process must 
-enable the Business Customer to set various types of discount, [To Do 
-Identify Chapter][todo3], for attendees. 
-
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	Revise the following paragraph.
-  </span>
-</div> 
+**Registrations** bounded context the registrant assigns names
+ of attendees to the purchased seats (this is described in the chapter
+[Preparing for the V1 Release][j_chapter5]). 
 
 This was the first stop on our CQRS journey, so the team decided to 
 implement a core, but self-contained part of the system. The 
 registrations process must be as painless as possible for attendees. The 
 process must enable the Business Customer to ensure that the maximum 
 possible number of seat can be booked, and give the Business Customer 
-the flexibility to define a set of custom pricing and discount scheme. 
+the flexibility to define a set of custom prices for the different seat
+types at a conference. 
 
 Because this was the first bounded context addressed by the team, they 
 also implemented some infrastructure elements of the system to support 
@@ -43,6 +31,11 @@ buses and a persistence mechanism for aggregates.
 > describes a journey, so some of the design decisions and
 > implementation details change in later steps in the journey. These
 > changes are described in subsequent chapters.
+
+Future plans for enhancements to this bounded context include support 
+for wait listing, whereby requests for seats are placed on a wait-list
+if there are not sufficient seats available and enabling the Business 
+Customer to set various types of discount for seat types. 
 
 ## Working Definitions for this Chapter
 
@@ -61,7 +54,11 @@ action.
 
 Commands are processed once by a single recipient. A command bus 
 transports commands that command handlers then dispatch to aggregates. 
-Sending a command is an asynchronous operation with no return value. 
+Sending a command is an asynchronous operation with no return value.
+
+> **BharathPersona:** For a discussion of some possible optimizations
+> that also involve a slightly different definition of a command, see
+> [Chapter 6, Versioning our System][j_chapter6].
 
 ### Event
 
@@ -82,7 +79,13 @@ follow a simple set of rules to determine which command or commands to
 send. The workflow does not contain any business logic, simply logic to 
 determine the next command to send. The workflow is implemented as a 
 state machine, so when the workflow responds to an event, it can change 
-its internal state in addition to sending a new command. 
+its internal state in addition to sending a new command.
+
+> **MarkusPersona:** It can be difficult for someone new to the code to
+> follow the flow of caommands and events through the system. For a
+> discussion of a technique that can help, see the section "Testing" in
+> [Extending and Enhancing the Orders and Registrations Bounded
+> Contexts][j_chapter4].
 
 The workflow in this bounded context can receive commands as well as 
 subscribe to events.
@@ -100,7 +103,7 @@ CQRS related terms.
 The bounded context descibed in this chapter addresses the following 
 user story. 
 
-### Seat Ordering
+### Creating Orders
 
 A registrant is the person who reserves and pays for seats at a 
 conference. Ordering is a two-stage process: first the registrant 
@@ -1474,7 +1477,9 @@ This second test can make use of the behavior the **SeatsAvailability**
 aggregate because the aggregate does raise an event if it rejects a 
 reservation. 
 
+[j_chapter4]:     Journey_04_ExtendingEnhancing.markdown
 [j_chapter5]:     Journey_05_PaymentsBC.markdown
+[j_chapter6]:     Journey_06_V2Release.markdown
 [r_chapter3]:     Reference_03_ESIntroduction.markdown
 [r_chapter4]:     Reference_04_DeepDive.markdown
 [r_chapter6]:     Reference_06_Sagas.markdown
