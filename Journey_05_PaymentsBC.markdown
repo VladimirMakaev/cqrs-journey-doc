@@ -742,8 +742,8 @@ These alternative approaches will include:
 ### Choosing When to Update the Read-side Data
 
 In the Conference Management bounded context, the business customer can 
-change the description of a seat type. This results in a **SeatUpdated 
-** event that is handled in the Orders and Registrations bounded context 
+change the description of a seat type. This results in a **SeatUpdated**
+event that is handled in the Orders and Registrations bounded context 
 by the **ConferenceViewModelGenerator** class that updates the 
 read-model data to reflect the new information about the seat type. The 
 UI displays the new seat description when a registrant is making an 
@@ -887,6 +887,26 @@ Azure blobs to store information about the seat assignments.
 > **SeatAssignmentsDao** class to understand how the UI retrieves the
 > data for display.
 
+## Eventual Consistency
+
+During testing, the team discovered a scenario where the registrant 
+might see evidence of eventual consistency in action. If the registrant 
+assigns attendees to seats on an order and then quickly navigates to 
+view the assignments, then sometimes this view shows only some of the 
+updates. However, refreshing the page displays the correct information. 
+This happens because it takes time for the events that record the seat 
+assignments to propagate to the read-model, and sometimes the tester 
+viewed the information queried from the read-model too quickly. 
+
+The team decided to add a note to the view page warning users about this 
+possibility, although in a production system the read-model is likely to 
+be updated faster than in a debug version of the application running 
+locally. 
+
+> **CarlosPersona:** So long as the registrant knows that the changes
+> have been persisted, and that what is displayed in the UI could be a
+> few seconds out of date, they are not going to be concerned.
+
 # Implementation Details 
 
 Describe significant features of the implementation with references to the code. Highlight any specific technologies (including any relevant trade-offs and alternatives). 
@@ -1019,9 +1039,19 @@ seats after the customer makes the payment. In the event that the seats
 cannot be re-acquired, the system notifies the business customer of the 
 problem and the business customer must resolve the situation manually.
 
-This specific scenario, where the system cannot make itself fully consistent without a manual intervention by a user (in this case the business owner must initiate a refund or override the seat quota) illustrates a more general point in relation to eventual consistency and command validation.
+This specific scenario, where the system cannot make itself fully 
+consistent without a manual intervention by a user (in this case the 
+business owner must initiate a refund or override the seat quota) 
+illustrates a more general point in relation to eventual consistency and 
+command validation. 
 
-A key benefit of embracing eventual consistency is to remove the requirement for using distributed transactions that have a significant, negative impact on the scalability and performance of large systems as a consequence of the number and duration of locks that they must hold in the system. In this specific scenario, you could take steps to avoid the potential problem of accepting payment without seats being available in two ways:
+A key benefit of embracing eventual consistency is to remove the 
+requirement for using distributed transactions that have a significant, 
+negative impact on the scalability and performance of large systems as a 
+consequence of the number and duration of locks that they must hold in 
+the system. In this specific scenario, you could take steps to avoid the 
+potential problem of accepting payment without seats being available in 
+two ways: 
 
 * Change the system to re-check the seat availability just before
   completing the payment. This is not possible because of the way that
