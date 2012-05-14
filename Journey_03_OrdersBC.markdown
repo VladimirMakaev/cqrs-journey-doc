@@ -119,6 +119,16 @@ explore the seat ordering story.
 
 **Ordering UI mockups**
 
+These UI mockups helped the team in several ways:
+
+* Communicating the core team's vision for the system to the graphic
+  designers who are an independent team at a third-party.
+* Communicating the domain expert's knowledge to the developers.
+* Refining the definition of terms in the Ubiquitous Lanaguage.
+* Exploring "what if" type questions about alternative scenarios and
+  approaches.
+* Forming the basis for the system's suite of acceptance tests.
+
 ### Domain Definitions (Ubiquitous Language)
 
 The following list defines the key domain related terms that the team 

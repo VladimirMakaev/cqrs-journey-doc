@@ -1470,6 +1470,22 @@ messaging ordering and either modify the infrastructure to guarantee
 ordering or make the system more robust if messages do arrive out of 
 order. 
 
+## Involving the Domain Expert
+
+In [Chapter 4, Extending and Enhancing the Orders and Registrations 
+Bounded Contexts][j_chapter4] you saw how the domain expert was involved 
+with designing the acceptance tests and the benefits that involvement 
+brought to the project in terms of clarifying domain knowledge. 
+
+You should also ensure that the domain expert attends bug triage 
+meetings. The domain expert can help to clarify the expected behavior of 
+the system, and during the discussion may uncover new user stories. For 
+example, during the triage of a bug related to un-publishing a 
+conferences in the Conference Management bounded context, the domain 
+expert identified a requirement for providing the business customer with 
+the ability to add a redirect link for the un-published conference to a 
+new conference or alternate page. 
+
 [j_chapter3]:       Journey_03_OrdersBC.markdown
 [j_chapter4]:       Journey_04_ExtendingEnhancing.markdown
 [r_chapter9]:       Reference_09_Technologies.markdown

@@ -897,7 +897,161 @@ The Conference Management bounded context raises an event whenever the
 total number of available seats changes, the **SeatsAvailability** class 
 then handles the event when its handler invokes the **AddSeats** method. 
 
-# Testing 
+# Testing
+
+This section discusses some of the testing issues addressed during this stage of the journey.
+
+## Acceptance Tests and the Domain Expert
+
+In [Chapter 3, Orders and Registrations Bounded Context][j_chapter3], 
+you saw some of the UI mockups that the developers and the domain expert 
+worked on together to refine some of the functional requirements for the 
+system. One of the planned uses for these UI mockups was to form the 
+basis of a set of acceptance tests for the system. 
+
+The team had the following goals for their acceptance testing approach:
+
+* The acceptance tests should be clearly and unambiguously expressed in
+  a format that the somain expert could understand.
+* It should be possible to execute the acceptance tests automatically.
+
+To achieve these goals the team used [SpecFlow][specflow].
+
+### Defining Acceptance Tests Using SpecFlow Features
+
+The first step is to define the acceptance tests in the language used by 
+SpecFlow. These tests are saved as feature files in a Visual Studio 
+project. The following code sample from the 
+ConferenceConfiguration.feature file shows an acceptance test for the 
+Conference Management bounded context. 
+
+```
+Feature:  Conference configuration scenarios for creating and editing Conference settings
+    In order to create or update a Conference configuration
+    As a Business Customer
+    I want to be able to create or update a Conference and set its properties
+
+
+Background: 
+Given the Business Customer selected the Create Conference option
+
+Scenario: A new Conference is created with the required information
+Given this information entered into the Owner Information section
+| Owner         | Email                    |
+| Gregory Weber | gregoryweber@contoso.com |
+And this inforamtion entered into the Conference Information section
+| Name     | Description                 | Slug     | Start      | End        |
+| CQRS2012 | CQRS summit 2012 conference | cqrs2012 | 05/02/2012 | 05/12/2012 |
+When the Business Customer proceed to create the Conference
+Then following details will be shown for the created Conference
+| Owner         | Email                    | Name     | Description                 | Slug     | Start      | End        |
+| Gregory Weber | gregoryweber@contoso.com | CQRS2012 | CQRS summit 2012 conference | cqrs2012 | 05/02/2012 | 05/12/2012 |
+
+
+Scenario: An existing unpublished Conference is selected and published
+Given an existing conference with this information
+| Owner         | Email                    | Name      | Description                             | Slug      | Start      | End        |
+| Gregory Weber | gregoryweber@contoso.com | CQRS2012P | CQRS summit 2012 conference (Published) | cqrs2012p | 05/02/2012 | 05/12/2012 |
+When the Business Customer proceed to publish the Conference
+Then the state of the Conference change to Published
+
+```
+
+> **CarlosPersona:** I found these acceptance tests were a great way for
+> me to clarify my definitions of the expected behavior of the system to
+> the developers.
+
+For additional examples, see the **Conference.AcceptanceTests** solution 
+file included with the downloadable source. 
+
+### Making the Tests Executable
+
+An acceptance test in a feature file is not directly executable: you 
+must provide some plumbing code to bridge the gap between the SpecFlow 
+feature file and your application. 
+
+To examples of how this is implemented, see the classes in the **Steps** 
+folder in the **Conference.Specflow** project in the 
+**Conference.AcceptanceTests** solution. 
+
+These step implementations use two different approaches.
+
+The first approach runs the test by simulating a user of the system. It 
+does this by driving a web browser directly using the [WatiN][watin] 
+open source library. The advantages of this approach are that it 
+exercises the system in exactly the same way that a real user would 
+interact with the system and that it is simple implement initially. 
+However, these tests are fragile and will require a considerable 
+maintenance effort to keep up to date as the UI and system change. The 
+following code sample shows an example of this approach: 
+
+```Cs
+public class SeatAssignmentSteps
+{
+    [When(@"the Registrant assign these seats")]
+    public void WhenTheRegistrantAssignTheseSeats(Table table)
+    {
+        var browser = ScenarioContext.Current.Browser();
+        browser.ClickAndWait(Constants.UI.SeatAssignementId, Constants.UI.SeatAssignmentPage);
+
+        foreach (var row in table.Rows)
+        {
+            browser.SetRowCells(row["seat type"], row["first name"], row["last name"], row["email address"]);
+        }
+
+        browser.Click(Constants.UI.NextStepId);
+    }
+}
+```
+
+You can see how this approach simulates clicking on, and entering text 
+into, UI elements in the web browser. 
+
+The second approach is to implement the tests by interacting with the 
+MVC controller classes. In the longer-term, this approach will be less 
+fragile at the cost of an intially more complex implementation that 
+requires some knowledge of the internal implementation of the system. 
+The following code sample shows an example of this approach: 
+
+```
+[Given(@"the selected Order Items")]
+public void GivenTheSelectedOrderItems(Table table)
+{
+    conferenceInfo = ScenarioContext.Current.Get<ConferenceInfo>();
+    registrationController = RegistrationHelper.GetRegistrationController(conferenceInfo.Slug);
+
+    var orderViewModel = RegistrationHelper.GetModel<OrderViewModel>(registrationController.StartRegistration());
+    Assert.NotNull(orderViewModel);
+
+    registration = new RegisterToConference { ConferenceId = conferenceInfo.Id, OrderId = registrationController.ViewBag.OrderId };
+
+    foreach (var row in table.Rows)
+    {
+        var orderItemViewModel = orderViewModel.Items.FirstOrDefault(s => s.SeatType.Description == row["seat type"]);
+        Assert.NotNull(orderItemViewModel);
+        registration.Seats.Add(new SeatQuantity(orderItemViewModel.SeatType.Id, Int32.Parse(row["quantity"])));
+    }
+}
+```
+
+You can see how this approach uses the **RegistrationController** MVC class directly.
+
+> **Note:** In both of these code samples you can see how the values in
+> the attributes link the step implementation to the statements in the
+> related SpecFlow feature files.
+
+The team chose to implement these steps as [xUnit.net][xunit] tests. To 
+run these tests within Visual Studio, you can use any of the test 
+runners supported by xUnit.net such as ReSharper, CodeRush, and 
+TestDriven.NET. 
+
+> **JanaPersona:** Remember that these acceptance tests are not the only
+> tests performed on the system. The main solution includes
+> comprehensive unit and integration tests, and the test team also
+> performed exploratory and performance testing on the application.
+
+
+## Using Tests to Help Developers Understand Message Flows
 
 A common comment about implementations that use the CQRS pattern or that 
 use messaging extensively is the difficulty in understanding how all of 
@@ -993,6 +1147,7 @@ the **Order** instance. Now someone reading the test can see that when
 you send a **RegisterToConference** command you expect to see an 
 **OrderUpdated** event. 
 
+[j_chapter3]:       Journey_03_OrdersBC.markdown
 [j_chapter5]:       Journey_05_PaymentsBC.markdown
 [r_chapter4]:       Reference_04_DeepDive.markdown
 [appendix1]:        Appendix1_Running.markdown
@@ -1001,3 +1156,6 @@ you send a **RegisterToConference** command you expect to see an
 [fig2]:             images/Journey_04_Architecture.png?raw=true
 [fig3]:             images/Journey_04_SeatsAvailability.png?raw=true
 [modelvalidation]:  http://msdn.microsoft.com/en-us/library/dd410405(VS.98).aspx
+[specflow]:         http://www.specflow.org/
+[watin]:            http://watin.org
+[xUnit]:            http://xunit.codeplex.com/
