@@ -155,9 +155,9 @@ bounded contexts.
   Locator code to access her Orders, an Attendee can use a Record 
   Locator code to access his personalized conference agenda. 
 
-- **Registration.** A Registration associates an Attendee with a Seat 
-  in a confirmed Order. An Order may have one or more Registrations 
-  associated with it. 
+- **Seat Assignment.** A Seat Assignment associates an Attendee with a
+  Seat in a confirmed Order. An Order may have one or more Seat
+  Assignments associated with it. 
 
 - **Order.** When a Registrant interacts with the system, the system
   creates an Order to manage the Reservations, payment, and 
@@ -1098,12 +1098,16 @@ considered considered during the design phase.
 > robust, scalable messaging infrastructure.
 
 Figure 8 shows how messages, both commands and events, flow through the 
-system. Objects in the UI and domain objects use **CommandBus** and 
-**EventBus** instances to send **BrokeredMessage** messages to a topic 
-in the Windows Azure Service Bus. Command and event handler classes 
-register use a **SubscriptionReceiver** instance to receive messages 
-from subscriptions within a topic. The command and event handler classes 
-then deliver the message to a domain object. 
+system. MVC controllers in the UI and domain objects use **CommandBus** 
+and **EventBus** instances to send **BrokeredMessage** messages to one 
+of the two topics in the Windows Azure Service Bus. To receive messages, 
+the handler classes register with the **CommandProcessor** and 
+**EventProcessor** instances that retrieve messages from the topics by 
+using the **SubscriptionReceiver** class. The **CommandProcessor** class 
+determines which single handler should receive a command message, the 
+**EventProcessor** class determines which handlers should receive an 
+event message. The handler instances are responsible for invoking 
+methods on the domain objects. 
 
 > **Note:** A Windows Azure Service Bus topic can have multiple 
 > subscribers. The Windows Azure Service Bus delivers messages sent to a 
@@ -1114,24 +1118,25 @@ then deliver the message to a domain object.
 
 **Message flows through a Windows Azure Service Bus topic.**
 
-In the intial implementation, the **CommandBus** and **EventBus** 
+In the initial implementation, the **CommandBus** and **EventBus** 
 classes are very similar. The only difference between the **Send** 
 method and the **Publish** method is that the **Send** method expects 
 the message to be wrapped in an **Envelope** class. The **Envelope** 
 class enables the sender to specify a time delay for the message 
 delivery. 
 
-Because an event may be processed by multiple subscribers, the topic 
-that the **TopicSender** class sends events to can have multiple 
-subscriptions. Each subscription is associated with a particular handler 
-type so that events reach all of their subscribers. In the example shown 
+Events can have multiple recipients. In the example shown 
 in figure 8, the **ReservationRejected** event is sent to the 
 **RegistrationProcess**, the **WaitListProcess**, and one other 
-destination. 
+destination. The **EventProcessor** class identifies the list of
+handlers to receive the event by examining its list of registered
+handlers.
 
 A command has only one recipient. In figure 8, the 
 **MakeSeatReservation** is sent to the **SeatsAvaialbility** aggregate. 
-There is just a single handler registered for this subscription. 
+There is just a single handler registered for this subscription. The
+**CommandProcessor** class identifies the handler to receive the command
+by examining its list of registered handlers.
 
 There are a number of questions that arise from this implementation:
 
@@ -1152,13 +1157,22 @@ differences between Windows Azure Service Bus queues and topics. For an
 introduction to Windows Azure Service Bus, see [Technologies Used in the 
 Reference Implementation][r_chapter9] in the Reference Guide. 
 
-With the implementation shown in figure 8, the only way to ensure that a 
-command is delivered to a single recipient is to ensure that a topic has 
-only one subscription. After an instance of the **SubscriptionReceiver** 
-class has received a message, then it is deleted from the subscription. 
-There is no way in Windows Azure Service Bus to restrict a topic to a 
-single subscription, therefore the developers must be careful to create 
-just a single subscription on a topic that is delivering commands. 
+With the implementation shown in figure 8, two things are necessary to 
+ensure that a command message is handled by a single handler. First, 
+there should only be a single subscription to the 
+**conference/commands** topic in Windows Azure Service Bus; remember 
+that a Windows Azure Service Bus topic may have multiple subscribers. 
+Second, the **CommandProcessor** should invoke a single handler for each 
+command message that it receives. There is no way in Windows Azure
+Service Bus to restrict a topic to a single subscription, therefore the
+developers must be careful to create just a single subscription on a
+topic that is delivering commands. 
+
+> **BharathPersona:** A separate issue is to ensure that commands are
+> retrieved from the topic and processed by the handler only once. You
+> must ensure that either the command is idempotent, or that the system
+> guarantees to process the command only once. This issue will be
+> addressed in a later stage of the journey.
 
 > **Note:** It is possible to have multiple **SubscriptionReceiver** 
 > instances running, perhaps in multiple worker role instances. If 
@@ -1180,7 +1194,6 @@ how it receives a message from the topic subscription.
 
 ```Cs
 private SubscriptionClient client;
-private CancellationTokenSource cancellationSource;
 
 ...
 
@@ -1188,19 +1201,48 @@ private void ReceiveMessages(CancellationToken cancellationToken)
 {
     while (!cancellationToken.IsCancellationRequested)
     {
-        var message = this.client.Receive(TimeSpan.FromSeconds(10));
+        BrokeredMessage message = null;
 
-        if (message == null)
+        try
         {
-            Thread.Sleep(100);
-            continue;
+            message = this.receiveRetryPolicy.ExecuteAction<BrokeredMessage>(this.DoReceiveMessage);
+        }
+        catch (Exception e)
+        {
+            Trace.TraceError("An unrecoverable error occurred while trying to receive a new message:\r\n{0}", e);
+
+            throw;
         }
 
-        if (!cancellationToken.IsCancellationRequested)
+        try
+        {
+            if (message == null)
+            {
+                Thread.Sleep(100);
+                continue;
+            }
+
             this.MessageReceived(this, new BrokeredMessageEventArgs(message));
+        }
+        finally
+        {
+            if (message != null)
+            {
+                message.Dispose();
+            }
+        }
     }
 }
+
+protected virtual BrokeredMessage DoReceiveMessage()
+{
+    return this.client.Receive(TimeSpan.FromSeconds(10));
+}
 ```
+
+> **JanaPersona:** This code sample shows how the system uses the
+> [Transient Fault Handling Application Block][tfab] to reliably
+> retrieve messages from the topic.
 
 The Windows Azure Service Bus **SubscriptionClient** class uses a 
 peek/lock technique to retrieve a message from a subscription. In the 
@@ -1216,8 +1258,8 @@ client.
 > the **Complete** or **Abandon** methods when it processes the message.
 
 The following code sample from the **MessageProcessor** class shows how 
-to call the **Complete** method asynchronously using the 
-**BrokeredMessage** instance passed as a parameter to the 
+to call the **Complete** and **Abandon** methods using
+the **BrokeredMessage** instance passed as a parameter to the 
 **MessageReceived** event. 
 
 ```Cs
@@ -1225,29 +1267,44 @@ private void OnMessageReceived(object sender, BrokeredMessageEventArgs args)
 {
     var message = args.Message;
 
+    object payload;
     using (var stream = message.GetBody<Stream>())
+    using (var reader = new StreamReader(stream))
     {
-        var payload = this.serializer.Deserialize(stream);
-        
-		...
-		
-        try
-        {
-            ProcessMessage(payload);
-            message.Async(message.BeginComplete, message.EndComplete);
-        }
-        catch (Exception)
-        {
-            ...
-			
-            if (args.Message.DeliveryCount >= 5)
-                args.Message.Async(args.Message.BeginDeadLetter, args.Message.EndDeadLetter);
-        }
+        payload = this.serializer.Deserialize(reader);
     }
+
+    try
+    {
+        ...
+
+        ProcessMessage(payload);
+
+        ...
+    }
+    catch (Exception e)
+    {
+        if (args.Message.DeliveryCount > MaxProcessingRetries)
+        {
+            Trace.TraceWarning("An error occurred while processing a new message and will be dead-lettered:\r\n{0}", e);
+            message.SafeDeadLetter(e.Message, e.ToString());
+        }
+        else
+        {
+            Trace.TraceWarning("An error occurred while processing a new message and will be abandoned:\r\n{0}", e);
+            message.SafeAbandon();
+        }
+
+        return;
+    }
+
+    Trace.TraceInformation("The message has been processed and will be completed.");
+    message.SafeComplete();
 }
 ``` 
 > **Note:** This example uses an extension method to invoke the
-  **BeginComplete** and **EndComplete** methods.
+> **Complete** and **Abandon** methods of the **BrokeredMessage**
+> reliably using the [Transient Fault Handling Application Block][tfab].
 
 ### Why have separate **CommandBus** and **EventBus** classes if they are so similar?
 
@@ -1290,24 +1347,19 @@ for processing when the consumer restarts.
 
 ### What is the granularity of a topic and a subscription?
 
-As stated previously, a subscription should be associated with a single 
-event handler type, although an event may be handled by multiple handler 
-types. For example, the **ReservationRejected** event may be handled by 
-both the **RegistrationProcessHandler** and **WaitListProcessHandler** 
-handler classes because it must be delivered to the two workflows. 
+The current implementation uses a single topic (**conference/commands**) 
+for all commands within the system, and a single topic 
+(**conference/events**) for all events within the system. There is a 
+single subscription for each topic, and each subscription receives all 
+of the messages published to the topic. It is the responsibility of the 
+**CommandProcessor** and **EventProcessor** classes to deliver the 
+messages to the correct handlers. 
 
-Figure 8 suggests that Topic B is only reponsible for delivering 
-**ReservationRejected** events. However, it could also deliver 
-additional event types such as **ReservationAccepted** events. In this 
-scenario, the handler classes might need to include some additional 
-logic: if the **ReservationAccepted** event only needs to go to the 
-**RegistrationProcess** workflow, then the **WaitListProcess** would 
-need to discard any **ReservationAccepted** events that it retrieved 
-from its subscription. 
-
-In practice, it may be simpler to use one topic per event type. For 
-example a topic for **ReservationAccepted** events and another topic for 
-**ReservationRejected** events. 
+In the future, the team will examine the options of using multiple 
+topics, for example using a separate command topic for each bounded 
+context, and multiple subscriptions, for example one per event type. 
+These alternatives may simplify the code and facilitate scaling the 
+application across multiple worker roles. 
 
 > **ArchitectPersona:** There are no costs associated with having 
 > multiple topics, subscriptions, or queues. Windows Azure Service Bus 
@@ -1502,6 +1554,7 @@ reservation.
 [sbperf]:         http://msdn.microsoft.com/en-us/library/hh528527.aspx
 [jsonnet]:        http://james.newtonking.com/pages/json-net.aspx
 [sagapaper]:      http://www.amundsen.com/downloads/sagas.pdf
+[tfab]:           http://msdn.microsoft.com/en-us/library/hh680934(PandP.50).aspx
 
 [fig1]:           images/OrderMockup.png?raw=true
 [fig2]:           images/Journey_03_Aggregates_01.png?raw=true
