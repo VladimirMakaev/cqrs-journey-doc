@@ -14,8 +14,8 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.2 r9819"
-   sodipodi:docname="Reference_09_ViewRepository.svg"
-   inkscape:export-filename="D:\CQRS Resources\Source Code\cqrs-journey-doc\images\Reference_09_ViewRepository.png"
+   sodipodi:docname="Journey_04_ViewRepository.svg"
+   inkscape:export-filename="D:\CQRS Resources\Source Code\cqrs-journey-doc\images\Journey_04_ViewRepository.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90">
   <title
@@ -82,7 +82,7 @@
        sodipodi:cy="304.71008"
        sodipodi:rx="109.8461"
        sodipodi:ry="56.427792"
-       d="m 939.71085,304.71008 a 109.8461,56.427792 0 1 1 -219.6922,0 109.8461,56.427792 0 1 1 219.6922,0 z"
+       d="m 939.71085,304.71008 c 0,31.16421 -49.17978,56.42779 -109.8461,56.42779 -60.66633,0 -109.8461,-25.26358 -109.8461,-56.42779 0,-31.16421 49.17977,-56.42779 109.8461,-56.42779 60.66632,0 109.8461,25.26358 109.8461,56.42779 z"
        transform="translate(0,308.2677)" />
     <path
        sodipodi:type="arc"
@@ -92,7 +92,7 @@
        sodipodi:cy="157.62163"
        sodipodi:rx="125.2697"
        sodipodi:ry="27.461525"
-       d="m 321.26222,157.62163 a 125.2697,27.461525 0 1 1 -250.539396,0 125.2697,27.461525 0 1 1 250.539396,0 z"
+       d="m 321.26222,157.62163 c 0,15.16658 -56.08515,27.46152 -125.2697,27.46152 -69.18454,0 -125.269696,-12.29494 -125.269696,-27.46152 0,-15.16658 56.085156,-27.46153 125.269696,-27.46153 69.18455,0 125.2697,12.29495 125.2697,27.46153 z"
        transform="translate(0,308.2677)" />
     <path
        transform="translate(-1.1285483,617.11582)"
@@ -103,7 +103,7 @@
        sodipodi:cy="157.62163"
        sodipodi:rx="125.2697"
        sodipodi:ry="27.461525"
-       d="m 321.26222,157.62163 a 125.2697,27.461525 0 1 1 -250.539396,0 125.2697,27.461525 0 1 1 250.539396,0 z" />
+       d="m 321.26222,157.62163 c 0,15.16658 -56.08515,27.46152 -125.2697,27.46152 -69.18454,0 -125.269696,-12.29494 -125.269696,-27.46152 0,-15.16658 56.085156,-27.46153 125.269696,-27.46153 69.18455,0 125.2697,12.29495 125.2697,27.46153 z" />
     <rect
        style="color:#000000;fill:none;stroke:#000000;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
        id="rect3012"
@@ -238,7 +238,9 @@
        x="112.85558"
        y="452.92709"
        id="text3141"
-       sodipodi:linespacing="125%"><tspan
+       sodipodi:linespacing="125%"
+       inkscape:export-xdpi="90"
+       inkscape:export-ydpi="90"><tspan
          sodipodi:role="line"
          id="tspan3143"
          x="112.85558"

@@ -177,7 +177,7 @@ the same database as the normalized tables that the write model uses.
 > storing the read-side data, see the 
 > **SeatAssignmentsViewModelGenerator** class.
 
-### Storing De-normalized Views in a Database
+### Storing Denormalized Views in a Database
 
 One common option for storing the read-side data is to use a set of 
 relational database tables to hold the de-normalized views. The 
@@ -186,7 +186,12 @@ benefit in storing normalized data because this will require complex
 queries to construct the data for the client. This implies that goals 
 for the read-side should be to keep the queries as simple as possible, 
 and to structure the tables in the database in such a way that they can 
-be read quickly and efficiently. 
+be read quickly and efficiently.
+
+> **BharathPersona:** Application scalability and a responsive UI are
+> often explicit goals when people choose to implement the CQRS pattern.
+> Optimizing the read-side to provide fast responses with low
+> resource utilization to queries will help you to achieve these goals.
 
 An important area for consideration is the interface whereby a client 
 such as an MVC controller action submits a query to the read-side model. 
@@ -299,9 +304,11 @@ Possible objections to this approach include:
   that support features such as paging, filtering, and sorting in the
   UI.
   
-The team decided to adopt the second approach. For examples, see the 
-**ConferenceDao** and **OrderDao** classes in the **Registration** 
-project. 
+The team decided to adopt the second approach because of the clarity it 
+brings to the code; in this context they did not see any significant 
+advantage in the flexibility of the approach that uses the 
+**IQueryable** interface. For examples, see the **ConferenceDao** and 
+**OrderDao** classes in the **Registration** project. 
 
 ## Making Information about Partially Fulfilled Orders Available to the Read-side
 
@@ -437,20 +444,16 @@ displays the order information to the registrant.
 
 ```Cs
 [HttpPost]
-public ActionResult Find(string conferenceCode, string email, string accessCode)
+public ActionResult Find(string email, string accessCode)
 {
-	var repo = this.repositoryFactory();
-	using (repo as IDisposable)
-	{
-		var order = repo.Query<DraftOrder>()
-			.Where(o => o.RegistrantEmail == email && o.AccessCode == accessCode)
-			.FirstOrDefault();
+    var orderId = orderDao.LocateOrder(email, accessCode);
 
-		if (order == null)
-			return RedirectToAction("Find", new { conferenceCode = conferenceCode });
+    if (!orderId.HasValue)
+    {
+        return RedirectToAction("Find", new { conferenceCode = this.ConferenceCode });
+    }
 
-		return RedirectToAction("Display", new { conferenceCode = conferenceCode, orderId = order.OrderId });
-	}
+    return RedirectToAction("Display", new { conferenceCode = this.ConferenceCode, orderId = orderId.Value });
 }
 ```
 
