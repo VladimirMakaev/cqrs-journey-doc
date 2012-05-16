@@ -1067,7 +1067,14 @@ could pay for seats only to find that they are no longer available, in
 addition to being very unlikely to happen in practice (a timeout 
 occuring while a registrant is paying for the very last seats), also has 
 the least impact on the system because it doesn't require a long-term 
-reservation (lock) on any seats. 
+reservation (lock) on any seats.
+
+> **MarkusPersona:** To further minimize the chance of this scenario
+> occuring, the team decided to increase the buffer time for releasing
+> reserved seats from five minutes to fourteen minutes. The orginal
+> value of five minutes was chosen to account for any possible clock
+> skew between the servers so that reservations were not released before
+> the fifteen minute countdown timer in the UI expired.
 
 In more general terms, you could re-state the two options above as:
 
