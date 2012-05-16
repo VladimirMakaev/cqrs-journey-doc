@@ -173,6 +173,9 @@ in the **Infrastructure Projects\Azure** solution folder. You can copy the
 **Settings.Template.xml** in this solution folder to create a 
 **Settings.xml** file. 
 
+> **Note:** You only need to create the **Settings.xml** file if you
+> plan to use either the **Debug** or **Release** build configurations.
+
 If you plan to use the Windows Azure Service Bus and the Windows Azure 
 table storage based event store then you must edit the **Settings.xml** 
 file in the **Infrastructure Projects\Azure** solution folder to include 
