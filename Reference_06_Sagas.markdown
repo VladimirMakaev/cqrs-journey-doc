@@ -1,7 +1,7 @@
 ## Chapter 6
 # Coordinating Workflows and Sagas (Chapter Title)
 
-# Choosing a Name
+# Clarifying the Terminology
 
 The term **Saga** is commonly used in discussions of CQRS to refer to a 
 piece of code that coordinates and routes messages between bounded 
