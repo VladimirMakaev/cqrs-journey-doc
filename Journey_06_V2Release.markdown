@@ -90,7 +90,14 @@ This alternative passes all the message types (both old and new) through
 to the domain where each aggregate must be able to handle both the old 
 and new messages. This may be an appropriate strategy in the short-term, 
 but will eventually cause the domain-model to become polluted with 
-legacy event handlers. 
+legacy event handlers.
+
+This is the option the team selected for the V2 release because it 
+involved the minimum amount of code changes. 
+
+> **JanaPersona:** Dealing with both old and new events in the
+> aggregates now does not prevent you from later moving to the first
+> option and using a mapping/filtering mechanism in the infrastructure.
 
 ## Honor Message Idempotency
 
@@ -99,7 +106,7 @@ more robust. In the V1 release, in some scenarios, it is possible that
 some messages might be processed more than once and result in incorrect 
 or inconsistent data in the system. 
 
-> **JanaPerson:** Message idempotency is important in any system that
+> **JanaPersona:** Message idempotency is important in any system that
 > use messaging, not just systems that implement the CQRS pattern or use
 > event sourcing.
 
@@ -189,6 +196,42 @@ A possible risk with the third option is that the set of events that are
 needed may change in the future. If we don't save events now, they are 
 lost for good. 
 
+The purpose of persisting the events is to enable them to be played back 
+when the the Orders and Registrations bounded context needs the 
+information about current seat quotas in order to calculate the number 
+of remaining seats. To calculate these numbers consistently, you must 
+always play the events back in the same order. There are several choices 
+for this ordering: 
+
+* The order the events were sent by the Conference Management bounded
+  context.
+* The order the events were received by the Orders and Registrations
+  bounded context.
+* The order the events were processed by the Orders and Registrations
+  bounded context.
+
+Most of the time these orderings will be the same. There is no correct 
+order, you just need to choose one to be consistent. Therefore, the 
+choice is determined by simplicity: in this case the simplest approach 
+is to persist the events in the order that the handler in the Orders and 
+Registrations bounded context receives them. 
+
+> **MarkusPersona:** This choice does not typically arise with event
+> sourcing. Aggregates create events in a fixed order, and that is the
+> order that the system uses to persist the events. In this scenario,
+> the integration events are not created by a single aggregate.
+
+There is a similar issue with saving timestamps for these events. 
+Timestamps may be useful in the future if these is a requirement to look 
+at number of remaining seats at a particular time. The choice here is 
+whether you should create a timestamp when the event is created in the 
+Conference Management bounded context or when it is received by the 
+Orders and Registrations bounded context. It's possible that the Orders 
+and Registrations bounded context is offline for some reason when the 
+Conference Management bounded context creates an event, therefore the 
+team decided to create the timestamp when the Conference Management 
+bounded context publishes the event. 
+
 ## Message Ordering
 
 The acceptance tests that the team created and ran to verify the V1 
@@ -273,7 +316,390 @@ Describe significant features of the implementation with references to the code.
 
 Provide significantly more detail for those BCs that use CQRS/ES. Significantly less detail for more "traditional" implementations such as CRUD. 
 
-## De-duplicating Messages
+## Adding Support for Zero-cost Orders
+
+There were three specific goals in making this change, all of which are
+related:
+
+1. Modify the **RegistrationProcess** workflow and related aggregates to
+   handle orders with a zero cost.
+2. Modify the navigation in the UI to skip the payment step when the
+   total cost of the order is zero.
+3. Ensure that the system functions correctly after the upgrade to V2
+   with the old events as well as the new.
+
+### Changes to the RegistrationProcess Workflow
+
+Previously, the **RegistrationProcess** workflow sent a **ConfirmOrderPayment** command after it received notification from the UI that the registrant had completed the payment. Now, if there is a zero-cost order, the UI sends a **ConfirmOrder** command directly to the **Order** aggregate. If the order requires a payment, the **RegistrationProcess** workflow sends a **ConfirmOrder** command to the **Order** aggregate after it receives notification of a successful payment from the UI.
+
+> **JanaPersona:** Notice that the name of the command has changed from
+> **ConfirmOrderPayment** to **ConfirmOrder**. This reflects the fact
+> that the order doesn't need to know anything about the payment, all it
+> needs to know is that the order is confirmed. Similarly, there is a
+> new **OrderConfirmed** event that is now used in place of the old
+> **OrderPaymentConfirmed** event.
+
+When the **Order** aggregate receives the **ConfirmOrder** command it raises an **OrderConfirmed** event. In addition to being peristed, this event is also handled by the following objects:
+
+* The **OrderViewModelGenerator** class where it updates the sate of the
+  order in the read-model.
+* The **SeatAssignments** aggregate where it initializes a new
+  **SeatAssignments** instance.
+* The **RegistrationProcess** workflow where it triggers a command to
+  commit the seat reservation.
+
+### Changes to the UI
+
+The main change in the UI is in the **RegistrationController** MVC 
+controller class in the **SpecifyRegistrantAndPaymentDetails** action. 
+Previously, this action method returned an 
+**InitiateRegistrationWithThirdPartyProcessorPayment** action result; 
+now, if the new **IsFreeOfCharge** property of the **Order** object is 
+true, it returns a **CompleteRegistrationWithoutPayment** action result, 
+otherwise it returns a 
+**CompleteRegistrationWithThirdPartyProcessorPayment** action result. 
+
+```Cs
+[HttpPost]
+public ActionResult SpecifyRegistrantAndPaymentDetails(AssignRegistrantDetails command, string paymentType, int orderVersion)
+{
+    ...
+
+    var pricedOrder = this.orderDao.FindPricedOrder(orderId);
+    if (pricedOrder.IsFreeOfCharge)
+    {
+        return CompleteRegistrationWithoutPayment(command, orderId);
+    }
+
+    switch (paymentType)
+    {
+        case ThirdPartyProcessorPayment:
+
+            return CompleteRegistrationWithThirdPartyProcessorPayment(command, pricedOrder, orderVersion);
+
+        case InvoicePayment:
+            break;
+
+        default:
+            break;
+    }
+
+    ...
+}
+```
+
+The **CompleteRegistrationWithThirdPartyProcessorPayment** redirects the 
+user to the **ThirdPartyProcessorPayment** action and the 
+**CompleteRegistrationWithoutPayment** method redirects the user 
+directly to the **ThankYou** action. 
+
+### Data Migration
+
+The Conference Management bounded context stores order information from 
+the Orders and Registrations bounded context in the **PricedOrders** 
+table in its SQL database. Previously, the Conference Management bounded 
+context received the **OrderPaymentConfirmed** event; now it receives 
+the **OrderConfirmed** event that contains an additional 
+**IsFreeOfCharge** property. This becomes a new column in the SQL 
+database. 
+
+> **Markus:** We didn't need to modify the existing data in this table
+> during the migration because the default value for a boolean is
+> **false**. All of the existing entries were created before the system
+> supported zero-cost orders.
+
+During the migration, any in-flight **ConfirmOrderPayment** commands 
+could be lost because they are no longer handled by the **Order** 
+aggregate. You should verify that none of these commands are currently 
+on the command bus. 
+
+> **PoePersona:** We need to plan carefully how to deploy the V2 release
+> so that we can be sure that all the existing, in-flight
+> **ConfirmOrderPayment** commands are processed by a worker role
+> instance running the V1 release
+
+The system persists the state of **RegistrationProcess** workflow 
+instances to a SQL database table. There are no changes to the schema of 
+this table. The only change you will see after the migration is an 
+additional value in the **StateValue** column. This reflects the 
+additional **PaymentConfirmationReceived** vlaue in the **ProcessState** 
+enumeration in the **RegistrationProcess** class as shown in the 
+following code sample: 
+
+```Cs
+public enum ProcessState
+{
+    NotStarted = 0,
+    AwaitingReservationConfirmation = 1,
+    ReservationConfirmationReceived = 2,
+    PaymentConfirmationReceived = 3,
+}
+```
+
+In the V1 release, the events that the event sourcing system persisted 
+for the **Order** aggregate included the **OrderPaymentConfirmed** 
+event. Therefore, the event store contains instances of this event type. 
+In the V2 release, the **OrderPaymentConfirmed** is replaced with the 
+**OrderConfirmed** event. 
+
+The team decided for the V2 release not to introduce mapping and 
+filtering events at the infrastructure level when events are 
+deserialized. This means that the handlers must understand both the old 
+and new events when the system replays these events from the event 
+store. The following code sample shows this in the 
+**SeatAssignmentsHandler** class: 
+
+```Cs
+static SeatAssignmentsHandler()
+{
+    Mapper.CreateMap<OrderPaymentConfirmed, OrderConfirmed>();
+}
+
+public SeatAssignmentsHandler(IEventSourcedRepository<Order> ordersRepo, IEventSourcedRepository<SeatAssignments> assignmentsRepo)
+{
+    this.ordersRepo = ordersRepo;
+    this.assignmentsRepo = assignmentsRepo;
+}
+
+public void Handle(OrderPaymentConfirmed @event)
+{
+    this.Handle(Mapper.Map<OrderConfirmed>(@event));
+}
+
+public void Handle(OrderConfirmed @event)
+{
+    var order = this.ordersRepo.Get(@event.SourceId);
+    var assignments = order.CreateSeatAssignments();
+    assignmentsRepo.Save(assignments);
+}
+```
+
+You can also see the same technique in use in the 
+**OrderViewModelGenerator** class. 
+
+The approach is slightly different in the **Order** class because this 
+is one of the events that is persisted to the event store. The following 
+code sample shows part of the **protected** constructor in the **Order** 
+class: 
+
+```Cs
+protected Order(Guid id)
+    : base(id)
+{
+    ...
+    base.Handles<OrderPaymentConfirmed>(e => this.OnOrderConfirmed(Mapper.Map<OrderConfirmed>(e)));
+    base.Handles<OrderConfirmed>(this.OnOrderConfirmed);
+    ...
+}
+```
+
+> **JanaPersona:** Handling the old events in this way was
+> straightforward for this scenario because the only change was to the
+> name of the event. It would be more complicated if the properties of
+> the event changed as well. In the future, Contoso will consider doing
+> the mapping in the infrastructure to avoid polluting the domain model
+> with legacy events.
+
+## Displaying Remaining Seats in the UI
+
+There were three specific goals in making this change, all of which are
+related:
+
+1. Modify the system to include information about the
+   number of remaining seats of each seat type in the conference
+   read-model.
+2. Modify the UI to display the number of remaining seats of each seat
+   type.
+3. Ensure that the system functions correctly after the upgrade to V2.
+
+### Adding Information about Remaining Seat Quantities to the Read-Model
+
+The information that the system needs to be able to display the number 
+of remaining seats comes from two places. 
+
+* The Conference Management bounded context raises the **SeatCreated**
+  and **SeatUpdated** whenever the Business Customer creates new seat
+  types or modifies seat quotas. 
+* The **SeatsAvailability** aggregate in the Orders and Registrations
+  bounded context raises the **SeatsReserved**,
+  **SeatsReservationCancelled**, and **AvailableSeatsChanged** while a
+  registrant is creating an order.
+  
+> **Note:** The **ConferenceViewModelGenerator** class does not use the
+> **SeatCreated** and **SeatUpdated**
+
+The **ConferenceViewModelGenerator** class in the Orders and 
+Registrations bounded context now handles these events and uses them to 
+calculate and store the information about seat type quantities in the 
+read-model. The following code sample shows the relevant handlers in the 
+**ConferenceViewModelGenerator** class: 
+
+```Cs
+public void Handle(AvailableSeatsChanged @event)
+{
+	this.UpdateAvailableQuantity(@event, @event.Seats);
+}
+
+public void Handle(SeatsReserved @event)
+{
+	this.UpdateAvailableQuantity(@event, @event.AvailableSeatsChanged);
+}
+
+public void Handle(SeatsReservationCancelled @event)
+{
+	this.UpdateAvailableQuantity(@event, @event.AvailableSeatsChanged);
+}
+
+private void UpdateAvailableQuantity(IVersionedEvent @event, IEnumerable<SeatQuantity> seats)
+{
+	using (var repository = this.contextFactory.Invoke())
+	{
+		var dto = repository.Set<Conference>().Include(x => x.Seats).FirstOrDefault(x => x.Id == @event.SourceId);
+		if (dto != null)
+		{
+			if (@event.Version > dto.SeatsAvailabilityVersion)
+			{
+				foreach (var seat in seats)
+				{
+					var seatDto = dto.Seats.FirstOrDefault(x => x.Id == seat.SeatType);
+					if (seatDto != null)
+					{
+						seatDto.AvailableQuantity += seat.Quantity;
+					}
+					else
+					{
+						Trace.TraceError("Failed to locate Seat Type read model being updated with id {0}.", seat.SeatType);
+					}
+				}
+
+				dto.SeatsAvailabilityVersion = @event.Version;
+
+				repository.Save(dto);
+			}
+			else
+			{
+				Trace.TraceWarning ...
+			}
+		}
+		else
+		{
+			Trace.TraceError ...
+		}
+	}
+}
+```
+
+The **UpdateAvailableQuantity** method compares the version on the event 
+to current version of the read-model to detect possible duplicate 
+messages. 
+
+**MarkusPersona:** This check only detects duplicate messages, not out of sequence messages.
+
+### Modifying the UI to Display Remaining Seat Quantities
+
+Now, when the UI queries the conference read-model for a list of seat 
+types, the list includes the currently available number of seats. The 
+following code samples shows how the **RegistrationController** MVC 
+controller uses the **AvailableQuantity** of the **SeatType** class: 
+
+```Cs
+private OrderViewModel CreateViewModel()
+{
+	var seatTypes = this.ConferenceDao.GetPublishedSeatTypes(this.ConferenceAlias.Id);
+	var viewModel =
+		new OrderViewModel
+		{
+			ConferenceId = this.ConferenceAlias.Id,
+			ConferenceCode = this.ConferenceAlias.Code,
+			ConferenceName = this.ConferenceAlias.Name,
+			Items =
+				seatTypes.Select(
+					s =>
+						new OrderItemViewModel
+						{
+							SeatType = s,
+							OrderItem = new DraftOrderItem(s.Id, 0),
+							AvailableQuantityForOrder = s.AvailableQuantity,
+							MaxSelectionQuantity = Math.Min(s.AvailableQuantity, 20)
+						}).ToList(),
+		};
+
+	return viewModel;
+}
+```
+
+### Data Migration
+
+The SQL table that holds the conference read-model data now has a new 
+column to hold the version number that is used to check for duplicate 
+events, and the SQL table that holds the seat type read-model data now 
+has a new column to hold the available quantity of seats. 
+
+As part of the data migration it is necessary to replay all of the 
+events in the event store for each of the **SeatsAvailability** 
+aggregates in order to correctly calculate the available quantities. 
+
+## De-duplicating Command Messages
+
+The system currently uses the Windows Azure Service Bus to transport messages. When the **SubscriptionReceiver** class creates a topic, it configures the topic to detect duplicate messages as shown in the following code sample:
+
+```Cs
+private void CreateTopicIfNotExists()
+{
+    var topicDescription =
+        new TopicDescription(this.topic)
+        {
+            RequiresDuplicateDetection = true,
+            DuplicateDetectionHistoryTimeWindow = TimeSpan.FromHours(1)
+        };
+    try
+    {
+        this.namespaceManager.CreateTopic(topicDescription);
+    }
+    catch (MessagingEntityAlreadyExistsException) { }
+}
+```
+
+However, for the duplicate detection to work you must ensure that every message has a unique id. The following code sample shows the **MarkSeatsAsReserved** command:
+
+```Cs
+public class MarkSeatsAsReserved : ICommand
+{
+    public MarkSeatsAsReserved()
+    {
+        this.Id = Guid.NewGuid();
+        this.Seats = new List<SeatQuantity>();
+    }
+
+    public Guid Id { get; set; }
+
+    public Guid OrderId { get; set; }
+
+    public List<SeatQuantity> Seats { get; set; }
+
+    public DateTime Expiration { get; set; }
+}
+```
+
+The **BuildMessage** method in the **CommandBus** class uses the command Id to create a unique message Id that the Windows Azure Service Bus can use to detect duplicates:
+
+```Cs
+private BrokeredMessage BuildMessage(Envelope<ICommand> command)
+{
+    var stream = new MemoryStream();
+    ...
+
+    var message = new BrokeredMessage(stream, true);
+    if (!default(Guid).Equals(command.Body.Id))
+    {
+        message.MessageId = command.Body.Id.ToString();
+    }
+
+    ...
+
+    return message;
+}
+```
 
 # Testing 
 
