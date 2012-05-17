@@ -1046,7 +1046,7 @@ aggregate on the event bus, all as part of a transaction.
 
 **CarlosPersona:** The team later discovered an issue with this when 
 they tried to use Windows Azure Service Bus as the messaging 
-infrastructure. Windows Azure Service Bus does support distributed 
+infrastructure. Windows Azure Service Bus does not support distributed 
 transactions with databases. For a discussion of this issue, see 
 [Preparing for the V1 Release][j_chapter5] later in this guide. 
 
@@ -1247,11 +1247,15 @@ protected virtual BrokeredMessage DoReceiveMessage()
 The Windows Azure Service Bus **SubscriptionClient** class uses a 
 peek/lock technique to retrieve a message from a subscription. In the 
 code sample, the **Receive** method locks the message on the 
-subscription. If the client calls the **Complete** method, the message 
-is deleted from the subscription. Otherwise, if the client calls the 
-**Abandon** method or a timeout occurs, the lock on the message is 
-released and it can be received again by the same, or a different, 
-client. 
+subscription. While the message is locked, it cannot be seen by any 
+other client. The **Receive** method then tries to process the message. 
+If the client processes the message successfully, it calls the 
+**Complete** method; this deletes the message from the subscription. 
+Otherwise, if the client fails to process the message successfully, it 
+calls the **Abandon** method; this releases the lock on the message and 
+it can be received again by the same, or a different, client. If the 
+client does not call either the **Complete** or **Abandon** methods 
+within a fixed time, this also releases the lock on the message. 
 
 > **Note:** The **MessageReceived** event passes a reference to the 
 > **SubscriptionReceiver** instance so that the handler can call either 
@@ -1470,8 +1474,8 @@ public void when_reserving_more_seats_than_total_then_fails()
 }
 ```
 
-This two tests work together to verify the behavior of the 
-**SeatsAvailability** attribute. In the first test, the 
+These two tests work together to verify the behavior of the 
+**SeatsAvailability** aggregate. In the first test, the 
 expected behavior is that the **MakeReservation** method succeeds and 
 does not throw an exception. In the second test, the expected behavior 
 is for the **MakeReservation** method to throw an exception because 
