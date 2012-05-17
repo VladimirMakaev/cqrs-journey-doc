@@ -136,7 +136,12 @@ of two web sites and three bounded contexts. The infrastructure includes
 SQL databases, an event store, and messaging infrastructure. 
 
 The first table that follows figure 1 lists all of the messages that the 
-elements shown on the diagram exchange with each other. 
+artefacts (aggregates, MVC contollers, read-model generators, and data
+access objects) shown on the diagram exchange with each other. 
+
+> **Note:** For reasons of clarity, the handlers (such as the
+> **OrderCommandHandler** class) that deliver the messages to the domain
+> objects are not shown.
 
 ![Figure 1][fig1]
 
@@ -187,8 +192,7 @@ elements shown on the diagram exchange with each other.
       <td align="left">MVC Controller</td>
       <td align="left">CompleteThirdPartyProcessorPayment<br/>
                        CancelThirdPartyProcessorPayment</td>
-      <td align="left">ThirdPartyProcessorPaymentDetails<br/>
-                       InvoiceProcessorPaymentDetails</td>
+      <td align="left">ThirdPartyProcessorPaymentDetails</td>
     </tr>
 
     <tr>
@@ -971,9 +975,8 @@ classes to better describe the process.
 
 The diagram shows how the Orders and Registrations bounded context, the 
 Payments bounded context, and the external payments service all interact 
-with each other. Registrants can also opt to pay by invoice instead of 
-using a third-party payments processing service, however for reason of 
-simplicity, the diagram does not show this option. 
+with each other. In the future, registrants will also be able to pay by
+invoice instead of using a third-party payments processing service. 
 
 The Registrant makes a payment as a part of the overall flow in the UI 
 as shown in figure 3. The **PaymentController** controller class does 
