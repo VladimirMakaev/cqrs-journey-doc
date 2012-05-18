@@ -189,6 +189,10 @@ Service Bus namespace.
 > for the event store. You must use a real Windows Azure storage
 > account.
 
+> **Note:** In the V2 release, there is an additional entry in the 
+> **Settings.Template.xml** file to specify the Windows Azure table
+> storage table name for event log used to store the integration events.
+
 # Building the RI
 
 Open the **Conference** Visual Studio solution file in the code 
@@ -381,7 +385,14 @@ scenario is not supported.
 The problem arises because the two build configurations only share some 
 data sources, so after the switch there are inconsistencies in the data. 
 You should re-create all the data sources if you switch from one build 
-configuration to another. 
+configuration to another.
+
+## Moving fom V1 to V2
+
+If you already have Windows Azure Service Bus topics and subscriptions 
+that were created by V1, you must drop them in the Windows Azure 
+management console. They will be recreated automatically with the new 
+definitions. 
 
 ## Other Known Issues
 

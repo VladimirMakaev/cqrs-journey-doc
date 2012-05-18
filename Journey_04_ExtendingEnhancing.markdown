@@ -1158,6 +1158,8 @@ you send a **RegisterToConference** command you expect to see an
 [fig1]:             images/Journey_04_ViewRepository.png?raw=true
 [fig2]:             images/Journey_04_Architecture.png?raw=true
 [fig3]:             images/Journey_04_SeatsAvailability.png?raw=true
+
+[repourl]:          https://github.com/mspnp/cqrs-journey-code
 [modelvalidation]:  http://msdn.microsoft.com/en-us/library/dd410405(VS.98).aspx
 [specflow]:         http://www.specflow.org/
 [watin]:            http://watin.org

@@ -5,7 +5,14 @@
 
 # Upgrading the Code and Migrating the Data 
 
-The top-level goal for this stage in the journey is to learn about how to upgrade a system that includes bounded contexts that implement the CQRS pattern and event sourcing. The user stories that the team implemented in this stage of the journey involve both changes to the code and changes to the data: some existing data schemas changed and new data schemas were added. In addition to upgrading the system and migrating the data, the team planned to do the upgrade and migration with no downtime for the live system running in Windows Azure.
+The top-level goal for this stage in the journey is to learn about how 
+to upgrade a system that includes bounded contexts that implement the 
+CQRS pattern and event sourcing. The user stories that the team 
+implemented in this stage of the journey involve both changes to the 
+code and changes to the data: some existing data schemas changed and new 
+data schemas were added. In addition to upgrading the system and 
+migrating the data, the team planned to do the upgrade and migration 
+with no downtime for the live system running in Windows Azure. 
 
 ## Working Definitions for this Chapter 
 
@@ -13,28 +20,47 @@ Outline any working definitions that were adopted for this chapter.
 
 ## User Stories 
 
-The team implemented the following user stories during this phase of the project.
+The team implemented the following user stories during this phase of the 
+project. 
 
 ### No Downtime Upgrade
 
-The goal for the V2 release is to perform the upgrade, including any necessary data migration, without any downtime for the system. If this is not feasible with the current implementation, then the downtime should be minimized, and the system should be modified to support zero downtime upgrades in the future (starting with the V3 release).
+The goal for the V2 release is to perform the upgrade, including any 
+necessary data migration, without any downtime for the system. If this 
+is not feasible with the current implementation, then the downtime 
+should be minimized, and the system should be modified to support zero 
+downtime upgrades in the future (starting with the V3 release). 
 
 > **BethPersona:** Ensuring that we can perform no downtime upgrades is
 > crucial to our credibility in the marketplace.
 
 ### Display Remaining Seat Quantities
 
-Currently, when a registrant creates an order, there is no indication of the number of seats remaining for each seat type. The UI should display this information when the registrant is selecting seats for purchase.
+Currently, when a registrant creates an order, there is no indication of 
+the number of seats remaining for each seat type. The UI should display 
+this information when the registrant is selecting seats for purchase. 
 
 ### Handle Zero-cost Seats
 
-Currently, when a registrant selects seats that have a zero-cost, the UI flow still takes the registrant to the payments page even though there is nothing to pay. The system should detect when there is nothing to pay and adjust the flow to take the registrant directly to the conformation page for the order.
+Currently, when a registrant selects seats that have a zero-cost, the UI 
+flow still takes the registrant to the payments page even though there 
+is nothing to pay. The system should detect when there is nothing to pay 
+and adjust the flow to take the registrant directly to the conformation 
+page for the order. 
 
 ### Support for Discounts to Seat Prices
 
-Registrants should be able to obtain discounts through the use of **Promotional Codes**. A registrant can enter a **Promotional Code** during the ordering process and the system will adjust the total cost of the order appropriately.
+Registrants should be able to obtain discounts through the use of 
+**Promotional Codes**. A registrant can enter a **Promotional Code** 
+during the ordering process and the system will adjust the total cost of 
+the order appropriately. 
 
-The discount associated with an individual **Promotional Code** can be from 1% to 100%. Each **Promotional Code** has an associated quota that determines how many seats are available at the dicounted price (this may be unlimited) and a scope that determines which seat type the code is associated with; this can also apply to all seat types rather than just one.
+The discount associated with an individual **Promotional Code** can be 
+from 1% to 100%. Each **Promotional Code** has an associated quota that 
+determines how many seats are available at the dicounted price (this may 
+be unlimited) and a scope that determines which seat type the code is 
+associated with; this can also apply to all seat types rather than just 
+one. 
 
 <div style="margin-left:20px;margin-right:20px;">
   <span style="background-color:yellow;">
@@ -49,13 +75,9 @@ What are the key architectural features? Server-side, UI, multi-tier, cloud, etc
 
 # Patterns and Concepts 
 
-* What are the primary patterns or approaches that have been adopted for this bounded context? (CQRS, CQRS/ES, CRUD, ...) 
-
-* What were the motivations for adopting these patterns or approaches for this bounded context? 
-
-* What trade-offs did we evaluate? 
-
-* What alternatives did we consider?
+During this stage of the journey, most of the key challenges addressed 
+by the team related to how best to perform the migration from V1 to V2. 
+This section describes some of those challenges. 
 
 ## Handling Changes to Events Definitions
 
@@ -99,7 +121,7 @@ involved the minimum amount of code changes.
 > aggregates now does not prevent you from later moving to the first
 > option and using a mapping/filtering mechanism in the infrastructure.
 
-## Honor Message Idempotency
+## Honoring Message Idempotency
 
 One of the key issues to address in the V2 release is to make the system 
 more robust. In the V1 release, in some scenarios, it is possible that 
@@ -169,7 +191,7 @@ that only contains the latest value of the seat type description, as a
 result replaying a set of events elsewhere may regenerate another 
 read-model projection that contains incorrect seat type descriptions. 
 
-The team considered the following four options:
+The team considered the following five options:
 
 * Save all of the events in the originating bounded context (the
   Conference Management bounded context) and use a shared event store
@@ -183,6 +205,8 @@ The team considered the following four options:
   selecting only those that it needs.
 * Let the command handler in the view model generator save diferent
   events, in effect using event sourcing for this view model.
+* Store all command and event messages from all bounded contexts in a 
+  message log.
 
 The first option is not always viable. In this particular case it would 
 work because the same team is implementing both bounded contexts and the 
@@ -194,7 +218,13 @@ infrastructure making it easy to use a shared event store.
 
 A possible risk with the third option is that the set of events that are 
 needed may change in the future. If we don't save events now, they are 
-lost for good. 
+lost for good.
+
+Although the fifth option stores all the commands and events, some of
+which you might never need to refer to again, it does provide a complete
+log of everything that happens in the system. This could be useful for
+troubleshooting, and also helps you to meet requirements that have not
+yet been identified.
 
 The purpose of persisting the events is to enable them to be played back 
 when the the Orders and Registrations bounded context needs the 
@@ -312,9 +342,15 @@ command messages.
 
 # Implementation Details 
 
-Describe significant features of the implementation with references to the code. Highlight any specific technologies (including any relevant trade-offs and alternatives). 
+This section describes some of the significant implementation details in 
+this stage of the journey. You may find it useful to have a copy of the 
+code so you can follow along. You can download a copy of the code from 
+the repository on github: [mspnp/cqrs-journey-code][repourl]. 
 
-Provide significantly more detail for those BCs that use CQRS/ES. Significantly less detail for more "traditional" implementations such as CRUD. 
+> **Note:** Do not expect the code samples to exactly match the code in
+> the reference implementation. This chapter describes a step in the
+> CQRS journey, the implementation may well change as we learn more and
+> refactor the code.
 
 ## Adding Support for Zero-cost Orders
 
@@ -593,7 +629,8 @@ The **UpdateAvailableQuantity** method compares the version on the event
 to current version of the read-model to detect possible duplicate 
 messages. 
 
-**MarkusPersona:** This check only detects duplicate messages, not out of sequence messages.
+> **MarkusPersona:** This check only detects duplicate messages, not out
+> of sequence messages.
 
 ### Modifying the UI to Display Remaining Seat Quantities
 
@@ -641,7 +678,10 @@ aggregates in order to correctly calculate the available quantities.
 
 ## De-duplicating Command Messages
 
-The system currently uses the Windows Azure Service Bus to transport messages. When the **SubscriptionReceiver** class creates a topic, it configures the topic to detect duplicate messages as shown in the following code sample:
+The system currently uses the Windows Azure Service Bus to transport 
+messages. When the **SubscriptionReceiver** class creates a topic, it 
+configures the topic to detect duplicate messages as shown in the 
+following code sample: 
 
 ```Cs
 private void CreateTopicIfNotExists()
@@ -660,7 +700,9 @@ private void CreateTopicIfNotExists()
 }
 ```
 
-However, for the duplicate detection to work you must ensure that every message has a unique id. The following code sample shows the **MarkSeatsAsReserved** command:
+However, for the duplicate detection to work you must ensure that every 
+message has a unique id. The following code sample shows the 
+**MarkSeatsAsReserved** command: 
 
 ```Cs
 public class MarkSeatsAsReserved : ICommand
@@ -681,7 +723,9 @@ public class MarkSeatsAsReserved : ICommand
 }
 ```
 
-The **BuildMessage** method in the **CommandBus** class uses the command Id to create a unique message Id that the Windows Azure Service Bus can use to detect duplicates:
+The **BuildMessage** method in the **CommandBus** class uses the command 
+Id to create a unique message Id that the Windows Azure Service Bus can 
+use to detect duplicates: 
 
 ```Cs
 private BrokeredMessage BuildMessage(Envelope<ICommand> command)
@@ -700,7 +744,286 @@ private BrokeredMessage BuildMessage(Envelope<ICommand> command)
     return message;
 }
 ```
+## Guaranteeing Message Ordering
+
+The team decided to use Windows Azure Service Bus Message Sessions to 
+guarantee message ordering in the system. To do this they implemented 
+the **SessionSubscriptionReceiver** that can be used as an alternative 
+to the existing **SubscriptionReceiver** class. The following code 
+sample from the **SessionSubscriptionReceiver** class shows how to use 
+sessions to receive messages: 
+
+```Cs
+private void CreateSubscriptionIfNotExists()
+{
+    try
+    {
+        this.namespaceManager.CreateSubscription(new SubscriptionDescription(this.topic, this.subscription) { RequiresSession = true });
+    }
+    catch (MessagingEntityAlreadyExistsException) { }
+}
+
+private void ReceiveMessages(CancellationToken cancellationToken)
+{
+	while (!cancellationToken.IsCancellationRequested)
+	{
+		MessageSession session;
+		try
+		{
+			session = this.receiveRetryPolicy.ExecuteAction<MessageSession>(this.DoAcceptMessageSession);
+		}
+		catch (Exception e)
+		{
+			...
+		}
+
+		if (session == null)
+		{
+			Thread.Sleep(100);
+			continue;
+		}
+
+
+		while (!cancellationToken.IsCancellationRequested)
+		{
+			BrokeredMessage message = null;
+			try
+			{
+				try
+				{
+					message = this.receiveRetryPolicy.ExecuteAction(() => session.Receive(TimeSpan.Zero));
+				}
+				catch (Exception e)
+				{
+					...
+				}
+
+				if (message == null)
+				{
+					// If we have no more messages for this session, exit and try another.
+					break;
+				}
+
+				this.MessageReceived(this, new BrokeredMessageEventArgs(message));
+			}
+			finally
+			{
+				if (message != null)
+				{
+					message.Dispose();
+				}
+			}
+		}
+
+		this.receiveRetryPolicy.ExecuteAction(() => session.Close());
+	}
+}
+
+private MessageSession DoAcceptMessageSession()
+{
+	try
+	{
+		return this.client.AcceptMessageSession(TimeSpan.FromSeconds(45));
+	}
+	catch (TimeoutException)
+	{
+		return null;
+	}
+}
+```
+
+> **MarkusPersona:** You may find it useful to compare this version of
+> the **ReceiveMessages** that uses message sessions with the original
+> version in the **SubscriptionReceiver** class.
+
+To be able to use message sessions when you receive a message, you must 
+ensure that when you send a message you include a session id. The system 
+uses the source id from the event as the session id as shown in the 
+following code sample from the **BuildMessage** method in the 
+**EventBus** class. 
+
+```Cs
+var message = new BrokeredMessage(stream, true);
+message.SessionId = @event.SourceId.ToString();
+```
+
+In this way, you can guarantee that all of the messages from an 
+individual source will be received in the correct order. 
+
+> **PoePersona:** The definition of the Windows Azure Service Bus topics
+> and subscriptions has changed in the V2 release to support message
+> sessions so you must drop the existing definitions in the Windows
+> Azure management console. The application will recreate them with the
+> correct definitions for V2.
+
+For additional information about message ordering and Windows Azure
+Service Bus, see [Windows Azure Queues and Windows Azure Service Bus
+Queues - Compared and Contrasted][queues].
+
+## Persisting Events from the Conference Management Bounded Context
+
+The team decided to create a message log of all the commands and events 
+that are sent. This will enable the Orders and Registrations bounded 
+context to query this log for the events from the Conference Management 
+bounded context that it requires to build its read-models. 
+
+> **BharathPersona:** This message log ensures that no messages are
+> lost, so that in the future it will be possible to meet additional
+> requirements.
+
+### Adding Additional Metadata to the Messages
+
+The system now persists all messages to the message log. To make it 
+easier to query the message log for specific commands or events, the 
+system now adds more metadata to each message. Previously, the only 
+metadata was the event type; now, the event metadata includes the event 
+type type, namespace, assembly, and path. The system adds the metadata 
+to the events in the **EventBus** class and to the commands in the 
+**CommandBus** class. 
+
+### Capturing and Persisting Messages to the Message Log
+
+The system uses an additional subscription to the 
+**conference/commands** and **conference/events** topics in Windows 
+Azure Service Bus to receive copies of every message in the system. It 
+then appends the message to a Windows Azure table storage table. The 
+following code sample shows the entity that the 
+**AzureMessageLogWriter** class uses to save the message to the table: 
+
+```Cs
+public class MessageLogEntity : TableServiceEntity
+{
+    public string Kind { get; set; }
+    public string CorrelationId { get; set; }
+    public string MessageId { get; set; }
+    public string SourceId { get; set; }
+    public string AssemblyName { get; set; }
+    public string Namespace { get; set; }
+    public string FullName { get; set; }
+    public string TypeName { get; set; }
+    public string Payload { get; set; }
+}
+```
+The **Kind** property specifies whether the message is either a command 
+or an event. The **MessageId** and **CorrelationId** properties are set 
+by the messaging infrastructure. The remaining properties are set from 
+the message metadata. 
+
+The following code sample shows the defintion of the partition and row 
+keys for these messages: 
+
+```Cs
+PartitionKey = message.EnqueuedTimeUtc.ToString("yyyMM"),
+RowKey = message.EnqueuedTimeUtc.Ticks.ToString("D20") + "_" + message.MessageId
+```
+
+Notice how the rowkey preserves the order in which the messages were 
+originally sent and adds on the message id to guarantee uniqueness just 
+in case two messages were enqueued at exactly the same time. 
+
+### Data Migration
+
+When Contoso migrates the system from V1 to V2, it will use the message 
+log to rebuild the conference and priced-order read-models in the Orders 
+and Registrations bounded context. 
+
+> **BharathPersona:** Contoso can use the message log whenever it needs
+> to rebuild the read-models that are built from events that are not
+> associated with an aggregate such as the integration events from the
+> Conference Management bounded context.
+
+The conference read-model holds information about conferences and 
+contains information from the **ConferenceCreated**, 
+**ConferenceUpdated**, **ConferencePublished**, 
+**ConferenceUnpublished**, **SeatCreated**, and **SeatUpdated** events 
+that come from the Conference Management bounded context. 
+
+The priced-order read model holds information from the **SeatCreated** 
+and **SeatUpdated** events that come from the Conference Management 
+bounded context. 
+
+However, in V1 these event messages were not persisted, so the 
+read-models cannot be re-populated in V2. To work around this problem, 
+the team implemented a data migration utility that generates events to 
+store in the message log that contain the missing data. For example, 
+after the migration to V2, the message log does not contain any 
+**ConferenceCreated** events, so the migration utility finds this 
+information in the SQL database used by the Conference Management 
+bounded context and creates the missing events. You can see how this is 
+done in the **GeneratePastEventLogMessagesForConferenceManagement** in 
+the **Migrator** class in the **MigrationToV2** project. 
+
+> **MarkusPersona:** You can see in this class that Contoso also copies
+> all of the existing event sourced events into the message log.
+
+The **RegenerateViewModels** in the **Migrator** class shown below 
+rebuilds the read-models. It retrieves all the events from the message 
+log by invoking the **Query** method, and then uses the 
+**ConferenceViewModelGenerator** and **PricedOrderViewModelUpdater** 
+classes to handle the messages. 
+
+```Cs
+internal void RegenerateViewModels(AzureEventLogReader logReader, string dbConnectionString)
+{
+    var commandBus = new NullCommandBus();
+
+    Database.SetInitializer<ConferenceRegistrationDbContext>(null);
+
+    var handlers = new List<IEventHandler>();
+    handlers.Add(new ConferenceViewModelGenerator(() => new ConferenceRegistrationDbContext(dbConnectionString), commandBus));
+    handlers.Add(new PricedOrderViewModelUpdater(() => new ConferenceRegistrationDbContext(dbConnectionString)));
+
+    using (var context = new ConferenceRegistrationMigrationDbContext(dbConnectionString))
+    {
+        context.UpdateTables();
+    }
+
+    try
+    {
+        var dispatcher = new MessageDispatcher(handlers);
+        var events = logReader.Query(new QueryCriteria { });
+
+        dispatcher.DispatchMessages(events);
+    }
+    catch
+    {
+        using (var context = new ConferenceRegistrationMigrationDbContext(dbConnectionString))
+        {
+            context.RollbackTablesMigration();
+        }
+
+        throw;
+    }
+}
+```
+
+> **JanaPersona:** They query may not be fast because it will retrieve
+> entities from multiple partitions.
+
+Notice how this method uses a **NullCommandBus** instance to swallow any 
+commands from the **ConferenceViewModelGenerator** instance because we 
+are only rebuilding the read-model here. 
+
+Previously, the **PricedOrderViewModelGenerator** used the 
+**ConferenceDao** class to obtain information about seats; now, it is 
+autonomous and handles the **SeatCreated** and **SeatUpdated** events 
+directly to maintain this information. As part of the migration, this 
+information must be added to the read-model. In the previous code 
+sample, the **PricedOrderViewModelUpdater** class only handles the 
+**SeatCreated** and **SeatUpdated** events and adds the missing 
+information to the priced-order read-model. 
+
+## One Subscription Per Event Handler
+
+Problem to solve is: if one event handler throws, the entire message is retried, which involves potentially calling twice other event handlers for the same message, which forces stricter idempotency unnecessarily.
+
+With single subscription per handler, we'd isolate the handling for each, and azure would take care of the fan-out to all interested handlers for the events.
 
 # Testing 
 
 Describe any special considerations that relate to testing for this bounded context.  
+
+
+[messagesessions]:   http://msdn.microsoft.com/en-us/library/microsoft.servicebus.messaging.messagesession.aspx
+[repourl]:           https://github.com/mspnp/cqrs-journey-code
+[queues]:            http://msdn.microsoft.com/en-us/library/windowsazure/hh767287(v=vs.103).aspx

@@ -913,9 +913,15 @@ locally.
 
 # Implementation Details 
 
-Describe significant features of the implementation with references to the code. Highlight any specific technologies (including any relevant trade-offs and alternatives). 
+This section describes some of the significant implementation details in 
+this stage of the journey. You may find it useful to have a copy of the 
+code so you can follow along. You can download a copy of the code from 
+the repository on github: [mspnp/cqrs-journey-code][repourl]. 
 
-Provide significantly more detail for those BCs that use CQRS/ES. Significantly less detail for more "traditional" implementations such as CRUD. 
+> **Note:** Do not expect the code samples to exactly match the code in
+> the reference implementation. This chapter describes a step in the
+> CQRS journey, the implementation may well change as we learn more and
+> refactor the code.
 
 ## The Conference Management Bounded Context
 
@@ -1615,3 +1621,4 @@ new conference or alternate page.
 [unity]:            http://msdn.microsoft.com/en-us/library/ff647202.aspx
 [appfabsdk]:        http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=27421
 [gregyoungqa]:      http://goodenoughsoftware.net/2012/05/08/qa/
+[repourl]:          https://github.com/mspnp/cqrs-journey-code
