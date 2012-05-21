@@ -1039,16 +1039,37 @@ With single subscription per handler, we'd isolate the handling for each, and az
 
 See Issues #398 and #394
 
-## Migrating the Data from V1 to V2
+## Migrating from V1 to V2
 
-This section summarizes the data migration from V1 to V2. Some of these 
-steps were discussed previously in relation to a specific change or 
-enhancement to the application. 
+Migrating from V1 to V2 requires you to update the deployed application
+code and migrate the data. These are the required steps:
+
+1. Deploy a minimal version of the application that indicates to users
+   that the application is undergoing planned maintenance to the Windows
+   Azure staging environment.
+2. Swap the running application in the Windows Azure production
+   environment with the minimal application in the staging environment
+   and then stop the application in the staging environment.
+3. Run the migration program to migrate the data (see below).
+4. Deploy the updated version of the application to the Windows Azure
+   staging environment.
+5. Swap the running minimal application in the Windows Azure production
+   environment with the updated application in the staging environment
+   and then stop the minimal application in the staging environment.
+
+> **PoePersona:** Because of the changes to the event store, it is not
+> possible to perform a no downtime upgrade from V1 to V2. However, the
+> changes that the team have made will ensure that the migration from V2
+> to V3 will be possible with no downtime.
+
+The following sections summarize the data migration from V1 to V2. Some 
+of these steps were discussed previously in relation to a specific 
+change or enhancement to the application. 
 
 One of the changes the team introduced for V2 is to keep a copy of all 
 command and event messages in a message log in order to future-proof the 
 application by capturing everything that might be used in the future. 
-The migration process must take into account this new feature. 
+The migration process takes this new feature into account. 
 
 ### Generating Past Log Messages for the Conference Management Bounded Context
 

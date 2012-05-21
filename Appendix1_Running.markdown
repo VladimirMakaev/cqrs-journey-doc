@@ -339,6 +339,22 @@ infrastructure and event store or the Windows Azure Service Bus
 messaging infrastructure and Windows Azure table storage based event
 store. 
 
+# Migrating from the V1 to the V2 Release
+
+If you have been running the V1 release and have data that you would 
+like to preserve as you migrate to the V2 release, the following steps 
+describe how you can perform this migration in Windows Azure. 
+
+1. Stop the the running V1 deployment in Windows Azure.
+2. Run the migration utility **MigrationToV2** in the **Conference**
+   solution.
+3. Deploy the V2 release to Windows Azure.
+
+The **MigrationToV2** utility uses the same **Settings.xml** file as the 
+other projects in the **Conference** solution in addition to its own 
+**Application.config** file to specify the Windows Azure storage account 
+and SQL connection strings. 
+
 # Known Issues
 
 ## Runtime Activation Error in Debug Mode
