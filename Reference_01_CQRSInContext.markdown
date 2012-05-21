@@ -27,8 +27,8 @@ approach known as Domain-driven Design (DDD). There are a few important
 points to note about our use of this terminology: 
 
 - There are other approaches that tackle the same problems that DDD 
-   tackles, with similar concepts, but with their own specific
-   terminologies.  
+  tackles, with similar concepts, but with their own specific
+  terminologies.  
 
 - We are using the DDD terminology because many CQRS practitioners also 
   use this terminology, and it is used in much of the existing CQRS 
@@ -369,21 +369,34 @@ problems. As such, if you decide to use the DDD approach, you may find
 that the CQRS pattern is a very natural fit for some of the bounded 
 contexts that you identify within your system, and that it is relatively 
 straightforward to move from your domain model to the physical 
-implementation of the CQRS pattern. 
+implementation of the CQRS pattern.
+
+Some experts consider the DDD approach to be an essential pre-requisite
+for implementing the CQRS pattern.
+
+> It is essential to write the whole Domain Model, ubiquitous language,
+> including use cases, domain and user intention specifications, and to
+> identify both context boundaries and autonomous components. In my
+> experience, those are absolutely mandatory.  
+Jose Migual (Customer Advisory Council)
 
 However, many people can point to projects where they have seen real 
 benefits from implementing the CQRS pattern, but where they have not 
 used the DDD approach for the domain analysis and model design. 
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	Look for a suitable quote to use for the previous paragraph.
-  </span>
-</div>
+> It is something of a tradition to connect both paradigms because using
+> DDD can lead naturally into CQRS, and also the available literature
+> about CQRS tends to use DDD terminology. However, DDD is mostly
+> appropriate for very large and complex projects. On the otherhand,
+> there is no reason why a small and simple project can not benefit from
+> CQRS. For example, a relatively small project that would otherwise use
+> distributed transactions could be split into a "write side" and a
+> "read side" with CQRS to avoid the distributed transaction, but it may
+> be simple enough that applying DDD would be overkill.  
+> Alberto (Customer Advisory Council)
 
 In summary, the DDD approach is not a pre-requisite for implementing the 
-CQRS pattern, but they do often go together. 
+CQRS pattern, but in practice they do often go together. 
 
 
 

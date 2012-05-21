@@ -364,6 +364,34 @@ that is more adaptable in the face of changing business requirements.
 This results in lower development and maintenance costs in the 
 longer-term. 
 
+## Facilitates Building Task-based UIs
+
+When you implement the CQRS pattern, you use commands (often from the 
+UI), to initiate operations in the domain. These commands are typically 
+closely tied to the domain operations and the ubiquitous language. For 
+example, "book two seats on conference X." You can design your UI to 
+send these commands to the domain instead of intiating CRUD-style 
+operations. This makes it easier to design intuitive, task-based UIs.
+
+## Barriers to Adopting the CQRS Pattern
+
+Although you can list a number of clear benefits to adopting the CQRS 
+pattern in specific scenarios, you may find it difficult in practice to 
+convice your stakeholders that these benefits warrant the additional 
+complexity of the solution. 
+
+> From my experience, the most important disadvantage of using CQRS/ES
+> and DDD is the "fear of change". This model is not similar to the
+> famous 3-tier layered architecture that many of our stakeholders
+> are used to.  
+> Pawel (Customer Advisory Council)
+
+> The learning curve of the developers team is steep. Usually they
+> thinks in terms of relational database development. From my
+> experience, the lack of business, and therefore domain, rules and
+> specifications became the biggest hurdle.  
+> Jose Miguel (Customer Advisory Council)
+
 # When Should I Use CQRS?
 Although we have outlined some of the reasons why you might decide to 
 apply the CQRS pattern to some of the bounded contexts in your system, 

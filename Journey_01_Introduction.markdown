@@ -3,22 +3,43 @@
 
 *The starting point: Where have we come from, what are we taking, and who is coming with us?*
 
+This chapter introduces a fictitious company named Contoso. It describes 
+Contoso's plans to launch the Contoso Conference Management System; a 
+new, online service that will enable other companies or individuals to 
+organize and manage their own conferences and events. The chapter 
+describes, at a high-level some of the functional and non-functional 
+requirements of the new system, and why Contoso wants to implement parts 
+of the new system using the CQRS pattern and event sourcing. As with any 
+company considering this process, there are many issues to consider and 
+challenges to be met, particularly because this is the first time 
+Contoso has used both the CQRS pattern and event sourcing. The chapters 
+that follow this one show, step-by-step, how Contoso architected and 
+built its conference management application. 
+
+The chapter also also introduces a panel of fictional experts to comment 
+on the development efforts. 
+
 # The Contoso Corporation 
 
-* Size of organization 
-* Goals of organization 
-* Business constraints 
-* Key business differentiators 
-* In-house design/development skills 
-* Use of DDD 
+Contoso is a startup ISV company of approximately 20 employees that 
+specializes in developing solutions using Microsoft® technologies. The 
+developers at Contoso are knowledgeable about various Microsoft products 
+and technologies, including the .NET Framework, ASP.NET MVC, and Windows 
+Azure. Some of the developers have previous experience of using the 
+Domain-Driven Design (DDD) approach, but none have them have used the 
+CQRS pattern previously. 
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	To do - expand this section.
-  </span>
-</div> 
-
+The Conference Management System application is one of the first 
+innovative online services that Contoso wants to take to market. As a 
+startup, Contoso wants to develop and launch these services with a 
+minimal investment in hardware and IT personnel. Contoso wants to be 
+quick to market in order to start growing market share, and cannot 
+afford the time to implement all of the planned functionality in the 
+first releases. Therefore, it is important that the architecture it 
+adopts can easily accommodate changes and enhancements with minimal 
+impact on existing users of the system. Contoso has chosen to deploy the 
+application on Windows Azure in order to take advantage of its ability 
+to scale applications as demand grows. 
 
 # Who Is Coming With Us On the Journey? 
 
@@ -95,20 +116,16 @@ the specialists whose interests align with yours.
 
 # The Conference Management System 
 
-* Key features 
-* Sample user stories 
-* Non-functional requirements 
-* Related systems and integration requirements 
-* Greenfield/brownfield development 
+This section describes the Contoso Conference Management System as it 
+was envisaged at the start of the journey. The team has not used the 
+CQRS pattern before, therefore the system that is delivered at the end 
+of our journey may not match this description exactly because: 
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	To do - some of these bullets need expanding below.
-  </span>
-</div> 
+* What we learn as we go may impact on what we plan to deliver.
+* It is more difficult to estimate what can be achieved in the available
+  time.
 
-## Overview of the System
+  ## Overview of the System
 
 Contoso plans to build an online conference management system that will 
 enable Contoso's customers to plan and manage conferences that are held 
@@ -244,6 +261,14 @@ flexibility breaks down into a number of related aspects:
 > **BharathPersona:** There is some debate in the CQRS community 
 > about whether, in practice, you can use different development teams 
 > for different parts of the CQRS pattern implementation. 
+
+# Beginning the Journey
+
+The next chapter is the start of our CQRS journey. It provides more 
+information about the Contoso Conference Management System and describes 
+some of the high-level parts of the system. Subsequent chapters describe 
+the stages of journey as Contoso implements the Conference Management 
+System. 
 
 [personabharath]: images/PersonaBharath.png?raw=true
 [personajana]:    images/PersonaJana.png?raw=true

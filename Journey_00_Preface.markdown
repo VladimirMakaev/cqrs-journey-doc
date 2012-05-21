@@ -5,12 +5,33 @@ _Why are we embarking on this journey?_
 
 # What Are the Motivations for Creating This Guidance Now?
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	To do - needs to hook readers in to the guide.
-  </span>
-</div> 
+The **Command Query Responsibility Segregation (CQRS)** pattern and 
+**Event Sourcing** are currently generating a great deal of interest 
+from developers and architects who are designing and building 
+large-scale, distributed systems. There are conference sessions, blogs, 
+articles, and frameworks all dedicated to the CQRS pattern and to event 
+sourcing, and all explaining how they can help you to improve the 
+maintainability, testability, scalability, and flexibility of your 
+systems. 
+
+However, like anything new, it takes some time before a pattern or 
+approach or methodology is fully understood and consistently defined by 
+the community and has useful, practical guidance to help you to apply or
+implement it. 
+
+This guidance is designed to help you get started with the CQRS pattern 
+and event sourcing. It is not **the** guide, but **a** guide that 
+describes the experiences of a development team in implementing the CQRS 
+pattern and event sourcing in a "real-world" application. The 
+development team did not work in isolation; they actively sought input 
+from industry experts and from a wider group of advisors to ensure that 
+the guidance is both detailed and practical. 
+
+The CQRS pattern and event sourcing are not simple solutions to the 
+problems associated with large-scale, distributed systems. By providing 
+you with both a working application and written guidance, we hope to get 
+you launched well on the way up the learning curve and prepared to 
+embark on your own CQRS journey. 
 
 # How is This Guidance Structured?
 
