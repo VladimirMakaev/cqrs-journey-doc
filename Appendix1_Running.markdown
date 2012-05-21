@@ -387,13 +387,6 @@ data sources, so after the switch there are inconsistencies in the data.
 You should re-create all the data sources if you switch from one build 
 configuration to another.
 
-## Moving fom V1 to V2
-
-If you already have Windows Azure Service Bus topics and subscriptions 
-that were created by V1, you must drop them in the Windows Azure 
-management console. They will be recreated automatically with the new 
-definitions. 
-
 ## Other Known Issues
 
 * No security features have been implemented yet. 

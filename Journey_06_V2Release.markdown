@@ -679,9 +679,10 @@ aggregates in order to correctly calculate the available quantities.
 ## De-duplicating Command Messages
 
 The system currently uses the Windows Azure Service Bus to transport 
-messages. When the **SubscriptionReceiver** class creates a topic, it 
-configures the topic to detect duplicate messages as shown in the 
-following code sample: 
+messages. When the system initializes the Windows Azure Service Bus from 
+the start-up code in the **ConferenceProcessor** class, it configures 
+the topics to detect duplicate messages as shown in the following code 
+sample from the **ServiceBusConfig** class: 
 
 ```Cs
 private void CreateTopicIfNotExists()
@@ -690,7 +691,7 @@ private void CreateTopicIfNotExists()
         new TopicDescription(this.topic)
         {
             RequiresDuplicateDetection = true,
-            DuplicateDetectionHistoryTimeWindow = TimeSpan.FromHours(1)
+            DuplicateDetectionHistoryTimeWindow = topic.DuplicateDetectionHistoryTimeWindow,
         };
     try
     {
@@ -699,6 +700,10 @@ private void CreateTopicIfNotExists()
     catch (MessagingEntityAlreadyExistsException) { }
 }
 ```
+> **Note:** You can configure the
+> **DuplicateDetectionHistoryTimeWindow** in the **Settings.xml** file
+> by adding an attribute to the **Topic** element. The default value is
+> one hour.
 
 However, for the duplicate detection to work you must ensure that every 
 message has a unique id. The following code sample shows the 
@@ -747,22 +752,31 @@ private BrokeredMessage BuildMessage(Envelope<ICommand> command)
 ## Guaranteeing Message Ordering
 
 The team decided to use Windows Azure Service Bus Message Sessions to 
-guarantee message ordering in the system. To do this they implemented 
-the **SessionSubscriptionReceiver** that can be used as an alternative 
-to the existing **SubscriptionReceiver** class. The following code 
-sample from the **SessionSubscriptionReceiver** class shows how to use 
-sessions to receive messages: 
+guarantee message ordering in the system.
+
+The system configures the Windows Azure Service Bus topics and subscriptions from the **OnStart** method in the **ConferenceProcessor** class. The configuration in the **Settings.xml** file specifies whether a particular subscription should use sessions. The following code sample from the **ServiceBusConfig** class shows how the system creates and configures subscriptions.
 
 ```Cs
-private void CreateSubscriptionIfNotExists()
+private void CreateSubscriptionIfNotExists(NamespaceManager namespaceManager, TopicSettings topic, SubscriptionSettings subscription)
 {
+    var subscriptionDescription =
+        new SubscriptionDescription(topic.Path, subscription.Name)
+        {
+            RequiresSession = subscription.RequiresSession
+        };
+
     try
     {
-        this.namespaceManager.CreateSubscription(new SubscriptionDescription(this.topic, this.subscription) { RequiresSession = true });
+        namespaceManager.CreateSubscription(subscriptionDescription);
     }
     catch (MessagingEntityAlreadyExistsException) { }
 }
+```
 
+The following code sample from the **SessionSubscriptionReceiver** class 
+shows how to use sessions to receive messages: 
+
+```Cs
 private void ReceiveMessages(CancellationToken cancellationToken)
 {
 	while (!cancellationToken.IsCancellationRequested)
@@ -850,11 +864,13 @@ message.SessionId = @event.SourceId.ToString();
 In this way, you can guarantee that all of the messages from an 
 individual source will be received in the correct order. 
 
-> **PoePersona:** The definition of the Windows Azure Service Bus topics
-> and subscriptions has changed in the V2 release to support message
-> sessions so you must drop the existing definitions in the Windows
-> Azure management console. The application will recreate them with the
-> correct definitions for V2.
+> **PoePersona:** In the V2 release, the team changed the way that the
+> system creates the Windows Azure Service Bus topics and subscriptions.
+> Previously, the **SubscriptionReceiver** class created them if they
+> didn't exist already. Now, the system creates them when the
+> application starts up using configuration data. This happens early in
+> the start-up process to avoid the risk of losing messages if one is
+> sent to a topic before a the system initializes the subscriptions. 
 
 For additional information about message ordering and Windows Azure
 Service Bus, see [Windows Azure Queues and Windows Azure Service Bus
@@ -956,9 +972,9 @@ the **Migrator** class in the **MigrationToV2** project.
 > **MarkusPersona:** You can see in this class that Contoso also copies
 > all of the existing event sourced events into the message log.
 
-The **RegenerateViewModels** in the **Migrator** class shown below 
-rebuilds the read-models. It retrieves all the events from the message 
-log by invoking the **Query** method, and then uses the 
+The **RegenerateViewModels** method in the **Migrator** class shown
+below rebuilds the read-models. It retrieves all the events from the
+message log by invoking the **Query** method, and then uses the 
 **ConferenceViewModelGenerator** and **PricedOrderViewModelUpdater** 
 classes to handle the messages. 
 
@@ -1015,9 +1031,64 @@ information to the priced-order read-model.
 
 ## One Subscription Per Event Handler
 
+
+
 Problem to solve is: if one event handler throws, the entire message is retried, which involves potentially calling twice other event handlers for the same message, which forces stricter idempotency unnecessarily.
 
 With single subscription per handler, we'd isolate the handling for each, and azure would take care of the fan-out to all interested handlers for the events.
+
+See Issues #398 and #394
+
+## Migrating the Data from V1 to V2
+
+This section summarizes the data migration from V1 to V2. Some of these 
+steps were discussed previously in relation to a specific change or 
+enhancement to the application. 
+
+One of the changes the team introduced for V2 is to keep a copy of all 
+command and event messages in a message log in order to future-proof the 
+application by capturing everything that might be used in the future. 
+The migration process must take into account this new feature. 
+
+### Generating Past Log Messages for the Conference Management Bounded Context
+
+Part of the migration process is to recreate, where possible, the 
+messages that the V1 release discarded after processing and then add 
+them to the message log. In the V1 release, all of the integration 
+events sent from the Conference Management bounded context to the Orders 
+and Registrations bounded context were lost in this way. The system 
+cannot recreate all of the lost events, but it can create events that 
+represent the state of system at the time of the migration. 
+
+For more information, see the section "Persisting Events from the 
+Conference Management Bounded Context" earlier in this chapter. 
+
+### Migrating the Event Sourcing Events
+
+In the V2 release, the event store now stores additional metadata for 
+each event in order to facilitate querying for for events. The migration 
+process copies all of the events from the existing event store to a new 
+event store with the new schema. 
+
+> **JanaPersona:** The original events are not updated in any way and
+> are treated as being immutable.
+
+At the same time, the system adds a copy of all of these events to the 
+message log that was introduced in the V2 release. 
+
+For more information, see the 
+**MigrateEventSourcedAndGeneratePastEventLogs** in the **Migrator** 
+class in the **MigrationToV2** project. 
+
+### Rebuilding the Read-Models
+
+The V2 release includes several changes to the definitions of the 
+read-models in the Orders and Registrations bounded context. The 
+**MigrationToV2** project rebuilds the Conference read-model and 
+Priced-order read-model in the Orders and Registrations bounded context. 
+
+For more information, see the section "Persisting Events from the 
+Conference Management Bounded Context" earlier in this chapter. 
 
 # Testing 
 
