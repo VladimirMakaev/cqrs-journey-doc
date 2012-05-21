@@ -374,26 +374,13 @@ implementation of the CQRS pattern.
 Some experts consider the DDD approach to be an essential pre-requisite
 for implementing the CQRS pattern.
 
-> It is essential to write the whole Domain Model, ubiquitous language,
-> including use cases, domain and user intention specifications, and to
-> identify both context boundaries and autonomous components. In my
-> experience, those are absolutely mandatory.  
-Jose Migual (Customer Advisory Council)
+Quote 1 goes here
 
 However, many people can point to projects where they have seen real 
 benefits from implementing the CQRS pattern, but where they have not 
 used the DDD approach for the domain analysis and model design. 
 
-> It is something of a tradition to connect both paradigms because using
-> DDD can lead naturally into CQRS, and also the available literature
-> about CQRS tends to use DDD terminology. However, DDD is mostly
-> appropriate for very large and complex projects. On the otherhand,
-> there is no reason why a small and simple project can not benefit from
-> CQRS. For example, a relatively small project that would otherwise use
-> distributed transactions could be split into a "write side" and a
-> "read side" with CQRS to avoid the distributed transaction, but it may
-> be simple enough that applying DDD would be overkill.  
-> Alberto (Customer Advisory Council)
+Quote 2 goes here
 
 In summary, the DDD approach is not a pre-requisite for implementing the 
 CQRS pattern, but in practice they do often go together. 

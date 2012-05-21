@@ -176,11 +176,7 @@ transactions, and where events must be immutable. Once a transaction has
 happened, you cannot delete or change it, although you can create a new 
 corrective or reversing transaction if necessary.
 
-> The primary benefit of using Event Sourcing is a built-in audit
-> mechanism that ensures consistency of transactional data and audit
-> data because these are the same data. Representation by events allows
-> you to reconstruct the state of any object at any moment of time.  
-> Pawel (Customer Advisory Council)
+Quote 5 goes here
 
 The following list describes some of the additional benefits that you 
 can derive from using event sourcing. The significance of the individual 
@@ -225,13 +221,7 @@ benefits will vary depending on the domain you are working in.
   that the system calculates the value correctly based on the new
   version of the code. 
   
-> Event Sourcing can also help with complex testing scenarios where you
-> need to verify that a given action triggered a specific result. This
-> is especially relevant for negative results, where you need to verify
-> that an action did **not** trigger a result; this is frequently not
-> verified when writing tests, but can easily be instrumented when the
-> changes are being recorded through events.  
-> Alberto (Customer Advisory Council)
+Quote 6 goes here
 
 The chapter "[A CQRS/ES Deep Dive][r_chapter4]" discusses these benefits 
 in more detail. There are also many illustrations of these benefits in 

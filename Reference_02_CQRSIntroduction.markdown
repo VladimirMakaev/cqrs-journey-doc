@@ -380,17 +380,9 @@ pattern in specific scenarios, you may find it difficult in practice to
 convice your stakeholders that these benefits warrant the additional 
 complexity of the solution. 
 
-> From my experience, the most important disadvantage of using CQRS/ES
-> and DDD is the "fear of change". This model is not similar to the
-> famous 3-tier layered architecture that many of our stakeholders
-> are used to.  
-> Pawel (Customer Advisory Council)
+Quote 3 goes here
 
-> The learning curve of the developers team is steep. Usually they
-> thinks in terms of relational database development. From my
-> experience, the lack of business, and therefore domain, rules and
-> specifications became the biggest hurdle.  
-> Jose Miguel (Customer Advisory Council)
+Quote 4 goes here
 
 # When Should I Use CQRS?
 Although we have outlined some of the reasons why you might decide to 
