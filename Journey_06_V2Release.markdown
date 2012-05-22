@@ -366,7 +366,14 @@ related:
 
 ### Changes to the RegistrationProcess Workflow
 
-Previously, the **RegistrationProcess** workflow sent a **ConfirmOrderPayment** command after it received notification from the UI that the registrant had completed the payment. Now, if there is a zero-cost order, the UI sends a **ConfirmOrder** command directly to the **Order** aggregate. If the order requires a payment, the **RegistrationProcess** workflow sends a **ConfirmOrder** command to the **Order** aggregate after it receives notification of a successful payment from the UI.
+Previously, the **RegistrationProcess** workflow sent a 
+**ConfirmOrderPayment** command after it received notification from the 
+UI that the registrant had completed the payment. Now, if there is a 
+zero-cost order, the UI sends a **ConfirmOrder** command directly to the 
+**Order** aggregate. If the order requires a payment, the 
+**RegistrationProcess** workflow sends a **ConfirmOrder** command to the 
+**Order** aggregate after it receives notification of a successful 
+payment from the UI. 
 
 > **JanaPersona:** Notice that the name of the command has changed from
 > **ConfirmOrderPayment** to **ConfirmOrder**. This reflects the fact
@@ -375,7 +382,9 @@ Previously, the **RegistrationProcess** workflow sent a **ConfirmOrderPayment** 
 > new **OrderConfirmed** event that is now used in place of the old
 > **OrderPaymentConfirmed** event.
 
-When the **Order** aggregate receives the **ConfirmOrder** command it raises an **OrderConfirmed** event. In addition to being peristed, this event is also handled by the following objects:
+When the **Order** aggregate receives the **ConfirmOrder** command it 
+raises an **OrderConfirmed** event. In addition to being peristed, this 
+event is also handled by the following objects: 
 
 * The **OrderViewModelGenerator** class where it updates the sate of the
   order in the read-model.
@@ -1113,8 +1122,35 @@ Conference Management Bounded Context" earlier in this chapter.
 
 # Testing 
 
-Describe any special considerations that relate to testing for this bounded context.  
+## Discovering a Bug During the Migration
 
+When the test team ran their tests on the system after the migration, 
+they discovered that the number of seat types in the Orders and 
+Registrations bounded context was different from the number prior to the 
+migration. The investigation revealed the following cause. 
+
+The Conference Management bounded context allows a Business Customer to 
+delete a seat type if the conference has never been published, but does 
+not raise an integration event to report this fact to the Orders and 
+Registrations bounded context. Therefore the Orders and Registrations 
+bounded context receives an event from the Conference Management bounded 
+context when a Business Customer creates a new seat type, but not when a 
+Business Customer deletes a seat type. 
+
+Part of the migration process creates a set of integration events to 
+replace those that the V1 release discarded after processing. It creates 
+these events by reading the SQL database used by the Conference 
+Management bounded context. This process did not create integration 
+events for the deleted seat types. 
+
+In summary, in the V1 release deleted seat types incorrectly appeared in 
+the read-models in the Orders and Registrations bounded context. After 
+the migration to the V2 release, these deleted seat types did not appear 
+in the read-models in the Orders and Registrations bounded context. 
+
+> **PoePersona:** Testing the migration process not only verifies that
+> the migration runs as expected, but potentially reveals bugs in the
+> application itself.
 
 [messagesessions]:   http://msdn.microsoft.com/en-us/library/microsoft.servicebus.messaging.messagesession.aspx
 [repourl]:           https://github.com/mspnp/cqrs-journey-code
