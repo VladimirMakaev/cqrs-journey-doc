@@ -7745,4 +7745,15 @@
          id="tspan5490"
          style="font-size:16px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;text-anchor:middle;font-family:Segoe Script;-inkscape-font-specification:Segoe Script">Registrations</tspan></text>
   </g>
+  <g
+     inkscape:groupmode="layer"
+     id="versionlayer"
+     inkscape:label="Version">
+    <text
+       xml:space="preserve"
+       style="-inkscape-font-specification:Courier New;font-family:Courier New;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;fill:#ff0000"
+       x="10"
+       y="10"
+       id="versiontext">Map.svg (v1)</text>
+  </g>
 </svg>

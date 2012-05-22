@@ -444,4 +444,15 @@
          y="892.38873"
          id="tspan3963-79">Other artifacts</tspan></text>
   </g>
+  <g
+     inkscape:groupmode="layer"
+     id="versionlayer"
+     inkscape:label="Version">
+    <text
+       xml:space="preserve"
+       style="-inkscape-font-specification:Courier New;font-family:Courier New;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;fill:#ff0000"
+       x="10"
+       y="10"
+       id="versiontext">Reference_01_BCs.svg (v1)</text>
+  </g>
 </svg>
