@@ -5,9 +5,9 @@ http://cqrsjourney.github.com
 
 ## Appendix 1
 
-4th May 2012
+22nd May 2012
 
-These release notes apply to the Pseudo-Production Release (V1) of the 
+These release notes apply to the Pseudo-Production Release (V2) of the 
 Contoso Conference Management System.
 
 # Building and Running the Sample Code (RI)
@@ -136,6 +136,9 @@ DefaultEndpointsProtocol=https;AccountName=[your-windows-azure-storage-account-n
     <Instances count="1" />
     <ConfigurationSettings>
       <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="[your-windows-azure-connection-string]" />
+      <Setting name="Diagnostics.ScheduledTransferPeriod" value="00:02:00" />
+      <Setting name="Diagnostics.LogLevelFilter" value="Warning" />
+      <Setting name="Diagnostics.PerformanceCounterSampleRate" value="00:00:30" />
       <Setting name="DbContext.ConferenceManagement" value="[your-sql-azure-connection-string]" />
       <Setting name="DbContext.SqlBus" value="[your-sql-azure-connection-string] />
     </ConfigurationSettings>
@@ -144,6 +147,9 @@ DefaultEndpointsProtocol=https;AccountName=[your-windows-azure-storage-account-n
     <Instances count="1" />
     <ConfigurationSettings>
       <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="[your-windows-azure-connection-string]" />
+      <Setting name="Diagnostics.ScheduledTransferPeriod" value="00:02:00" />
+      <Setting name="Diagnostics.LogLevelFilter" value="Warning" />
+      <Setting name="Diagnostics.PerformanceCounterSampleRate" value="00:00:30" />
       <Setting name="DbContext.Payments" value="[your-sql-azure-connection-string]" />
       <Setting name="DbContext.ConferenceRegistration" value="[your-sql-azure-connection-string]" />
       <Setting name="DbContext.SqlBus" value="[your-sql-azure-connection-string]" />
@@ -154,6 +160,9 @@ DefaultEndpointsProtocol=https;AccountName=[your-windows-azure-storage-account-n
     <Instances count="1" />
     <ConfigurationSettings>
       <Setting name="Microsoft.WindowsAzure.Plugins.Diagnostics.ConnectionString" value="[your-windows-azure-connection-string]" />
+      <Setting name="Diagnostics.ScheduledTransferPeriod" value="00:02:00" />
+      <Setting name="Diagnostics.LogLevelFilter" value="Information" />
+      <Setting name="Diagnostics.PerformanceCounterSampleRate" value="00:00:30" />
       <Setting name="DbContext.Payments" value="[your-sql-azure-connection-string]" />
       <Setting name="DbContext.EventStore" value="[your-sql-azure-connection-string]" />
       <Setting name="DbContext.ConferenceRegistrationProcesses" value="[your-sql-azure-connection-string]" />
@@ -191,7 +200,8 @@ Service Bus namespace.
 
 > **Note:** In the V2 release, there is an additional entry in the 
 > **Settings.Template.xml** file to specify the Windows Azure table
-> storage table name for event log used to store the integration events.
+> storage table name for the message log used to store all event and
+> command messages.
 
 # Building the RI
 
@@ -353,7 +363,18 @@ describe how you can perform this migration in Windows Azure.
 The **MigrationToV2** utility uses the same **Settings.xml** file as the 
 other projects in the **Conference** solution in addition to its own 
 **Application.config** file to specify the Windows Azure storage account 
-and SQL connection strings. 
+and SQL connection strings.
+
+> **Note:** To avoid data transfer charges, you should run the migration
+> utility inside a Windows Azure worker role instead of on-premise. The
+> solution includes an empty Windows Azure worker role in the
+> **MigrationToV2.Azure** with diagnostics already configured that you
+> can use for this purpose. For information about how to run an
+> application inside a Windows Azure role instance, see [Using Remote
+> Desktop with Windows Azure Roles][azurerdp]. 
+
+> **Note:** Migration from V1 to V2 is not supported if you are using
+> the **DebugLocal** configuration.
 
 # Known Issues
 
@@ -409,11 +430,12 @@ configuration to another.
 * No performance or localizability tests have been performed yet.
 * The UI is still a work in progress.
 * Validation in the UI is not yet complete. 
-* You see a list of outstanding issues for the V1 release [here][v1outstanding].
+* You see a list of outstanding issues for the V2 release [here][v2outstanding].
 
 
 [source]:          https://github.com/mspnp/cqrs-journey-code
 [xunit]:           http://xunit.codeplex.com/
 [specflow]:        http://www.specflow.org/
 [connectionerror]: http://blogs.msdn.com/b/narahari/archive/2011/12/21/azure-a-connection-attempt-failed-because-the-connected-party-did-not-properly-respond-after-a-period-of-time-or-established-connection-failed-because-connected-host-has-failed-to-respond-x-x-x-x-x-quot.aspx
-[v1outstanding]:   https://github.com/mspnp/cqrs-journey-code/issues/search?utf8=%E2%9C%93&q=v1
+[v2outstanding]:   https://github.com/mspnp/cqrs-journey-code/issues/search?utf8=%E2%9C%93&q=v2
+[azurerdp]:        http://msdn.microsoft.com/en-us/library/windowsazure/gg443832.aspx
