@@ -1082,18 +1082,25 @@ information to the priced-order read-model.
 Migrating from V1 to V2 requires you to update the deployed application
 code and migrate the data. These are the required steps:
 
-1. Deploy a minimal version of the application that indicates to users
-   that the application is undergoing planned maintenance to the Windows
-   Azure staging environment.
-2. Swap the running application in the Windows Azure production
-   environment with the minimal application in the staging environment
-   and then stop the application in the staging environment.
-3. Run the migration program to migrate the data (see below).
-4. Deploy the updated version of the application to the Windows Azure
-   staging environment.
-5. Swap the running minimal application in the Windows Azure production
-   environment with the updated application in the staging environment
-   and then stop the minimal application in the staging environment.
+1. Deploy the V2 release to your Windows Azure staging environment. The
+   V2 release has a global **MaintenanceMode** property that is
+   initially set to **true**. In this mode, the application displays a
+   message to the user that site is currently undergoing maintenance.
+2. When you are ready, swap the V2 release (still in maintenance mode)
+   into your Windows Azure production environment.
+3. Leave the V1 release (now running in the staging environment) to run
+   for a few minutes to ensure that all in-flight messages complete
+   their processing.
+4. Run the migration program to migrate the data (see below).
+5. After the data migration completes successfully, change the
+   **MaintenanceMode** property to **false**.
+6. The V2 release is now live in Windows Azure.
+
+> **JanaPersona:** The team considered using a separate application to
+> display to users that the site is undergoing maintenance during the
+> upgrade process. However, using the **MaintenanceMode** property in
+> the V2 release provides a simpler process, and adds a potentially
+> useful new feature to the application.
 
 > **PoePersona:** Because of the changes to the event store, it is not
 > possible to perform a no downtime upgrade from V1 to V2. However, the
@@ -1175,11 +1182,30 @@ data migration process.
 
 ## SpecFlow Revisited
 
-Previously, the set of SpecFlow tests were implemented in two ways: either simulating user interaction by automating a web browser, or by operating directly on the MVC contollers. Both approaches had their advantages and disadvantages that are discussed in [Chapter 4, Extending and Enhancing the Orders and Registrations Bounded Contexts][j_chapter4].
+Previously, the set of SpecFlow tests were implemented in two ways: 
+either simulating user interaction by automating a web browser, or by 
+operating directly on the MVC contollers. Both approaches had their 
+advantages and disadvantages that are discussed in [Chapter 4, Extending 
+and Enhancing the Orders and Registrations Bounded 
+Contexts][j_chapter4]. 
 
-After discussing these tests with another expert, the team also implemented a third approach. From the perspective of the DDD approach, the UI is not part of the domain-model, and the focus of the core team should be on understanding the domain with the help of the domain expert and implementing the business logic in the domain. The UI is just mechanics that is added to enable users to interact with the domain. Therefore acceptance testing should include verfying that the domain-model functions in the way that the domain expert expects. Therefore the team created a set of acceptance tests using SpecFlow that are designed to exercise the domain without the distraction of the UI parts of the system.
+After discussing these tests with another expert, the team also 
+implemented a third approach. From the perspective of the DDD approach, 
+the UI is not part of the domain-model, and the focus of the core team 
+should be on understanding the domain with the help of the domain expert 
+and implementing the business logic in the domain. The UI is just 
+mechanics that is added to enable users to interact with the domain. 
+Therefore acceptance testing should include verfying that the 
+domain-model functions in the way that the domain expert expects. 
+Therefore the team created a set of acceptance tests using SpecFlow that 
+are designed to exercise the domain without the distraction of the UI 
+parts of the system. 
 
-The following code sample shows the **SelfRegistrationEndToEndWithDomain.feature** file in the **Features\Domain\Registration** folder in the **Conference.AcceptanceTests** Visual Studio solution. Notice how the **When** and **Then** clauses use commands and events.
+The following code sample shows the 
+**SelfRegistrationEndToEndWithDomain.feature** file in the 
+**Features\Domain\Registration** folder in the 
+**Conference.AcceptanceTests** Visual Studio solution. Notice how the 
+**When** and **Then** clauses use commands and events. 
 
 > **BharathPersona:** Typically, you would expect the **When** clauses
 > to send commands and the **Then** clauses to see events or exceptions
