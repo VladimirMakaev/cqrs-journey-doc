@@ -24,7 +24,7 @@ forward from the V1 release to the next production release of the
 system. The following chapters will describe what happens after the V1 
 release. 
 
-This chapter also describes the Metro-style UI that the team added to 
+This chapter also describes the Metro-inspired UI that the team added to 
 the public web-site during this phase and includes a discussion of 
 task-based UIs. 
 
