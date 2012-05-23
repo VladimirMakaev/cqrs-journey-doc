@@ -57,19 +57,16 @@ conference. When a registrant begins the ordering process to purchase a
 number of seats at conference, the system creates **Reservations** for 
 the number of seats requested by the registrant. These seats are then 
 not available for other registrants to reserve. The **Reservations** are 
-held for _n_ minutes (_n_ is one of the properties of the conference 
-defined by the **Business Customer**) during which the registrant can 
-complete the ordering process by making a payment for those seats. If 
-the registrant does not pay for the tickets within _n_ minutes, the 
-system deletes the **Reservation** and the seats become available to 
-other registrants to reserve. 
+held for 15 minutes during which the registrant can complete the 
+ordering process by making a payment for those seats. If the registrant 
+does not pay for the tickets within _n_ minutes, the system deletes the 
+**Reservation** and the seats become available to other registrants to 
+reserve. 
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-    At the moment the value of _n_ is hardcoded - this may change in the future and become a parameter than can be set by the Business Customer.
-  </span>
-</div>
+> **CarlosPersona:** We discussed making the period of time that
+> reservations are held a parameter that a Business Customer can adjust
+> for a conference. This may be a feature that we add if we determine
+> that there is a demand for this level of control.
 
 ## The Conference Management Bounded Context
 
@@ -143,7 +140,9 @@ flow of data as events between them.
 
 **Bounded Contexts in the Contoso Conference Management System**
 
-The following list provides more information about the arrows in figure 1. You can find additional detail in the chapters that discuss the individual bounded contexts. 
+The following list provides more information about the arrows in figure 
+1. You can find additional detail in the chapters that discuss the 
+individual bounded contexts. 
 
 1. Events that report when conferences have been created, updated, and
    published. Events that report when seat types have been created or
@@ -169,8 +168,37 @@ The following list provides more information about the arrows in figure 1. You c
 > information, see
 > [Chapter 5, Preparing for the V1 Release][j_chapter5]
 
-# Why Did We Choose These Bounded Contexts? 
+# Why Did We Choose These Bounded Contexts?
 
+During the planning stage of the journey, it became clear that these 
+were the natural divisions in the domain that could each contain their 
+own, independent domain-models. Some of these divisions were easier to 
+identify that others. For example, it was clear from early on that the 
+Conference Management bounded context is independent of the 
+remainder of the domain. It has clearly defined responsibilities that 
+relate to defining conferences and seat-types and clearly defined 
+integration points with the rest of the application. 
+
+On the other hand, it took some time to realize that the Orders and 
+Registrations bounded context is separate from the 
+Payments bounded context. For example, it was not until the V2 release 
+of the application that all concepts relating to payments disappeared 
+from the Orders and Registrations bounded context when the 
+**OrderPaymentConfirmed** event became the **OrderConfirmed** event. 
+
+> **BharathPersona:** We continued to refine the domain-models right
+> through the journey as our understanding of domain deepened.
+
+More practically, from the perspective of the journey, we wanted a set 
+of bounded contexts that would enable us to release a working 
+application with some core functionality and that would enable us to 
+explore a number of different implementation patterns: CQRS, CQRS/ES, as 
+well as integration with a legacy, CRUD-style bounded context.
+
+> **BethPersona:** Contoso wants to release a usable application as
+> soon as possible, but be able to add both planned features and
+> customer requested features as they are developed and with no
+> downtime for the upgrades.
 
 [j_chapter1]:     Journey_01_Introduction.markdown
 [j_chapter4]:     Journey_04_ExtendingEnhancing.markdown
