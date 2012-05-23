@@ -410,7 +410,6 @@ For help resolving this issue see [Azure: A connection attempt failed...][connec
 Currently, there is no validation to:
 
 * Check that the end date for a conference is later than the start date.
-* Check that email addresses are in a valid format.
 
 ## Switching between Debug and DebugLocal Builds
 
