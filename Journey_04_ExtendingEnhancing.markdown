@@ -1133,7 +1133,7 @@ Scenario: End to end Registration implemented using controllers
 Second, some of the step implementations from the 
 **SelfRegistrationEndToEndWithControllersSteps** class: 
 
-```
+```Cs
 [Given(@"the Registrant proceed to make the Reservation")]
 public void GivenTheRegistrantProceedToMakeTheReservation()
 {

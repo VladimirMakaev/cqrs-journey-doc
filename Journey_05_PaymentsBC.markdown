@@ -30,7 +30,8 @@ task-based UIs.
 
 ## Working Definitions for this Chapter 
 
-Outline any working definitions that were adopted for this chapter. 
+This section outlines some of the definitions that are relevant to this
+chapter.
 
 ### Access Code
 

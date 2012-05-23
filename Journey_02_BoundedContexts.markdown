@@ -3,6 +3,24 @@
 
 *Planning the journey: What will be the main stopping places along the way?*
 
+# Introduction
+
+This chapter provides a high-level overview of the Contoso Conference 
+Management System. It will help you to understand the structure of the 
+application, how the parts of the application are related to each other, 
+and the integration points. 
+
+It describes this high-level structure in terms borrowed from the 
+Domain-Driven Design (DDD) approach that Eric Evans describes in his 
+book "Domain-Driven Design: Tackling Complexity in the Heart of 
+Software." Although there is not a universal consensus that DDD is a 
+prerequisite for implementing the CQRS pattern successfully, the team 
+decided to use many of the concepts from the DDD approach, such as 
+**Domain**, **Bounded Context**, and **Aggregate** in line with common 
+practice within the CQRS community. The chapter [CQRS in 
+Context][r_chapter1] in the Reference Guide discusses the realtionship 
+between the DDD approach and the CQRS pattern in more detail. 
+
 # Definitions Used in This Chapter 
 
 The following definitions are used for the remainder of this chapter. 
