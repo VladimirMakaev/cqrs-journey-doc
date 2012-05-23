@@ -182,7 +182,7 @@ bounded contexts.
   cannot reserve the quantity of seats of the seat type requested by the 
   Registrant. 
 
-- **Seat.** A represents a space at a conference or access to a 
+- **Seat.** A Seat represents a space at a conference or access to a 
   specific session at the conference such as a cocktail party, a 
   tutorial, or a workshop. Each conference has a quota of Seats that may 
   be changed by the Business Customer. Each session has a quota of Seats 
@@ -397,7 +397,7 @@ The numbers in the diagram correspond to the following steps:
 > **BharathPersona:** Workflow or saga? Initially the team referred to
 > the **RegistrationProcess** workflow as a saga. However, after they
 > reviewed the original definition of a saga from the paper
-> [Sagas](sagapaper) by Hector Garcia-Molina and Kenneth Salem, they
+> [Sagas][sagapaper] by Hector Garcia-Molina and Kenneth Salem, they
 > revised their decision. The key reasons for this are that reservation
 > process does not include explicit compensation steps, and does not
 > need to be represented as a long-lived transaction.
