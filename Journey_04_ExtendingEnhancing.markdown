@@ -243,7 +243,7 @@ Possible objections to this approach include:
 
 * It is not easy to replace the data store with a non-relational 
   database (that does not expose an **IQueryable** object. However, you
-  can choose to implement the write-model differently in each bounded
+  can choose to implement the read-model differently in each bounded
   context using an approach that is appropriate to that bounded context. 
 * The client might abuse the **IQueryable** interface be performing 
   operations that can be done more efficiently as a part of the 
@@ -297,6 +297,9 @@ This approach has a number of advantages:
 * **Testability.** It is easier to specify unit tests for the **Find** 
   and **Get** methods than to create suitable unit tests for the range
   of possible LINQ queries that a client could specify. 
+* **Maintainability.** All of the queries are defined in the same
+  location, the DAO classes, making it easier to modify the system
+  consistently.
 
 Possible objections to this approach include:
 
@@ -322,7 +325,7 @@ business only needs to store information about seats that were actually
 purchased, not the difference between what the registrant requested and 
 what the registrant purchased. 
 
-The consequence of this is that the informationa about how many seats 
+The consequence of this is that the information about how many seats 
 the registrant requested only needs to exist in the model on the 
 read-side. 
 
