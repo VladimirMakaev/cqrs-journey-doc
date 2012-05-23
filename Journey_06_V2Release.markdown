@@ -170,6 +170,43 @@ the message more than once.
   </span>
 </div>
 
+### Avoiding Processing Events Multiple Times
+
+In V1, in certain scenarios it was possible for the system to process an event multiple times if an error occurred while the event was being processed. To avoid this scenario, the team modified the architecture so that every event handler has its own subscription to a Windows Azure topic. Figure 1 shows the two different models.
+
+![Figure 1][fig1]
+
+**Using one subscription per event handler**
+
+In the V1, the following behavior _could_ occur: 
+
+1. The **EventProcessor**  instance receives an **OrderPlaced** event
+   from the **all** subscription in the service bus. 
+2. The **EventProcessor** instance has two registered handlers, the
+   **RegistrationProcessRouter** and **OrderViewModelGenerator** handler
+   classes, so it invokes the **Handle** method on each of them.
+3. The **Handle** method in the **OrderViewModelGenerator** class
+   completes successfully.
+4. The **Handle** method in the **RegistrationProcessRouter** class
+   throws an exception.
+5. The **EventProcessor** instances catches the exception and abandons
+   the event message. The message is automatically put back into the
+   subscription.
+6. The **EventProcessor** instance receives the **OrderPlaced** event
+   from the **all** subscription for a second time.
+7. It invokes the two Handle methods, causing the
+   **RegistrationProcessRouter** class to retry the message, and the
+   **OrderViewModelGenerator** class to process the message for a second
+   time.
+8. Every time the **RegistrationProcessRouter** class throws an
+   exception, the **OrderViewModelGenerator** class processes the event.
+
+In the V2 model, if a handler class throws an exception, the 
+**EventProcessor** instance puts the event message back on the 
+subscription associated with that handler class. The retry logic now 
+only causes the **EventProcessor** instance to retry the handler that 
+raised the exception, so no other handlers re-processe the message. 
+
 ## Persisting Integration Events
 
 One of the concerns raised with the V1 release was about the way that 
@@ -926,6 +963,8 @@ public class MessageLogEntity : TableServiceEntity
     public string Namespace { get; set; }
     public string FullName { get; set; }
     public string TypeName { get; set; }
+    public string SourceType { get; set; }
+    public string CreationDate { get; set; }
     public string Payload { get; set; }
 }
 ```
@@ -1038,16 +1077,6 @@ sample, the **PricedOrderViewModelUpdater** class only handles the
 **SeatCreated** and **SeatUpdated** events and adds the missing 
 information to the priced-order read-model. 
 
-## One Subscription Per Event Handler
-
-
-
-Problem to solve is: if one event handler throws, the entire message is retried, which involves potentially calling twice other event handlers for the same message, which forces stricter idempotency unnecessarily.
-
-With single subscription per handler, we'd isolate the handling for each, and azure would take care of the fan-out to all interested handlers for the events.
-
-See Issues #398 and #394
-
 ## Migrating from V1 to V2
 
 Migrating from V1 to V2 requires you to update the deployed application
@@ -1071,6 +1100,10 @@ code and migrate the data. These are the required steps:
 > changes that the team have made will ensure that the migration from V2
 > to V3 will be possible with no downtime.
 
+> **MarkusPersona:** The team applied various optimizations to the
+> migration utility, such as batching the operations, in order to
+> minimize the amount of downtime.
+
 The following sections summarize the data migration from V1 to V2. Some 
 of these steps were discussed previously in relation to a specific 
 change or enhancement to the application. 
@@ -1078,7 +1111,21 @@ change or enhancement to the application.
 One of the changes the team introduced for V2 is to keep a copy of all 
 command and event messages in a message log in order to future-proof the 
 application by capturing everything that might be used in the future. 
-The migration process takes this new feature into account. 
+The migration process takes this new feature into account.
+
+The following sections describe the key steps performed by the migration 
+utility. Because the migration process copies large amounts of data 
+around, you should run it in a Windows Azure worker role in order to 
+minimize the cost . The migration utility is a console application so 
+you can use the Windows Azure remote desktop feature. For information 
+about how to run an application inside a Windows Azure role instance, 
+see [Using Remote Desktop with Windows Azure Roles][azurerdp].
+
+> **PoePersona:** For some organizations, the security poilicy will not
+> allow you to use Windows Azure remote desktop in a production
+> evironment. However, you only need the worker role that hosts the
+> remote desktop session for the duration of the migration, you can
+> delete it after the migration is complete.
 
 ### Generating Past Log Messages for the Conference Management Bounded Context
 
@@ -1122,6 +1169,99 @@ Conference Management Bounded Context" earlier in this chapter.
 
 # Testing 
 
+During this stage of the journey, the test team continuesd to expand the 
+set of acceptance tests. They also created a set of tests to verify the 
+data migration process. 
+
+## SpecFlow Revisited
+
+Previously, the set of SpecFlow tests were implemented in two ways: either simulating user interaction by automating a web browser, or by operating directly on the MVC contollers. Both approaches had their advantages and disadvantages that are discussed in [Chapter 4, Extending and Enhancing the Orders and Registrations Bounded Contexts][j_chapter4].
+
+After discussing these tests with another expert, the team also implemented a third approach. From the perspective of the DDD approach, the UI is not part of the domain-model, and the focus of the core team should be on understanding the domain with the help of the domain expert and implementing the business logic in the domain. The UI is just mechanics that is added to enable users to interact with the domain. Therefore acceptance testing should include verfying that the domain-model functions in the way that the domain expert expects. Therefore the team created a set of acceptance tests using SpecFlow that are designed to exercise the domain without the distraction of the UI parts of the system.
+
+The following code sample shows the **SelfRegistrationEndToEndWithDomain.feature** file in the **Features\Domain\Registration** folder in the **Conference.AcceptanceTests** Visual Studio solution. Notice how the **When** and **Then** clauses use commands and events.
+
+> **BharathPersona:** Typically, you would expect the **When** clauses
+> to send commands and the **Then** clauses to see events or exceptions
+> if your domain-model uses just aggregates. However in this example,
+> the domain-model includes a coordinating workflow that responds to
+> events by sending commands. The test is checking that all of the
+> expected commands are sent and all of the expected events raised.
+
+```
+Feature: Self Registrant end to end scenario for making a Registration for a Conference site with Doamin Commands and Events
+	In order to register for a conference
+	As an Attendee
+	I want to be able to register for the conference, pay for the Registration Order and associate myself with the paid Order automatically
+
+
+Scenario: Make a reservation with the selected Order Items
+Given the list of the available Order Items for the CQRS summit 2012 conference
+	| seat type                 | rate | quota |
+	| General admission         | $199 | 100   |
+	| CQRS Workshop             | $500 | 100   |
+	| Additional cocktail party | $50  | 100   |
+And the selected Order Items
+	| seat type                 | quantity |
+	| General admission         | 1        |
+	| Additional cocktail party | 1        |
+When the Registrant proceed to make the Reservation
+	# command:RegisterToConference
+Then the command to register the selected Order Items is received 
+	# event: OrderPlaced
+And the event for Order placed is emitted
+	# command: MakeSeatReservation
+And the command for reserving the selected Seats is received
+	# event: SeatsReserved
+And the event for reserving the selected Seats is emitted
+	# command: MarkSeatsAsReserved
+And the command for marking the selected Seats as reserved is received
+	# event: OrderReservationCompleted 
+And the event for completing the Order reservation is emitted
+	# event: OrderTotalsCalculated
+And the event for calculating the total of $249 is emitted
+```
+
+The following code sample shows some of the step implementations for the 
+feature file. The steps use the command bus to send the commands. 
+
+```Cs
+[When(@"the Registrant proceed to make the Reservation")]
+public void WhenTheRegistrantProceedToMakeTheReservation()
+{
+    var command = ScenarioContext.Current.Get<RegisterToConference>();
+    var conferenceAlias = ScenarioContext.Current.Get<ConferenceAlias>();
+
+    command.ConferenceId = conferenceAlias.Id;
+    orderId = command.OrderId;
+    this.commandBus.Send(command);
+
+    // Wait for event processing
+    Thread.Sleep(Constants.WaitTimeout);
+}
+
+...
+
+[Then(@"the command to register the selected Order Items is received")]
+public void ThenTheCommandToRegisterTheSelectedOrderItemsIsReceived()
+{
+    var orderRepo = EventSourceHelper.GetRepository<Registration.Order>();
+    Registration.Order order = orderRepo.Find(orderId);
+
+    Assert.NotNull(order);
+    Assert.Equal(orderId, order.Id);
+}
+
+[Then(@"the event for Order placed is emitted")]
+public void ThenTheEventForOrderPlacedIsEmitted()
+{
+    //OrderPlaced
+    var draftOrder = RegistrationHelper.FindInContext<DraftOrder>(orderId);
+
+    Assert.NotNull(draftOrder);
+}
+```
+
 ## Discovering a Bug During the Migration
 
 When the test team ran their tests on the system after the migration, 
@@ -1152,6 +1292,10 @@ in the read-models in the Orders and Registrations bounded context.
 > the migration runs as expected, but potentially reveals bugs in the
 > application itself.
 
+
+[j_chapter4]:        Journey_04_ExtendingEnhancing.markdown
+
 [messagesessions]:   http://msdn.microsoft.com/en-us/library/microsoft.servicebus.messaging.messagesession.aspx
 [repourl]:           https://github.com/mspnp/cqrs-journey-code
 [queues]:            http://msdn.microsoft.com/en-us/library/windowsazure/hh767287(v=vs.103).aspx
+[azurerdp]:          http://msdn.microsoft.com/en-us/library/windowsazure/gg443832.aspx

@@ -902,7 +902,8 @@ then handles the event when its handler invokes the **AddSeats** method.
 
 # Testing
 
-This section discusses some of the testing issues addressed during this stage of the journey.
+This section discusses some of the testing issues addressed during this 
+stage of the journey. 
 
 ## Acceptance Tests and the Domain Expert
 
@@ -925,8 +926,12 @@ To achieve these goals the team used [SpecFlow][specflow].
 The first step is to define the acceptance tests in the language used by 
 SpecFlow. These tests are saved as feature files in a Visual Studio 
 project. The following code sample from the 
-ConferenceConfiguration.feature file shows an acceptance test for the 
-Conference Management bounded context. 
+ConferenceConfiguration.feature file in the 
+Features\UserInterface\Views\Management folder shows an acceptance test 
+for the Conference Management bounded context. A typical SpecFlow test 
+scenario consists of a collection of **Given**, **When**, and **Then** 
+statements. Some of these statements include the data that is used in 
+the test. 
 
 ```
 Feature:  Conference configuration scenarios for creating and editing Conference settings
@@ -938,25 +943,27 @@ Feature:  Conference configuration scenarios for creating and editing Conference
 Background: 
 Given the Business Customer selected the Create Conference option
 
-Scenario: A new Conference is created with the required information
-Given this information entered into the Owner Information section
-| Owner         | Email                    |
-| Gregory Weber | gregoryweber@contoso.com |
-And this inforamtion entered into the Conference Information section
-| Name     | Description                 | Slug     | Start      | End        |
-| CQRS2012 | CQRS summit 2012 conference | cqrs2012 | 05/02/2012 | 05/12/2012 |
-When the Business Customer proceed to create the Conference
-Then following details will be shown for the created Conference
-| Owner         | Email                    | Name     | Description                 | Slug     | Start      | End        |
-| Gregory Weber | gregoryweber@contoso.com | CQRS2012 | CQRS summit 2012 conference | cqrs2012 | 05/02/2012 | 05/12/2012 |
-
-
 Scenario: An existing unpublished Conference is selected and published
-Given an existing conference with this information
-| Owner         | Email                    | Name      | Description                             | Slug      | Start      | End        |
-| Gregory Weber | gregoryweber@contoso.com | CQRS2012P | CQRS summit 2012 conference (Published) | cqrs2012p | 05/02/2012 | 05/12/2012 |
+Given this conference information
+| Owner         | Email                    | Name      | Description                             | Slug   | Start      | End        |
+| Gregory Weber | gregoryweber@contoso.com | CQRS2012P | CQRS summit 2012 conference (Published) | random | 05/02/2012 | 05/12/2012 |
+And the Business Customer proceed to create the Conference
 When the Business Customer proceed to publish the Conference
 Then the state of the Conference change to Published
+
+Scenario: An existing Conference is edited and updated
+Given an existing published conference with this information
+| Owner         | Email                    | Name      | Description                            | Slug   | Start      | End        |
+| Gregory Weber | gregoryweber@contoso.com | CQRS2012U | CQRS summit 2012 conference (Original) | random | 05/02/2012 | 05/12/2012 |
+And the Business Customer proceed to edit the existing settigns with this information
+| Description                           |
+| CQRS summit 2012 conference (Updated) |
+When the Business Customer proceed to save the changes
+Then this information is show up in the Conference settings
+| Description                           |
+| CQRS summit 2012 conference (Updated) |
+
+...
 
 ```
 
@@ -964,8 +971,8 @@ Then the state of the Conference change to Published
 > me to clarify my definitions of the expected behavior of the system to
 > the developers.
 
-For additional examples, see the **Conference.AcceptanceTests** solution 
-file included with the downloadable source. 
+For additional examples, see the **Conference.AcceptanceTests** Visual
+Studio solution file included with the downloadable source. 
 
 ### Making the Tests Executable
 
@@ -986,23 +993,94 @@ exercises the system in exactly the same way that a real user would
 interact with the system and that it is simple implement initially. 
 However, these tests are fragile and will require a considerable 
 maintenance effort to keep up to date as the UI and system change. The 
-following code sample shows an example of this approach: 
+following code sample shows an example of this approach, defining some 
+of the **Given**, **When**, and **Then** steps from the feature file 
+shown previously. SpecFlow uses the **Given**, **When**, and **Then** 
+attributes to link the steps to the clauses in the feature file and to 
+pass parameter values to step methods: 
 
 ```Cs
-public class SeatAssignmentSteps
+public class ConferenceConfigurationSteps : StepDefinition
 {
-    [When(@"the Registrant assign these seats")]
-    public void WhenTheRegistrantAssignTheseSeats(Table table)
-    {
-        var browser = ScenarioContext.Current.Browser();
-        browser.ClickAndWait(Constants.UI.SeatAssignementId, Constants.UI.SeatAssignmentPage);
+    ...
 
-        foreach (var row in table.Rows)
+    [Given(@"the Business Customer proceed to edit the existing settigns with this information")]
+    public void GivenTheBusinessCustomerProceedToEditTheExistingSettignsWithThisInformation(Table table)
+    {
+        Browser.Click(Constants.UI.EditConferenceId);
+        PopulateConferenceInformation(table);
+    }
+
+    [Given(@"an existing published conference with this information")]
+    public void GivenAnExistingPublishedConferenceWithThisInformation(Table table)
+    {
+        ExistingConferenceWithThisInformation(table, true);
+    }
+
+    private void ExistingConferenceWithThisInformation(Table table, bool publish)
+    {
+        NavigateToCreateConferenceOption();
+        PopulateConferenceInformation(table, true);
+        CreateTheConference();
+        if(publish) PublishTheConference();
+
+        ScenarioContext.Current.Set(table.Rows[0]["Email"], Constants.EmailSessionKey);
+        ScenarioContext.Current.Set(Browser.FindText(Slug.FindBy), Constants.AccessCodeSessionKey);
+    }
+
+    ...
+
+    [When(@"the Business Customer proceed to save the changes")]
+    public void WhenTheBusinessCustomerProceedToSaveTheChanges()
+    {
+        Browser.Click(Constants.UI.UpdateConferenceId);
+    }
+
+    ...
+
+    [Then(@"this information is show up in the Conference settings")]
+    public void ThenThisInformationIsShowUpInTheConferenceSettings(Table table)
+    {
+        Assert.True(Browser.SafeContainsText(table.Rows[0][0]),
+                        string.Format("The following text was not found on the page: {0}", table.Rows[0][0]));
+    }
+
+    private void PublishTheConference()
+    {
+        Browser.Click(Constants.UI.PublishConferenceId);
+    }
+
+    private void CreateTheConference()
+    {
+        ScenarioContext.Current.Browser().Click(Constants.UI.CreateConferenceId);
+    }
+        
+    private void NavigateToCreateConferenceOption()
+    {
+        // Navigate to Registration page
+        Browser.GoTo(Constants.ConferenceManagementCreatePage);
+    }
+
+    private void PopulateConferenceInformation(Table table, bool create = false)
+    {
+        var row = table.Rows[0];
+
+        if (create)
         {
-            browser.SetRowCells(row["seat type"], row["first name"], row["last name"], row["email address"]);
+            Browser.SetInput("OwnerName", row["Owner"]);
+            Browser.SetInput("OwnerEmail", row["Email"]);
+            Browser.SetInput("name", row["Email"], "ConfirmEmail");
+            Browser.SetInput("Slug", Slug.CreateNew().Value);
         }
 
-        browser.Click(Constants.UI.NextStepId);
+        Browser.SetInput("Tagline", Constants.UI.TagLine);
+        Browser.SetInput("Location", Constants.UI.Location);
+        Browser.SetInput("TwitterSearch", Constants.UI.TwitterSearch);
+
+        if (row.ContainsKey("Name")) Browser.SetInput("Name", row["Name"]);
+        if (row.ContainsKey("Description")) Browser.SetInput("Description", row["Description"]);
+        if (row.ContainsKey("Start")) Browser.SetInput("StartDate", row["Start"]);
+        if (row.ContainsKey("End")) Browser.SetInput("EndDate", row["End"]);
     }
 }
 ```
@@ -1014,32 +1092,104 @@ The second approach is to implement the tests by interacting with the
 MVC controller classes. In the longer-term, this approach will be less 
 fragile at the cost of an intially more complex implementation that 
 requires some knowledge of the internal implementation of the system. 
-The following code sample shows an example of this approach: 
+The following code samples show an example of this approach.
+
+First, a scenario from the 
+SelfRegistrationEndToEndWithControllers.feature file in the 
+Features\UserInterface\Controllers\Registration older: 
 
 ```
-[Given(@"the selected Order Items")]
-public void GivenTheSelectedOrderItems(Table table)
+Scenario: End to end Registration implemented using controllers
+	Given the Registrant proceed to make the Reservation
+	And these Order Items should be reserved
+	| seat type                 | quantity |
+	| General admission         | 1        |
+	| Additional cocktail party | 1        |
+	And these Order Items should not be reserved
+	| seat type     |
+	| CQRS Workshop |
+	And the Registrant enter these details
+	| first name | last name | email address            |
+	| Gregory    | Weber     | gregoryweber@contoso.com |
+	And the Registrant proceed to Checkout:Payment
+	When the Registrant proceed to confirm the payment
+	Then the Order should be created with the following Order Items
+	| seat type                 | quantity |
+	| General admission         | 1        |
+	| Additional cocktail party | 1        |
+	And the Registrant assign these seats
+	| seat type                 | first name | last name | email address       |
+	| General admission         | William    | Weber     | William@Weber.com   |
+	| Additional cocktail party | Jim        | Gregory   | Jim@Gregory.com     |
+	And these seats are assigned
+	| seat type                 | quantity |
+	| General admission         | 1        |
+	| Additional cocktail party | 1        |
+```
+
+Second, some of the step implementations from the 
+**SelfRegistrationEndToEndWithControllersSteps** class: 
+
+```
+[Given(@"the Registrant proceed to make the Reservation")]
+public void GivenTheRegistrantProceedToMakeTheReservation()
 {
-    conferenceInfo = ScenarioContext.Current.Get<ConferenceInfo>();
-    registrationController = RegistrationHelper.GetRegistrationController(conferenceInfo.Slug);
+    var redirect = registrationController.StartRegistration(
+        registration, registrationController.ViewBag.OrderVersion) as RedirectToRouteResult;
 
-    var orderViewModel = RegistrationHelper.GetModel<OrderViewModel>(registrationController.StartRegistration());
-    Assert.NotNull(orderViewModel);
+    Assert.NotNull(redirect);
 
-    registration = new RegisterToConference { ConferenceId = conferenceInfo.Id, OrderId = registrationController.ViewBag.OrderId };
+    // Perform external redirection
+    var timeout =  DateTime.Now.Add(Constants.UI.WaitTimeout);
+
+    while (DateTime.Now < timeout && registrationViewModel == null)
+    {
+        //ReservationUnknown
+        var result = registrationController.SpecifyRegistrantAndPaymentDetails(
+            (Guid)redirect.RouteValues["orderId"], registrationController.ViewBag.OrderVersion);
+
+        Assert.IsNotType<RedirectToRouteResult>(result);
+        registrationViewModel = RegistrationHelper.GetModel<RegistrationViewModel>(result);
+    }
+
+    Assert.False(registrationViewModel == null, "Could not make the reservation and get the RegistrationViewModel");
+}
+
+...
+
+[When(@"the Registrant proceed to confirm the payment")]
+public void WhenTheRegistrantProceedToConfirmThePayment()
+{
+    using (var paymentController = RegistrationHelper.GetPaymentController())
+    {
+        paymentController.ThirdPartyProcessorPaymentAccepted(
+            conferenceInfo.Slug, (Guid) routeValues["paymentId"], " ");
+    }
+}
+
+...
+
+[Then(@"the Order should be created with the following Order Items")]
+public void ThenTheOrderShouldBeCreatedWithTheFollowingOrderItems(Table table)
+{
+    draftOrder = RegistrationHelper.GetModel<DraftOrder>(registrationController.ThankYou(registrationViewModel.Order.OrderId));
+    Assert.NotNull(draftOrder);
 
     foreach (var row in table.Rows)
     {
-        var orderItemViewModel = orderViewModel.Items.FirstOrDefault(s => s.SeatType.Description == row["seat type"]);
-        Assert.NotNull(orderItemViewModel);
-        registration.Seats.Add(new SeatQuantity(orderItemViewModel.SeatType.Id, Int32.Parse(row["quantity"])));
+        var orderItem = draftOrder.Lines.FirstOrDefault(
+            l => l.SeatType == conferenceInfo.Seats.First(s => s.Description == row["seat type"]).Id);
+
+        Assert.NotNull(orderItem);
+        Assert.Equal(Int32.Parse(row["quantity"]), orderItem.ReservedSeats);
     }
 }
 ```
 
-You can see how this approach uses the **RegistrationController** MVC class directly.
+You can see how this approach uses the **RegistrationController** MVC 
+class directly. 
 
-> **Note:** In both of these code samples you can see how the values in
+> **Note:** In these code samples you can see how the values in
 > the attributes link the step implementation to the statements in the
 > related SpecFlow feature files.
 
@@ -1052,7 +1202,6 @@ TestDriven.NET.
 > tests performed on the system. The main solution includes
 > comprehensive unit and integration tests, and the test team also
 > performed exploratory and performance testing on the application.
-
 
 ## Using Tests to Help Developers Understand Message Flows
 
