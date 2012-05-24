@@ -240,7 +240,7 @@ these chapters in the section "A CQRS Journey."
 > make the next business decision. Putting that into a structural model 
 > is asking for a world of pain. It depends, get over it, choose wisely, 
 > and above all: make your own mistakes. 
-> - Yves Reynhout (CQRS Advisors Mail List)
+> Yves Reynhout (CQRS Advisors Mail List)
 
 # Event Sourcing Concerns 
 
@@ -286,13 +286,13 @@ application's UI.
 > ephemeral or a permanent source of truth. The CQRS pattern itself merely 
 > mandates a split between the write and the read thing, so ES is strictly 
 > complementary.  
-> - Clemens Vasters  (CQRS Advisors Mail List)
+> Clemens Vasters  (CQRS Advisors Mail List)
 
 > Event Sourcing is about the state of the domain model being persisted as 
 > a stream of events rather than as a single snapshot, not about how the 
 > command and query sides are kept in sync (usually with a 
 > publish/subscribe message-based approach).  
-> - Udi Dahan  (CQRS Advisors Mail List)
+> Udi Dahan  (CQRS Advisors Mail List)
 
 You can use the events that you persist in your event store to propagate 
 all the updates made on the write-side to the read-side. The read-side 

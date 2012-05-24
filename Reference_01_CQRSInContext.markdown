@@ -1,14 +1,6 @@
 ## Chapter 1
 # CQRS in Context (Chapter Title)
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	This should be an introduction only, with plenty of references to
-	external resources.
-  </span>
-</div>
-
 This chapter is intended to provide some context for the main subject of 
 this guide: a discussion of the Command Query Responsibility Segregation 
 (CQRS) pattern. It is useful to understand some of the origins of the 
@@ -242,7 +234,7 @@ There are no hard and fast rules that specify how big a bounded context
 should be. Ultimately it's a pragmatic issue that is determined by your 
 requirements and the constraints on your project: 
 
-> "Favoring Larger Bounded Contexts 
+> Favoring Larger Bounded Contexts 
 >
 > - Flow between user tasks is smoother when more is handled with a
 >   unified model. 
@@ -260,7 +252,7 @@ requirements and the constraints on your project:
 >   requiring skills that are in short supply. 
 > - Different models can cater to special needs or encompass the jargon
 >   of specialized groups of users, along with specialized dialects of
->   the Ubiquitous Language." 
+>   the Ubiquitous Language. 
 >
 >   Eric Evans, "Domain-Driven Design," p383. 
 

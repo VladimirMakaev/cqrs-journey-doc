@@ -55,7 +55,7 @@ managing changing business rules in some portions of your system.
 > that you process commands through. In REST terminology: GET requests 
 > wire up to a different thing from what PUT/POST/DELETE requests wire 
 > up to.  
-> - Greg Young (CQRS Advisors Mail List)
+> Greg Young (CQRS Advisors Mail List)
 
 ## Read and Write Sides
 Figure 1 shows a typical application of the CQRS pattern to a portion of 
@@ -227,12 +227,12 @@ is particularly true of applications that use a task-oriented UI.
   also strongly influenced by the DDD approach so it is common to see 
   DDD terminology in use whenever there is a discussion of CQRS. 
 
-*Commands* are imperatives; they are requests for the system to 
+*Commands are imperatives;* they are requests for the system to 
 perform a task or action. For example, "book two places on conference X" 
 or "allocate speaker Y to room Z." Commands are usually processed just 
 once, by a single recipient.
 
-*Events* are notifications; they report something that has already 
+*Events are notifications;* they report something that has already 
 happened to other interested parties. For example, "the customer's 
 credit card has been billed $200" or "ten seats have been booked on 
 conference X." Events can be processed multiple times, by multiple 
@@ -346,9 +346,9 @@ competitive pressures on your organization.
 
 This is related to the concept of Continuous Integration in DDD: 
 
-> "Continuous integration means that all work within the context is 
+> Continuous integration means that all work within the context is 
   being merged and made consistent frequently enough that when splinters
-  happen they are caught and corrected quickly."  
+  happen they are caught and corrected quickly.  
   Eric Evans, "Domain-Driven Design," p342. 
 
 In some cases, it may be possible to have different development teams 
@@ -406,10 +406,10 @@ Both Udi Dahan and Greg Young identify collaboration as the
 characteristic of a bounded context that provides the best indicator 
 that you may see benefits from applying the CQRS pattern. 
 
-> "In a collaborative domain, an inherent property of the domain is that
+> In a collaborative domain, an inherent property of the domain is that
   multiple actors operate in parallel on the same set of data. A 
   reservation system for concerts would be a good example of a 
-  collaborative domain - everyone wants the 'good seats'"  
+  collaborative domain - everyone wants the 'good seats'.  
   Udi Dahan,
   [Why you should be using CQRS almost everywhere...][dahaneverywhere]
 
@@ -451,11 +451,11 @@ and for how long. This differs from other architectures, where
 management of stale data is more of an implementation detail that is not 
 always addressed in a standard or consistent manner. 
 
-> "Standard layered architectures don't explicitly deal with either of 
+> Standard layered architectures don't explicitly deal with either of 
   these issues. While putting everything in the same database may be one
   step in the direction of handling collaboration, staleness is usually 
   exacerbated in those architectures by the use of caches as a 
-  performance-improving afterthought."  
+  performance-improving afterthought.  
   Udi Dahan talking about collaboration and staleness,
   [Clarified CQRS][dahanclarify].
 

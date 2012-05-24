@@ -16,7 +16,32 @@ with no downtime for the live system running in Windows Azure.
 
 ## Working Definitions for this Chapter 
 
-Outline any working definitions that were adopted for this chapter. 
+The following definitions are used for the remainder of this chapter. 
+For more detail, and possible alternative definitions, see [A CQRS/ES 
+Deep Dive][r_chapter4] in the Reference Guide. 
+
+### Command
+
+A command is a request for the system to perform an action that changes 
+the state of the system. Commands are imperatives, for example 
+**MakeSeatReservation**. In this bounded context, commands originate 
+either from the UI as a result of a user initiating a request, or from 
+a workflow when the workflow is directing an aggregate to perform an 
+action. 
+
+Commands are processed once by a single recipient. A command bus 
+transports commands that command handlers then dispatch to aggregates. 
+Sending a command is an asynchronous operation with no return value. 
+
+### Event
+
+An event describes something that has happened in the system, typically 
+as a result of a command. Aggregates in the domain model raise events. 
+
+Multiple subscribers can handle a specific event. Aggregates publish 
+events to an event bus; handlers register for specific types of event on 
+the event bus and then deliver the events to the subscriber. In this 
+bounded context, the only subscriber is a workflow. 
 
 ## User Stories 
 
@@ -800,7 +825,12 @@ private BrokeredMessage BuildMessage(Envelope<ICommand> command)
 The team decided to use Windows Azure Service Bus Message Sessions to 
 guarantee message ordering in the system.
 
-The system configures the Windows Azure Service Bus topics and subscriptions from the **OnStart** method in the **ConferenceProcessor** class. The configuration in the **Settings.xml** file specifies whether a particular subscription should use sessions. The following code sample from the **ServiceBusConfig** class shows how the system creates and configures subscriptions.
+The system configures the Windows Azure Service Bus topics and 
+subscriptions from the **OnStart** method in the **ConferenceProcessor** 
+class. The configuration in the **Settings.xml** file specifies whether 
+a particular subscription should use sessions. The following code sample 
+from the **ServiceBusConfig** class shows how the system creates and 
+configures subscriptions. 
 
 ```Cs
 private void CreateSubscriptionIfNotExists(NamespaceManager namespaceManager, TopicSettings topic, SubscriptionSettings subscription)

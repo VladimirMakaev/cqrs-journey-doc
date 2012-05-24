@@ -40,7 +40,7 @@ Customer to set various types of discount for seat types.
 ## Working Definitions for this Chapter
 
 The following definitions are used for the remainder of this chapter. 
-For more detail, and possible alternative definitions see [A CQRS/ES 
+For more detail, and possible alternative definitions, see [A CQRS/ES 
 Deep Dive][r_chapter4] in the Reference Guide. 
 
 ### Command
@@ -72,7 +72,7 @@ bounded context, the only subscriber is a workflow.
 
 ### Coordinating Workflow
 
-In this bounded context, a Coordinating Workflow (or workflow) is a 
+In this bounded context, a coordinating workflow (or workflow) is a 
 class that coordinates the behavior of the aggregates in the domain. A 
 workflow subscribes to the events that the aggregates raise, and then 
 follow a simple set of rules to determine which command or commands to 
@@ -718,6 +718,7 @@ public ActionResult SpecifyRegistrantDetails(string conferenceCode, Guid orderId
 	...
 }
 ```
+
 The advantages of this second approach, using the Post-Redirect-Get 
 pattern instead of in the **StartRegistration** post action are that it 
 works better with the browser's forward and back navigation buttons, and 
@@ -1306,6 +1307,7 @@ private void OnMessageReceived(object sender, BrokeredMessageEventArgs args)
     message.SafeComplete();
 }
 ``` 
+
 > **Note:** This example uses an extension method to invoke the
 > **Complete** and **Abandon** methods of the **BrokeredMessage**
 > reliably using the [Transient Fault Handling Application Block][tfab].

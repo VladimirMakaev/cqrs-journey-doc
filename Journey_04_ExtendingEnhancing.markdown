@@ -1,19 +1,19 @@
 ## Chapter 4
 # Extending and Enhancing the Orders and Registrations Bounded Contexts 
 
-*Exploring further*
+*Exploring further in the Orders and Registrations bounded context*
 
 # A Description of the Orders and Registrations Bounded Context 
 
-The Orders and Registrations Bounded Context was described in some detail 
-in the previous chapter. This chapter describes some changes that the 
-team made in this bounded context during the second stage of their CQRS 
-journey. 
+The **Orders and Registrations** bounded context was described in some 
+detail in the previous chapter. This chapter describes some changes that 
+the team made in this bounded context during the second stage of their 
+CQRS journey. 
 
 The specific topics described in this chapter include:
 
 * Improvements to the way that message correlation works with the 
-  **RegistrationProcess*. This illustrates how aggregate instances 
+  **RegistrationProcess**. This illustrates how aggregate instances 
   within the bounded context can interact in a complex manner.
 * Implementing a record locator to enable a registrant to retrieve an 
   order that was saved during a previous session. This illustrates
@@ -40,7 +40,7 @@ The specific topics described in this chapter include:
 ## Working Definitions for this Chapter 
 
 The following definitions are used for the remainder of this chapter. 
-For more detail, and possible alternative definitions see [A CQRS/ES 
+For more detail, and possible alternative definitions, see [A CQRS/ES 
 Deep Dive][r_chapter4] in the Reference Guide. 
 
 ### Command
@@ -68,7 +68,7 @@ bounded context, the only subscriber is a workflow.
 
 ### Coordinating Workflow
 
-In this bounded context, a Coordinating Workflow (or workflow) is a 
+In this bounded context, a coordinating workflow (or workflow) is a 
 class that coordinates the behavior of the aggregates in the domain. A 
 workflow subscribes to the events that the aggregates raise, and then 
 follow a simple set of rules to determine which command or commands to 
@@ -135,15 +135,11 @@ database.
 For more information about the options for running the application, see 
 [Appendix 1][appendix1]. 
 
-# Patterns and Concepts 
+# Patterns and Concepts
 
-* What are the primary patterns or approaches that have been adopted for this bounded context? (CQRS, CQRS/ES, CRUD, ...) 
-
-* What were the motivations for adopting these patterns or approaches for this bounded context? 
-
-* What trade-offs did we evaluate? 
-
-* What alternatives did we consider? 
+This section describes some of the key areas of the application that the 
+team visited during this stage of the journey and introduces some of the 
+challenges met by the team when they addressed these areas. 
 
 ## Record Locators
 
@@ -874,7 +870,7 @@ aggregate and its constituent classes.
 
 ![Figure 3][fig3]
 
-**The **SeatsAvailability** and its associated commands and events.
+**The SeatsAvailability aggregate and its associated commands and events.**
 
 This aggregate now models the following facts:
 
@@ -929,7 +925,7 @@ To achieve these goals the team used [SpecFlow][specflow].
 The first step is to define the acceptance tests in the language used by 
 SpecFlow. These tests are saved as feature files in a Visual Studio 
 project. The following code sample from the 
-ConferenceConfiguration.feature file in the 
+**ConferenceConfiguration.feature** file in the 
 Features\UserInterface\Views\Management folder shows an acceptance test 
 for the Conference Management bounded context. A typical SpecFlow test 
 scenario consists of a collection of **Given**, **When**, and **Then** 
@@ -1098,7 +1094,7 @@ requires some knowledge of the internal implementation of the system.
 The following code samples show an example of this approach.
 
 First, a scenario from the 
-SelfRegistrationEndToEndWithControllers.feature file in the 
+**SelfRegistrationEndToEndWithControllers.feature** file in the 
 Features\UserInterface\Controllers\Registration older: 
 
 ```

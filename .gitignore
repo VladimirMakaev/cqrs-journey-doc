@@ -10,3 +10,6 @@ output.html
 
 # Ignore markdown templpate
 *.template
+
+# Ignore PDF
+*.pdf

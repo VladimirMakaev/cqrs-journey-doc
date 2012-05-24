@@ -113,7 +113,7 @@ database in SQL Azure):
 .\Install-Database.ps1 -ServerName [your-sql-azure-server].database.windows.net -DoNotCreateDatabase -DoNotAddNetworkServiceUser -UseSqlServerAuthentication -UserName [your-sql-azure-username]
 ```
 
-You must then modify the ServiceConfiguration.Cloud.cscfg file in the Conference.Azure project to use the following connection strings.
+You must then modify the **ServiceConfiguration.Cloud.cscfg** file in the Conference.Azure project to use the following connection strings.
 
 **SQL Azure Connection String**
 
@@ -387,14 +387,14 @@ The **Settings.xml** file contains the names of the new Windows Azure
 tables that the V2 release uses. If you are migrating data from V1 to V2 
 ensure that the name of the **EventSourcing** table is different to the 
 name of the table used by the V1 release. The name of the table used by 
-the V1 release is hardcoded in the Program.cs file in the MigrationToV2 
+the V1 release is hardcoded in the **Program.cs** file in the MigrationToV2 
 project: 
 
 ```
 var originalEventStoreName = "ConferenceEventStore";
 ```
 
-The name of the new table for V2 is in the Settings.xml file:
+The name of the new table for V2 is in the **Settings.xml** file:
 
 ```
 <EventSourcing>
@@ -414,7 +414,7 @@ connect to the SQL Azure database that contains the SQL tables used by
 the application. Ensure that this connection string points to the SQL 
 Azure database that contains your production data. You can verify which 
 SQL Azure database your production environment uses by looking in the 
-active ServiceConfiguration.csfg file. 
+active **ServiceConfiguration.csfg** file. 
 
 > **Note:** If you are running the application locally using the
 > **Debug** configuration, the **DbContext.ConferenceManagement**

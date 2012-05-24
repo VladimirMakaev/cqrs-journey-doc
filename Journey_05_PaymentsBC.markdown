@@ -7,10 +7,10 @@
 
 This chapter describes the changes made by the team to prepare for the 
 first production release of the Contoso Conference Management System. 
-This work includes some refactoring and additions to the Orders and 
-Registrations bounded context that was introduced in the previous two 
-chapters as well as a new Conference Management bounded context and
-Payments bounded context. 
+This work includes some refactoring and additions to the **Orders and 
+Registrations** bounded context that was introduced in the previous two 
+chapters as well as a new **Conference Management** bounded context and
+**Payments** bounded context. 
 
 One of the key refactorings undertaken by the team during this phase of 
 the journey was to introduce event sourcing into the Orders and 
@@ -30,8 +30,9 @@ task-based UIs.
 
 ## Working Definitions for this Chapter 
 
-This section outlines some of the definitions that are relevant to this
-chapter.
+The following definitions are used for the remainder of this chapter. 
+For more detail, and possible alternative definitions, see [A CQRS/ES 
+Deep Dive][r_chapter4] in the Reference Guide. 
 
 ### Access Code
 
@@ -128,8 +129,6 @@ attendees to those seats. The system stores the name and contact details
 for each attendee.
 
 ## Architecture 
-
-What are the key architectural features? Server-side, UI, multi-tier, cloud, etc.
 
 Figure 1 illustrates the key architectural elements of the Contoso 
 Conference Management System in the V1 release. The application consists 
@@ -317,14 +316,15 @@ access objects) shown on the diagram exchange with each other.
   </tbody>
 </table>
 
-\* These events are only used for persisting aggregate state using event sourcing.
+> \* These events are only used for persisting aggregate state using
+> event sourcing.  
+> \*\* The **ConferenceViewModelGenerator** creates these commands from
+> the **SeatCreated** and **SeatUpdated** events that it handles from
+> the Conference Management bounded context.
 
-\*\* The **ConferenceViewModelGenerator** creates these commands from the **SeatCreated** and **SeatUpdated** events that it handles from the Conference Management bounded context.
-
-**Summary of messages in the Contoso Conference Management System**
-
-* All events use the past tense the naming convention.  
-* All commands use the imperative naming convention.  
+The following list outlines the message naming conventions in the Contoso Conference Management System
+* All events use the past tense the naming convention.
+* All commands use the imperative naming convention.
 * All DTOs are nouns.
 
 The application is designed to deploy to Windows Azure. At this stage in 
@@ -368,13 +368,9 @@ implement the CQRS pattern.
 
 # Patterns and Concepts 
 
-* What are the primary patterns or approaches that have been adopted for this bounded context? (CQRS, CQRS/ES, CRUD, ...) 
-
-* What were the motivations for adopting these patterns or approaches for this bounded context? 
-
-* What trade-offs did we evaluate? 
-
-* What alternatives did we consider? 
+This section describes some of the key areas of the application that the 
+team visited during this stage of the journey and introduces some of the 
+challenges met by the team when they addressed these areas. 
 
 ## Event Sourcing
 
@@ -404,6 +400,7 @@ and the implementation of the Orders and Registrations becomes simpler.
 > as an interim solution. However, they will potentially face the
 > problem in the future of migrating from one event store to another.
 
+
 > Evolution is key here; for example one could show how implementing
 > event sourcing allows you to get rid of those tedious data migrations,
 > and even allows you to build reports from the past.  
@@ -429,6 +426,7 @@ reliability, scale, and performance for your application.
 > different aggregate types. You may be able to introduce optimizations
 > that lower your costs, for example by using caching to reduce the
 > number of storage transactions.
+
 
 > My rule of thumb is that if you’re doing greenfield development, you
 > need very good arguments in order to choose SQL Azure. Windows Azure
@@ -544,7 +542,7 @@ You should not use the CQRS pattern as part of your top-level
 architecture: you should implement the pattern only in those bounded 
 contexts where it brings clear benefits. In the Contoso Conference 
 Management System, the conference management bounded context is a 
-relatively simple, stable, and low volume element of the overall system. 
+relatively simple, stable, and low volume part of the overall system. 
 Therefore the team decided that they would implement this bounded 
 context using a traditional two-tier, CRUD-style architecture. 
 
@@ -747,7 +745,7 @@ These alternative approaches will include:
 ### Choosing When to Update the Read-side Data
 
 In the Conference Management bounded context, the business customer can 
-change the description of a seat type. This results in a **SeatUpdated**
+change the description of a seat type. This results in a **SeatUpdated** 
 event that is handled in the Orders and Registrations bounded context 
 by the **ConferenceViewModelGenerator** class that updates the 
 read-model data to reflect the new information about the seat type. The 
@@ -761,6 +759,7 @@ description.
 > **CarlosPersona:** This is a deliberate business decision: we don't
 > want to confuse registrants by changing the seat description after
 > they create an order.
+
 
 > **BharathPersona:** If we did want to update the seat description on
 > existing orders, we would need to modify the
@@ -955,12 +954,8 @@ changes to conferences by publishing the following events.
 The **ConferenceService** class in the Conference project publishes 
 these events to the event bus. 
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	At the moment there is no distributed transaction to wrap the database update and the message publishing.
-  </span>
-</div> 
+> **MarkusPersona:** At the moment there is no distributed transaction
+> to wrap the database update and the message publishing.
 
 ## The Payments Bounded Context
 

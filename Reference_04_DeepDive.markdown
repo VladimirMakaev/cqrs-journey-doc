@@ -321,13 +321,13 @@ perform some work for you.
 > succeed (and that makes the async story WAY easier and practical). You 
 > can validate against the read model before submitting a command, and 
 > this way being almost certain that it will succeed.  
-> - Julian Dominguez (CQRS Advisors Mail List)
+> Julian Dominguez (CQRS Advisors Mail List)
 
 > When a user issues a Command, it'll give the best user experience if it 
 > rarely fails. However, from an architectural/implementation point of 
 > view, Commands will fail once in a while, and the application should be 
 > able to handle that.  
-> - Mark Seeman (CQRS Advisors Mail List)
+> Mark Seeman (CQRS Advisors Mail List)
 
 ### Example Code
 
@@ -377,8 +377,8 @@ instance. The Command Handler performs the following tasks:
 > go talk with your business expert and analyze what happens in this 
 > case. How to handle compensation, offer an alternate solution, or deal 
 > with overbooking. The only reason to retry I see is for technical 
-> transient failures, like accessing the state storage. 
-> - J&eacute;r&eacute;mie Chassaing (CQRS Advisors Mail List)
+> transient failures, like accessing the state storage.  
+> J&eacute;r&eacute;mie Chassaing (CQRS Advisors Mail List)
 
 Typically, you will organize your command handlers so that you have a 
 class that contains all of the handlers for a specific aggregate type. 
@@ -865,8 +865,6 @@ consistent by using this infrastructure feature.
   </span>
 </div>  
 
-Queries 
-
 # Optimizing the Read Side 
 
 This section discusses a number of issues that relate to the 
@@ -914,8 +912,8 @@ instance.
 version number greater than the version of the current, in-memory, 
 instance. 
 
-> "These are technical performance optimizations that can be implemented 
-> on case-by-case basis." 
+> These are technical performance optimizations that can be implemented 
+> on case-by-case basis.  
 > Rinat Abdullin (CQRS Advisors Mail List)
 
 # Messaging and CQRS
