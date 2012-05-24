@@ -22,12 +22,12 @@ on the development efforts.
 # The Contoso Corporation 
 
 Contoso is a startup ISV company of approximately 20 employees that 
-specializes in developing solutions using Microsoft® technologies. The 
-developers at Contoso are knowledgeable about various Microsoft products 
-and technologies, including the .NET Framework, ASP.NET MVC, and Windows 
-Azure. Some of the developers have previous experience of using the 
-Domain-Driven Design (DDD) approach, but none have them have used the 
-CQRS pattern previously. 
+specializes in developing solutions using Microsoft&reg; technologies. 
+The developers at Contoso are knowledgeable about various Microsoft 
+products and technologies, including the .NET Framework, ASP.NET MVC, 
+and Windows Azure. Some of the developers have previous experience of 
+using the Domain-Driven Design (DDD) approach, but none have them have 
+used the CQRS pattern previously. 
 
 The Conference Management System application is one of the first 
 innovative online services that Contoso wants to take to market. As a 

@@ -372,9 +372,9 @@ instance. The Command Handler performs the following tasks:
    in any parameters from the command.
 5. It persists the new state of the aggregate to storage.
 
-> I don’t see the reason to retry the command here. When you see that 
+> I don't see the reason to retry the command here. When you see that 
 > a command could not always be fulfilled due to race conditions, 
-> go talk with your business expert and analyze what happens in this 
+> go talk with your business expert and analyze what happens in this 
 > case. How to handle compensation, offer an alternate solution, or deal 
 > with overbooking. The only reason to retry I see is for technical 
 > transient failures, like accessing the state storage. 
@@ -597,10 +597,10 @@ approaches to modeling intent alongside the event data:
 **Example 1. The Event log or SOAP-style approach.**
 ```
 [ 
-  { "reserved" : { "seatType" : "FullConference", "quantity" : "5" }},
-  { "reserved" : { "seatType" : "WorkshopA", "quantity" : "3" }},
-  { "purchased" : { "seatType" : "FullConference", "quantity" : "5" }},
-  { "expired" : { "seatType" : "WorkshopA", "quantity" : "3" }},
+  { "reserved" : { "seatType" : "FullConference", "quantity" : "5" }},
+  { "reserved" : { "seatType" : "WorkshopA", "quantity" : "3" }},
+  { "purchased" : { "seatType" : "FullConference", "quantity" : "5" }},
+  { "expired" : { "seatType" : "WorkshopA", "quantity" : "3" }},
 ]
 ```
 
@@ -608,10 +608,10 @@ approaches to modeling intent alongside the event data:
 
 ```
 [ 
-  { "insert" : { "resource" : "reservations", "seatType" : "FullConference", "quantity" : "5" }},
-  { "insert" : { "resource" : "reservations", "seatType" : "WorkshopA", "quantity" : "3" }},
-  { "insert" : { "resource" : "orders", "seatType" : "FullConference", "quantity" : "5" }},
-  { "delete" : { "resource" : "reservations", "seatType" : "WorkshopA", "quantity" : "3" }},
+  { "insert" : { "resource" : "reservations", "seatType" : "FullConference", "quantity" : "5" }},
+  { "insert" : { "resource" : "reservations", "seatType" : "WorkshopA", "quantity" : "3" }},
+  { "insert" : { "resource" : "orders", "seatType" : "FullConference", "quantity" : "5" }},
+  { "delete" : { "resource" : "reservations", "seatType" : "WorkshopA", "quantity" : "3" }},
 ]
 ```
 
@@ -636,9 +636,9 @@ The advantages of the second approach are:
 * Easier to use with dynamic languages and with changing schemas.
 
 > **MarkusPersona:** Variable environment state needs to be stored 
-alongside events in order to have an accurate representation of the 
-circumstances at the time when the command resulting in the event 
-was executed, which means that we need to save everything! 
+alongside events in order to have an accurate representation of the 
+circumstances at the time when the command resulting in the event 
+was executed, which means that we need to save everything! 
 
 ## Events
 

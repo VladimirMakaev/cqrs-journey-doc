@@ -51,7 +51,7 @@ managing changing business rules in some portions of your system.
 > command processor and this principle presents a very suitable 
 > foundation for event sourcing, eventual-consistency state 
 > replication/fan-out and, thus, high-scale read access. In simple 
-> terms: You don’t service queries via the same module of a service 
+> terms: You don't service queries via the same module of a service 
 > that you process commands through. In REST terminology: GET requests 
 > wire up to a different thing from what PUT/POST/DELETE requests wire 
 > up to.  
@@ -409,9 +409,9 @@ that you may see benefits from applying the CQRS pattern.
 > "In a collaborative domain, an inherent property of the domain is that
   multiple actors operate in parallel on the same set of data. A 
   reservation system for concerts would be a good example of a 
-  collaborative domain – everyone wants the 'good seats'"  
+  collaborative domain - everyone wants the 'good seats'"  
   Udi Dahan,
-  [Why you should be using CQRS almost everywhere…][dahaneverywhere]
+  [Why you should be using CQRS almost everywhere...][dahaneverywhere]
 
 The CQRS pattern is particularly useful where the collaboration involves 
 complex decisions about what the outcome should be when you have 
@@ -484,7 +484,7 @@ In most systems, the majority of bounded contexts will probably not
 benefit from using the CQRS pattern. You should only use the pattern 
 when you can identify clear business benefits from so doing.
 
-> Most people using CQRS (and Event Sourcing too) shouldn’t have done
+> Most people using CQRS (and Event Sourcing too) shouldn't have done
 > so.  
 > Udi Dahan: [When to avoid CQRS][dahanavoid]
 
