@@ -73,27 +73,6 @@ is nothing to pay. The system should detect when there is nothing to pay
 and adjust the flow to take the registrant directly to the conformation 
 page for the order. 
 
-### Support for Discounts to Seat Prices
-
-Registrants should be able to obtain discounts through the use of 
-**Promotional Codes**. A registrant can enter a **Promotional Code** 
-during the ordering process and the system will adjust the total cost of 
-the order appropriately. 
-
-The discount associated with an individual **Promotional Code** can be 
-from 1% to 100%. Each **Promotional Code** has an associated quota that 
-determines how many seats are available at the dicounted price (this may 
-be unlimited) and a scope that determines which seat type the code is 
-associated with; this can also apply to all seat types rather than just 
-one. 
-
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-    Updated to include details of single-use codes and cummulative codes.
-  </span>
-</div>
-
 ## Architecture 
 
 What are the key architectural features? Server-side, UI, multi-tier, cloud, etc. 
@@ -188,16 +167,17 @@ stage process:
 If step 3 fails for some reason, this means that the system can process 
 the message more than once.
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-    Need to add details of how this is resolved. See https://github.com/mspnp/cqrs-journey-code/issues/266
-  </span>
-</div>
+> **JanaPersona:** The team plans to address this issue in the next
+> stage of the journey. See the chapter [Adding Resilience, new Bounded
+> Contexts, and Features ][j_chapter7] for more information.
 
 ### Avoiding Processing Events Multiple Times
 
-In V1, in certain scenarios it was possible for the system to process an event multiple times if an error occurred while the event was being processed. To avoid this scenario, the team modified the architecture so that every event handler has its own subscription to a Windows Azure topic. Figure 1 shows the two different models.
+In V1, in certain scenarios it was possible for the system to process an 
+event multiple times if an error occurred while the event was being 
+processed. To avoid this scenario, the team modified the architecture so 
+that every event handler has its own subscription to a Windows Azure 
+topic. Figure 1 shows the two different models. 
 
 ![Figure 1][fig1]
 
@@ -357,50 +337,6 @@ message sessions because this requires less change to the exsiting code.
 Both approaches would introduce some additional latency into the message 
 delivery, but the team does not anticipate that this will have a 
 significant effect on the performance of the system. 
-
-## Command Optimizations
-
-The current implementation uses the same messaging infrastructure for 
-both commands and events. The Windows Azure Service Bus provides a 
-reliable, performant, and scalable infrastructure for messaging in 
-Windows Azure. The team plans to evaluate whether the same 
-infrastructure is necesssary for both commands and events. 
-
-The system uses events as its primary mechanism for integrating between 
-bounded contexts. One bounded context can raise an event that is then 
-handled in another bounded context. These different bounded contexts 
-typically run in different role instances in Windows Azure: for example 
-the Conference Management bounded context runs in its own web role and 
-integrates with the Orders and Registrations bounded context. The 
-Windows Azure Service Bus provides a mechanism to transport messages 
-between these worker role instances. 
-
-> **BharathPersona:** It's also possible in the future that for some
-> bounded contexts, the read-model will be hosted in a separate role
-> instance from the write-model. Windows Azure Service Bus will
-> transport the events that the system uses to construct the
-> denormalized read-model.
-
-There are two factors that the team will consider when they determine 
-whether to continue using the Windows Azure Service Bus for transporting 
-command messages. 
-
-* In a CQRS implementation, commands are typically used within a bounded
-  context, not between bounded contexts. This may mean that a command
-  only exists within a process (or role instance in Windows Azure) and
-  could therefore be handled in-memory without the need for any more
-  robust messaging infrastructure.
-* You can treat commands as a two-way, synchronous messaging pattern.
-
-> An asynchronous command doesn't exist, it's actually another event. If
-> I must accept what you send me and raise an event if I disagree, it's
-> no longer you telling me to do something, it's you telling me
-> something has been done. This seems like a slight difference at first,
-> but it has many implications.  
-> Greg Young - Why lot's of developers use one-way command messaging 
-> (async handling) when it's not needed? - DDD/CQRS Google Groups
-
-## Implement Per Handler Subscriptions
 
 # Implementation Details 
 
@@ -1350,6 +1286,7 @@ in the read-models in the Orders and Registrations bounded context.
 
 
 [j_chapter4]:        Journey_04_ExtendingEnhancing.markdown
+[j_chapter7]:        Journey_07_V3Release.markdown
 
 [messagesessions]:   http://msdn.microsoft.com/en-us/library/microsoft.servicebus.messaging.messagesession.aspx
 [repourl]:           https://github.com/mspnp/cqrs-journey-code
