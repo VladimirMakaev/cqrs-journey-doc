@@ -1,5 +1,5 @@
 ## Chapter 7
-# Adding Resilience, new Bounded Contexts, and Features 
+# Adding Resilience, New Bounded Contexts, and Features 
 
 *To be decided*
 

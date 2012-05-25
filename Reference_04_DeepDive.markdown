@@ -858,27 +858,86 @@ sourcing. If the event store can send a copy of every event that it
 saves onto a message queue, then you can make the read-side eventually 
 consistent by using this infrastructure feature. 
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	[Add a reference to an event store that offers this functionality.]
-  </span>
-</div>  
-
 # Optimizing the Read Side 
 
-This section discusses a number of issues that relate to the 
-implementation of the read-side of the CQRS pattern. 
+There are four goals to keep in mind when optimizing the read-side.
+You typically want:
+
+* Fast responses to queries for data.
+* To minimize resource utilization.
+* To minimize latency.
+* To minimize costs.
+
+By separating the read-side from the write-side, the CQRS patern enables 
+you to design the read-side so that the data store is optimized for 
+reading. You can denormalize your relational tables or choose to store 
+the data in some other format that best suits the part of the 
+application that will use the data. Ideally, the recipient of the data 
+should not need to perform any joins or other complex, 
+resource-intensive operations on the data. 
+
+For a discussion of how to discourage any unnecessary operations on the 
+data, see the section, "Querying the Read-side" in [Extending and 
+Enhancing the Orders and Registrations Bounded Contexts][j_chapter4] in 
+the Journey Guidance. 
+
+If your system needs to accommodate high volumes of read operations, you 
+can scale out the read-side. For example, in Windows Azure by adding 
+additional role instances. You can also easily scale out your data store 
+on the read-side because it is read-only. You should also consider the 
+benefits of caching data on the read-side to further speed up response 
+times and reduce processing resource utilization. 
+
+In the section "Embracing Eventual Consistency" earlier in this chapter, 
+you saw how when you implement the CQRS pattern that you must accept 
+some latency between an update on the write-side and that change 
+becoming visible on the read-side. However, you will want to keep that 
+delay to a minimum. You can minimize the delay by ensuring that the 
+infrastructure that transports update information to the read-side has 
+enough resources, and by ensuring that the updates to your read-models 
+happen efficiently. 
+
+You should also consider the comparative storage costs for different 
+storage models on the read-side such as SQL Azure, Windows Azure table 
+storage, and Windows Azure blob storage. This may involve a trade-off 
+between performance and costs. 
 
 # Optimizing the Write Side 
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	parallelizing command handling, events, etc.<br/>
-	Snapshots in the event store
-  </span>
-</div>
+A key goal in optimizing the write-side is to maximize the throughput of 
+commands and events. Typically, the write-side performs work when it 
+receives commands from the UI or receives integration events from other 
+bounded contexts. You need to ensure that your messaging infrastructure 
+delivers command and event messages with minimal delay, that the 
+processing in the domain-model is efficient, and that interactions with 
+the data store are fast. 
+
+Options for optimizing the way that messages are delivered to the
+write-side include:
+
+* Delivering commands in-line without using the messaging
+  infrastructure. If you can host the domain-model in the same process
+  as the command sender, you can avoid using the messaging
+  infrastructure. You need to consider the impact this may have on the
+  resilience of your system to failures in this process.
+* Handling some commands in parallel. You need to consider whether this
+  will affect the way that your system manages concurrency.
+
+If you are using event sourcing, you may be able to reduce the time it 
+takes to load the state of aggregate by using snapshots. Instead of 
+replaying the complete event stream when you load an aggregate, you load 
+the most recent snapshot of its state and then only play back the events 
+that occurred after the snapshot was taken. You will need to introduce a 
+mechanism that creates snapshots for aggregates on a regular basis. 
+However, given the simplicity of a typical event store schema, loading 
+the state of an aggregate is typically very fast. Using snapshots 
+typically only provides a performance benefit when an agregate has a 
+very large number of events. 
+
+Instead of snapshots, you may be able to optimize the access to an 
+aggregate with a large number of events by caching it in memory. You 
+only need to load the full event stream when it is accessed for the 
+first time after a system start. 
 
 ## Concurrency and Aggregates
 
@@ -1008,7 +1067,56 @@ it becomes available to read again.
 > of retries, it is typically sent to a dead-letter queue for further
 > investigation.
 
-# Task-based UIs 
+# Task-based UIs
+
+In figure 3 above, you can see that in a typical implementation of the 
+CQRS pattern how the UI queries the read-side and receives a DTO, and 
+sends commands to the write-side. This section describes some of the 
+impact this has on the design of your UI. 
+
+In a typical three-tier architecture or simple CRUD system, the UI also 
+receives data in the form of DTOs from the service tier. The user then 
+manipulates the DTO through the UI. The UI then sends the modified DTO 
+back to the service tier. The service tier is then responsible for 
+persisting the changes to the data store. This can be a simple, 
+mechanical process of identifying the CRUD operations that the UI 
+performed on the DTO and applying equivalent CRUD operations to the data 
+store. The are several things to notice about this typical architecture: 
+
+* It uses CRUD operations throughout.
+* If you have a domain model you must translate the CRUD operations from
+  the UI into something that the domain understands.
+* It can lead to complexity in the UI if you want to provide a more
+  natural and intuitive UI that uses domain concepts instead of CRUD
+  concepts.
+* It does not necessarily capture the user's intent.
+* It is simple and well-understood.
+
+The following list identifies the changes that occur in your 
+architecture if you implement the CQRS pattern and send commands from 
+the UI to the write-side: 
+
+* It does not use CRUD style operations.
+* The domain can act directly in response to the commands from the UI.
+* You can design the UI to construct the commands directly, making it
+  easier to build a natural and intuitive UI that uses concepts from the
+  domain.
+* It is easier to capture the user's intent in a command.
+* It is more complex and assumes that you have a domain model in the
+  write-side.
+
+A task-based UI is a natural, intuitive UI based on domain concepts that 
+the users of the system already understand. It does not impose the CRUD 
+operations on the UI or the user. If you implement the CQRS pattern, 
+your task-based UI can create commands to send to the domain model on 
+the write-side. The commands should map very closely onto the mental 
+model that your users have of the domain, and should not require any 
+translation before the domain-model receieves and processes them. 
+
+In many applications, especially where the domain is relatively simple, 
+the costs of implementing the CQRS pattern and adding a task-based UI 
+will outweigh any benefits. Task-based UIs are particularly useful in 
+complex domains. 
 
 # Taking Advantage of Windows Azure
 
@@ -1043,21 +1151,32 @@ information about how to automatically scale roles in Windows Azure, see
 
 ## Implementing an Event Store Using Windows Azure Table Storage 
 
-This section shows an event store implementation using Windows Azure table storage. It is not intended to show production quality code, but to suggest an approach. An event store should:
+This section shows an event store implementation using Windows Azure 
+table storage. It is not intended to show production quality code, but 
+to suggest an approach. An event store should: 
 
 * Persist events to a reliable storage medium.
-* Enable an individual aggregate to retrieve its stream of events in the order that they were originally persisted.
-* Guarantee to publish each event "at least once" to a message infrastructure. 
+* Enable an individual aggregate to retrieve its stream of events in the
+  order that they were originally persisted.
+* Guarantee to publish each event "at least once" to a message
+  infrastructure. 
 
-Windows Azure tables have two fields that together define the uniqueness of a record: the partition key and the row key.
+Windows Azure tables have two fields that together define the uniqueness 
+of a record: the partition key and the row key. 
 
-This implementation uses the value of the aggregate's unique identifier as the partition key, and the event version number as the row key. Partition keys enable you to retrieve all of the records with the same partition key very quickly, and use transactions across rows that share the same partition key.
+This implementation uses the value of the aggregate's unique identifier 
+as the partition key, and the event version number as the row key. 
+Partition keys enable you to retrieve all of the records with the same 
+partition key very quickly, and use transactions across rows that share 
+the same partition key. 
 
-For more information about Windows Azure table storage see [Data Storage Offerings in Windows Azure][azurestorage].
+For more information about Windows Azure table storage see [Data Storage 
+Offerings in Windows Azure][azurestorage]. 
 
 ### Persisting Events
 
-The following code sample shows how the implementation persists an event to Windows Azure table storage.
+The following code sample shows how the implementation persists an event 
+to Windows Azure table storage. 
 
 ```Cs
 public void Save(string partitionKey, IEnumerable<EventData> events)
@@ -1110,7 +1229,8 @@ There are two things to note about this code sample:
 
 ### Retrieving Events
 
-The following code sample shows how to retrieve the list of events associated with an aggregate.
+The following code sample shows how to retrieve the list of events 
+associated with an aggregate. 
 
 ```Cs
 public IEnumerable<EventData> Load(string partitionKey, int version)
@@ -1128,11 +1248,17 @@ public IEnumerable<EventData> Load(string partitionKey, int version)
                                 });
 }
 ```
-The events are returned in the correct order because the version number is used as the row key.
+The events are returned in the correct order because the version number 
+is used as the row key. 
 
 ### Publishing Events
 
-To guarantee that every event is published as well as persisted, you can use the transactional behaviour of Windows Azure table partitions. When you save an event, you also add a copy of the event to a virtual queue on the same partition as part of a transaction. The following code sample shows a complete version of the save method that saves two copies of the event.
+To guarantee that every event is published as well as persisted, you can 
+use the transactional behaviour of Windows Azure table partitions. When 
+you save an event, you also add a copy of the event to a virtual queue 
+on the same partition as part of a transaction. The following code 
+sample shows a complete version of the save method that saves two copies 
+of the event. 
 
 ```Cs
 public void Save(string partitionKey, IEnumerable<EventData> events)
@@ -1185,7 +1311,11 @@ public void Save(string partitionKey, IEnumerable<EventData> events)
 }
 ```
 
-You can use a task to process the unpublished events: read the unpublished event from the virtual queue, publish the event on the messaging infrastructure, and delete the copy of the event from the unpublished queue. The following code sample shows a possible implementation of this behavior.
+You can use a task to process the unpublished events: read the 
+unpublished event from the virtual queue, publish the event on the 
+messaging infrastructure, and delete the copy of the event from the 
+unpublished queue. The following code sample shows a possible 
+implementation of this behavior. 
 
 ```Cs
 private readonly BlockingCollection<string> enqueuedKeys;
@@ -1253,14 +1383,37 @@ There are three points to note about this sample implementation:
 
 ## Implementing a Messaging Infrastructure Using the Windows Azure Service Bus 
 
-Will be covered in the Journey doc.
+The Windows Azure Service Bus offers a robust, cloud-based messaging 
+infrastructure that you can use to transport your command and event 
+messages when you implement the CQRS pattern. It's brokered messaging 
+feature enables you to use either a point-to-point topology using 
+queues, or a publish/subscribe topology using topics. 
+
+You can design your application to use the Windows Azure Service Bus to 
+guarantee at-least-once delivery of messages, and guarantee message 
+ordering by using message sessions. 
+
+The sample application described in the Journey Guidance uses the 
+Windows Azure Service Bus for delivering both commands and events. The 
+following chapters in the Journey Guidance contain further information. 
+
+* [Orders and Registrations Bounded Context][j_chapter3]
+* [Versioning our System ][j_chapter6]
+* [Adding Resilience, New Bounded Contexts, and Features][j_chapter7]
+
+You can find references to additional resources in [Technologies Used in 
+the Reference Implementation][r_chapter9]. 
+
 
 
 [r_chapter1]:     Reference_01_CQRSContext.markdown
 [r_chapter2]:     Reference_02_CQRSIntroduction.markdown
 [r_chapter4]:     Reference_04_DeepDive.markdown
 [r_chapter9]:     Reference_09_Technologies.markdown
-
+[j_chapter3]:     Journey_03_OrdersBC.markdown
+[j_chapter4]:     Journey_04_ExtendingEnhancing.markdown
+[j_chapter6]:     Journey_06_V2Release.markdown
+[j_chapter7]:     Journey_07_V3Release.markdown
 
 [captheorem]:     http://en.wikipedia.org/wiki/CAP_theorem
 [aab]:            http://msdn.microsoft.com/en-us/library/hh680892(PandP.50).aspx
