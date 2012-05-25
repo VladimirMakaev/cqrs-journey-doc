@@ -743,7 +743,7 @@ public class OrderViewModelGenerator :
 
     public void Handle(OrderPlaced @event)
     {
-        using (var repository = this.contextFactory.Invoke())
+        using (var context = this.contextFactory.Invoke())
         {
             var dto = new DraftOrder(@event.SourceId, DraftOrder.States.Created)
             {
@@ -751,7 +751,7 @@ public class OrderViewModelGenerator :
             };
             dto.Lines.AddRange(@event.Seats.Select(seat => new DraftOrderItem(seat.SeatType, seat.Quantity)));
 
-            repository.Save(dto);
+            context.Save(dto);
         }
     }
 
@@ -915,7 +915,7 @@ basis of a set of acceptance tests for the system.
 The team had the following goals for their acceptance testing approach:
 
 * The acceptance tests should be clearly and unambiguously expressed in
-  a format that the somain expert could understand.
+  a format that the domain expert could understand.
 * It should be possible to execute the acceptance tests automatically.
 
 To achieve these goals the team used [SpecFlow][specflow].
