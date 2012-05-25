@@ -55,7 +55,7 @@ managing changing business rules in some portions of your system.
 > that you process commands through. In REST terminology: GET requests 
 > wire up to a different thing from what PUT/POST/DELETE requests wire 
 > up to.  
-> Greg Young (CQRS Advisors Mail List)
+> Clemens Vasters (CQRS Advisors Mail List)
 
 ## Read and Write Sides
 Figure 1 shows a typical application of the CQRS pattern to a portion of 
