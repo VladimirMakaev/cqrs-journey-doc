@@ -157,7 +157,6 @@ access objects) shown on the diagram exchange with each other.
       <th align="left">Recieves</th>
     </tr>
   </thead>
-
   <tbody>
     <tr>
       <td align="left">ConferenceController</td>
@@ -165,7 +164,6 @@ access objects) shown on the diagram exchange with each other.
       <td align="left">N/A</td>
       <td align="left">ConferenceDetails</td>
     </tr>
-
     <tr>
       <td align="left">OrderController</td>
       <td align="left">MVC Controller</td>
@@ -175,7 +173,6 @@ access objects) shown on the diagram exchange with each other.
                        OrderSeats<br/>
                        PricedOrder</td>
     </tr>
-
     <tr>
       <td align="left">RegistrationController</td>
       <td align="left">MVC Controller</td>
@@ -186,7 +183,6 @@ access objects) shown on the diagram exchange with each other.
                        PricedOrder<br/>
                        SeatType</td>
     </tr>
-
     <tr>
       <td align="left">PaymentController</td>
       <td align="left">MVC Controller</td>
@@ -194,7 +190,6 @@ access objects) shown on the diagram exchange with each other.
                        CancelThirdPartyProcessorPayment</td>
       <td align="left">ThirdPartyProcessorPaymentDetails</td>
     </tr>
-
     <tr>
       <td align="left">Conference Management</td>
       <td align="left">CRUD Bounded Context</td>
@@ -212,7 +207,6 @@ access objects) shown on the diagram exchange with each other.
                        SeatAssignmentUpdated<br/>
                        SeatUnassigned</td>
     </tr>
-
     <tr>
       <td align="left">Order</td>
       <td align="left">Aggregate</td>
@@ -229,7 +223,6 @@ access objects) shown on the diagram exchange with each other.
                        AssignRegistrantDetails<br>
                        ConfirmOrderPayment</td>
     </tr>
-
     <tr>
       <td align="left">SeatsAvailability</td>
       <td align="left">Aggregate</td>
@@ -243,7 +236,6 @@ access objects) shown on the diagram exchange with each other.
                        AddSeats<br/>
                        RemoveSeats</td>
     </tr>
-
     <tr>
       <td align="left">SeatAssignments</td>
       <td align="left">Aggregate</td>
@@ -254,7 +246,6 @@ access objects) shown on the diagram exchange with each other.
       <td align="left">AssignSeat<br/>
                        UnassignSeat</td>
     </tr>
-    
     <tr>
       <td align="left">RegistrationProcess</td>
       <td align="left">Workflow</td>
@@ -270,7 +261,6 @@ access objects) shown on the diagram exchange with each other.
                        SeatsReserved<br/>
                        ExpireRegistrationProcess</td>
     </tr>
-
     <tr>
       <td align="left">OrderViewModelGenerator</td>
       <td align="left">Handler</td>
@@ -281,14 +271,12 @@ access objects) shown on the diagram exchange with each other.
                        OrderReservationCompleted<br/>
                        OrderRegistrantAssigned</td>
     </tr>
-
     <tr>
       <td align="left">PricedOrderViewModelGenerator</td>
       <td align="left">Handler</td>
       <td align="left">N/A</td>
       <td align="left">SeatTypeName</td>
     </tr>
-
     <tr>
       <td align="left">ConferenceViewModelGenerator</td>
       <td align="left">Handler</td>
@@ -302,7 +290,6 @@ access objects) shown on the diagram exchange with each other.
                        **SeatCreated<br/>
                        **SeatUpdated</td>
     </tr>
-
     <tr>
       <td align="left">ThirdPartyProcessorPayment</td>
       <td align="left">Aggregate</td>
