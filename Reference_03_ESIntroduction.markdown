@@ -338,23 +338,114 @@ the write-side data store.
 You can use event sourcing without also applying the CQRS pattern. The 
 ability to rebuild the application state, to mine the event history for 
 new business data, and to simplify the data storage part of the 
-application are all valuable in some scenarios.
-
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	Expand this section.
-  </span>
-</div>
+application are all valuable in some scenarios. However, this guide 
+focuses on using event sourcing in the context of the CQRS pattern. 
 
 # Event Stores 
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	To do.
-  </span>
-</div>
+If you are using event sourcing, you will need a mechanism to store your 
+events and to return the stream of events associated with an aggregate 
+instance so that you can replay the events to re-create the state of the 
+aggregate. This storage mechanism is typically referred to as an Event 
+Store. 
+
+You may choose to implement your own event store, or use a third-party 
+event store such as Jonathan Oliver's [EventStore][jolivereventstore]. 
+Although you can implement a small-scale event store relatively easily, 
+a production quality, scalable event store is more of a challenge. 
+
+## Basic Requirements
+
+Typically, when you implement the CQRS pattern, aggregates raise events 
+to publish information to other interested parties, such as other 
+aggregates, coordinating workflows, read-models, or other bounded 
+contexts. When you use event sourcing, you persist these same events to 
+an event store. This enables you to use those events to load the state 
+of an aggregate by replaying the sequence of events associated with that 
+aggregate. 
+
+Therefore, whenever an aggregate instance raises an event, two things 
+must happen. The system must persist the event to the event store, and 
+the system must publish the event. 
+
+> **Note:** In practice not all events in a system necessarily have
+> subscribers. You may raise some events solely as a way to persist some
+> properties of an aggregate.
+
+Whenever the system needs to load the current state of an aggregate, it 
+must query the event store for the list of past events associated with 
+that aggregate instance. 
+
+## Underlying Storage
+
+Events are not complex data structures; typically they have some 
+standard metadata that includes the Id of the aggregate instance they 
+are associated with and a version number, and a payload with the details 
+of the event itself. You do not need to use a relational database to 
+store your events: you could use a NoSQL store, a document database, or 
+a file system. 
+
+## Performance, Scalability, and Consistency
+
+Stored events should be immutable and are always read in the order that 
+they were saved; so saving an event should be a simple, fast append 
+operation on the underlying store. 
+
+When you load the persisted events, you will load the events in the 
+order that were originally saved. If you are using a relational 
+database, the records should be keyed using the aggregate Id and a field 
+that defines the ordering the events. 
+
+If an aggregate instance has a large number of events, this may affect 
+the time that it takes to replay all of the events to reload the state 
+of the aggregate. One option to consider in this scenario is to use a 
+snapshot mechanism: in addition to the full stream of events in the 
+event store, you can store a snapshot of the state of the aggregate at 
+some recent point in time. To reload the state of the aggregate, you 
+first load the most recent snapshot, and then replay all of the 
+subsequent events. You could generate the snapshot during the write 
+process, for example by creating a snapshot every 100 events. 
+
+> **Note:** Determining how frequently you should take snapshots depends
+> on the performance characteristics of your underlying storage. You
+> will need to measure how long it takes to replay different lengths of
+> event stream to determine the optimum time to create your snapshots.
+
+As an alternative, you could cache heavily used aggregate instances in 
+memory to avoid needing to repeatedly replay the event stream. 
+
+When an event store persists an event, it must also publish that event. 
+To preserve the consistency of the system, both operations must succeed 
+or fail together. The traditional approach to this type of scenario is 
+to use a distributed, two-phase commit transaction that wraps the append 
+operation to the data-store and the publish operation to the messaging 
+infrastructure together. In practice, you may find that support for 
+two-phase commit transactions is limited in many data stores and 
+messaging platforms. Using two-phase commit transactions may also limit 
+the performance and scalability of the system. 
+
+One of the key problems you must solve if you choose to implement your 
+own event store is how to achieve this consistency. For example, an 
+event store built on top of Windows Azure table storage could take the 
+following approach to maintain consistency between persisting and 
+publishing events: use a transaction to write copies of the event to two 
+tables in the same partition; one table stores the immutable events that 
+constitute the event stream of the aggregate; the other table stores a 
+list of events pending publication. You can then have a process that 
+reads the list of events pending publication, that guarantees to publish 
+those events at least once, and that after publication removes the event 
+from the pending list. 
+
+An additional set of problems related to consistency occur if you plan 
+to scale out your event store across multiple storage nodes, or use 
+multiple writers to write to the store. In this scenario, you must take 
+steps to ensure the consistency of your data. The data on the write-side 
+should be fully consistent, not eventually consistent. For more 
+information about the CAP theorem and maintaining consistency in 
+distributed systems, see the next chapter "[A CQRS/ES Deep 
+Dive][r_chapter4]". 
+
+[jolivereventstore]: https://github.com/joliver/EventStore
 
 [r_chapter1]:     Reference_01_CQRSContext.markdown
 [r_chapter4]:     Reference_04_DeepDive.markdown
