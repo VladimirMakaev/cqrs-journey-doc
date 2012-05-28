@@ -73,34 +73,126 @@ sequence.
 
 **Order processing without using a Coordinating Workflow**
 
-In the example shown in Figure 1, each aggregate sends the appropriate command to the aggregate that performs the next step in the process. The **Order** aggregate first sends a **MakeReservation** command to the **Reservation** aggregate to reserve the seats requested by the customer. After the seats have been reserved, the **Order** aggregate sends a **MakePayment** command to the **Payment** aggregate. If the payment is successful, the **Order** aggregate notifies the **Reservation** aggregate so that it can confirm the seat reservation, and notifies the customer that the order is now complete.
+In the example shown in Figure 1, each aggregate sends the appropriate 
+command to the aggregate that performs the next step in the process. The 
+**Order** aggregate first sends a **MakeReservation** command to the 
+**Reservation** aggregate to reserve the seats requested by the 
+customer. After the seats have been reserved, the **Order** aggregate 
+sends a **MakePayment** command to the **Payment** aggregate. If the 
+payment is successful, the **Order** aggregate notifies the 
+**Reservation** aggregate so that it can confirm the seat reservation, 
+and notifies the customer that the order is now complete. 
 
 ![Figure 2][fig2]
 
 **Order processing with a Coordinating Workflow**
 
-The example shown in Figure 2 illustrates the same business process as that shown in Figure 1, but this time using a Coordinating Workflow. Now, instead of each aggregate sending messages directly to other aggregates, the messages are mediated by the Coordinating Workflow.
+The example shown in Figure 2 illustrates the same business process as 
+that shown in Figure 1, but this time using a Coordinating Workflow. 
+Now, instead of each aggregate sending messages directly to other 
+aggregates, the messages are mediated by the Coordinating Workflow. 
 
-This appears to complicate the process: there is an additional object (the Coordinating Workflow) and a few more messages. However, there are benefits to this approach. 
+This appears to complicate the process: there is an additional object 
+(the Coordinating Workflow) and a few more messages. However, there are 
+benefits to this approach. 
 
-Firstly, the aggregates no longer need to know what is the next step in the process. Originally, the **Order** aggregate needed to know that after making a reservation it should try to make a payment by sending a message to the **Payment** aggregate. Now, it simply needs to report that an order has been created.
+Firstly, the aggregates no longer need to know what is the next step in 
+the process. Originally, the **Order** aggregate needed to know that 
+after making a reservation it should try to make a payment by sending a 
+message to the **Payment** aggregate. Now, it simply needs to report 
+that an order has been created. 
 
-Secondly, the definition of the message flow is now located in a single place, the Coordinating Workflow, rather than being scattered throughout the aggregates.
+Secondly, the definition of the message flow is now located in a single 
+place, the Coordinating Workflow, rather than being scattered throughout 
+the aggregates. 
 
-In a simple business process such as the one shown in Figure 1 and Figure 2, these benefits are marginal. However, if you have a business process that involves six aggregates and tens of messages, the benefits become more apparent. This is espcially true if this is a volatile part of the system where there are frequent changes to the business process: in this scenario, the changes are likely to be localized to a limited numbe of objects.
+In a simple business process such as the one shown in Figure 1 and 
+Figure 2, these benefits are marginal. However, if you have a business 
+process that involves six aggregates and tens of messages, the benefits 
+become more apparent. This is espcially true if this is a volatile part 
+of the system where there are frequent changes to the business process: 
+in this scenario, the changes are likely to be localized to a limited 
+numbe of objects. 
 
-In Figure 3, to illustrate this point, we introduce wait-listing to the process. If some of the seats requested by the customer cannot be reserved, the system adds these seat requests to a wait-list. To make this change, we modify the **Reservation** aggregate to raise a **SeatsNotReserved** event to report how many seats could not be reserved in addition to the **SeatsReserved** event that reports how many seats could be reserved. The Coordinating Workflow can then send a command to the **WaitList** aggregate to wait-list the unfulfilled part of the request.
+In Figure 3, to illustrate this point, we introduce wait-listing to the 
+process. If some of the seats requested by the customer cannot be 
+reserved, the system adds these seat requests to a wait-list. To make 
+this change, we modify the **Reservation** aggregate to raise a 
+**SeatsNotReserved** event to report how many seats could not be 
+reserved in addition to the **SeatsReserved** event that reports how 
+many seats could be reserved. The Coordinating Workflow can then send a 
+command to the **WaitList** aggregate to wait-list the unfulfilled part 
+of the request. 
 
 ![Figure 3][fig3]
 
-It's important to note that the Coordinating Workflow does not perform any business logic. It only routes messages, and in some cases translates between message types. For example, when it receives a **SeatsNotReserved** event, it sends an **AddToWaitList** command.
+It's important to note that the Coordinating Workflow does not perform 
+any business logic. It only routes messages, and in some cases 
+translates between message types. For example, when it receives a 
+**SeatsNotReserved** event, it sends an **AddToWaitList** command. 
 
-## Why Should I Use Coordinating Workflows? 
+## When Should I Use Coordinating Workflows?
 
-## Why Should I Not Use Coordinating Workflows? 
+Coordinating workflows route commands and events between aggregate 
+instances, however they don't implement any business logic. There are 
+two key reasons to use coordinating workflows: 
+
+* When your bounded context uses a large number of events and commands
+  that would be difficult to manage as a collection point-to-point
+  interactions between aggregates.
+* When you want to make it easier to modify message routing in the
+  bounded context. A coordinating workflow gives a single place where
+  the routing is defined.
+
+## When Should I Not Use Coordinating Workflows?
+
+The following list identifies reasons not to use coordinating workflows:
+
+* You should not use coordinating workflows if your bounded context
+  contains a small number of aggregate types that use a limited number
+  of messages. 
+* You should not use a coordinating workflow to implement any business
+  logic in your domain. Business logic belongs in the aggregate types.
+ 
 
 # Sagas
 
+Although the term Saga is often used in the context of the CQRS pattern, 
+it has a pre-existing definition. We have chosen to use the term 
+coordinating workflow in this guidance to avoid confusion with this 
+pre-existing definition. 
+
+The term saga, in relation to distributed systems, was originally 
+defined in the paper [Sagas](sagapaper) by Hector Garcia-Molina and 
+Kenneth Salem. This paper proposes a mechanism that it calls a saga as 
+an alternative to using a distributed transaction for managing a 
+long-running business process. The paper recognizes that business 
+processes are often comprised of multiple steps, each one of which 
+involves a transaction, and that overall consistency can be achieved by 
+grouping these individual transactions into a distributed transaction. 
+However, in long-running business processes, using distributed 
+transactions can impact on the performance and concurrency of the system 
+because of the locks that must be held for the duration of the 
+distributed transaction. 
+
+The saga concept removes the need for a distributed transaction by 
+ensuring that the transaction at each step of the business process has a 
+defined compensating transaction. In this way, if the business process 
+encounters an error condition and is unable to continue, it can execute 
+the compensating transactions for the steps that have already completed. 
+This undoes the work completed so far in the business process and 
+maintains the consistency of the system. 
+
+## Sagas and CQRS
+
+Although we have chosen to use the term Coordinating Workflow as defined 
+earlier in this chapter, Sagas (as defined in the paper by Hector 
+Garcia-Molina and Kenneth Salem) may still have a part to play in a 
+system that implements the CQRS pattern in some of its bounded contexts. 
+Typically, you would expect to see a coordinating workflow routing 
+messages between aggregates within a bounded context, and you would 
+expect to see a saga managing a long-running business process that spans 
+multiple bounded contexts. 
 
 [r_chapter4]:     Reference_04_DeepDive.markdown
 [sagapaper]:      http://www.amundsen.com/downloads/sagas.pdf
