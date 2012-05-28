@@ -12,7 +12,7 @@ Contoso Conference Management System.
 
 # Building and Running the Sample Code (RI)
 
-This appendix describes how to obtain, build and run the RI.
+This appendix describes how to obtain, build, and run the RI.
 
 These instructions describe five different scenarios for running the RI:
 
@@ -35,7 +35,7 @@ These instructions describe five different scenarios for running the RI:
 > purposes. They are not intended to illustrate a production-ready
 > scenario.
 
-> **Note 2:** Scenarios 1,2,3 and 4 use SQL Express for other data
+> **Note 2:** Scenarios 1, 2, 3 and 4 use SQL Express for other data
 > storage requirements. Scenario 5 requires you to use SQL Azure instead
 > of SQL Express.
 
@@ -47,7 +47,7 @@ Before you begin, you should install the following pre-requisites:
 * SQL Server 2008 Express or later
 * ASP.NET MVC 3 (Visual Studio 2010)
 * ASP.NET MVC 4 Installer (Visual Studio 2010)
-* Windows Azure SDK for .NET - November 2011 or later.
+* Windows Azure SDK for .NET - November 2011 or later
 
 > **Note:** Currently the RI requires the Windows Azure runtime
 > libraries in order to compile. This is true even for scenario 1. The
@@ -91,7 +91,7 @@ install [SpecFlow][specflow].
 
 ## SQL Express Database
 
-For scenarios 1,2,3 and 4 you can create a local SQL Express database 
+For scenarios 1, 2, 3 and 4 you can create a local SQL Express database 
 called **Conference** by running the script **Install-Database.ps1** in 
 the scripts folder. 
 
@@ -177,9 +177,9 @@ DefaultEndpointsProtocol=https;AccountName=[your-windows-azure-storage-account-n
 
 # Creating the Settings.xml File
 
-Before you can build the solution you must create a **Settings.xml** file 
-in the **Infrastructure Projects\Azure** solution folder. You can copy the 
-**Settings.Template.xml** in this solution folder to create a 
+Before you can build the solution, you must create a **Settings.xml** 
+file in the **Infrastructure Projects\Azure** solution folder. You can 
+copy the **Settings.Template.xml** in this solution folder to create a 
 **Settings.xml** file. 
 
 > **Note:** You only need to create the **Settings.xml** file if you
@@ -231,7 +231,7 @@ Azure (scenario 5).
 ### Debug
 
 Use the **Debug** build configuration if you plan either to deploy your 
-application locally to the Windows Azure compute emulator or run the 
+application locally to the Windows Azure compute emulator or to run the 
 application locally and stand-alone without using the Windows Azure 
 compute emulator. 
 
@@ -241,7 +241,7 @@ table storage (scenarios 2 and 4).
 
 ### DebugLocal
 
-Use the **DebugLocal** build configuration if you plan either to deploy 
+Use the **DebugLocal** build configuration if you plan to either deploy 
 your application locally to the Windows Azure compute emulator or run 
 the application on a local web server without using the Windows 
 Azure compute emulator. 
@@ -255,9 +255,9 @@ When you run the RI, you should first create a conference, add at least
 one seat type, and then publish the conference using the 
 **Conference.Web.Admin** site.
 
-After you have published the conference you will then be able to use the
-site to order seats and use the simulated the payment process using the 
-**Conference.Web** site.
+After you have published the conference, you will then be able to use 
+the site to order seats and use the simulated the payment process using 
+the **Conference.Web** site. 
 
 The following sections describe how to run the RI using in the different 
 scenarios. 
@@ -325,7 +325,7 @@ acceptance tests.
 The unit and integration tests in the **Conference** solution are 
 created using **xUnit.net**. 
 
-For more information about how you can run these tests please visit the 
+For more information about how you can run these tests, please visit the 
 [xUnit.net][xunit] site on Codeplex. 
 
 ## Running the Acceptance Tests
@@ -343,10 +343,10 @@ about SpecFlow, please visit [SpecFlow][specflow].
 The SpecFlow tests are implemented using **xUnit.net**.
 
 The **Conference.AcceptanceTests** solution uses the same build 
-configurations as the **Conference** solution to control whether the 
-acceptance tests are run against either the local SQL-based messaging 
-infrastructure and event store or the Windows Azure Service Bus
-messaging infrastructure and Windows Azure table storage based event
+configurations as the **Conference** solution to control whether you run 
+the acceptance tests against either the local SQL-based messaging 
+infrastructure and event store or the Windows Azure Service Bus 
+messaging infrastructure and Windows Azure table storage based event 
 store. 
 
 # Migrating from the V1 to the V2 Release
@@ -401,10 +401,10 @@ The name of the new table for V2 is in the **Settings.xml** file:
 	<ConnectionString>...</ConnectionString>
 	<TableName>ConferenceEventStoreApplicationDemoV2</TableName>
 </EventSourcing>
-
 ```
+
 > **Note:** The migration utility assumes that the V2 event sourcing
-> table is in the same Windows Azure stroage account as the V1 event
+> table is in the same Windows Azure storage account as the V1 event
 > sourcing table. If this is not the case, you will need to modify the
 > MigrationToV2 application code.
 
@@ -478,10 +478,10 @@ Currently, there is no validation to:
 
 ## Switching between Debug and DebugLocal Builds
 
-If you run the application after building using the Debug configuration 
-and create some data and then re-build using the DebugLocal 
-configuration you will see errors when you run the application. This 
-scenario is not supported. 
+If you run the application after building using the Debug configuration, 
+create some data, and then re-build using the DebugLocal configuration 
+you will see errors when you run the application. This scenario is not 
+supported. 
 
 The problem arises because the two build configurations only share some 
 data sources, so after the switch there are inconsistencies in the data. 
