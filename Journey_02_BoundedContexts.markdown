@@ -109,8 +109,6 @@ the conference.
 The business customer can use the conference management web-site to view 
 a list of orders and attendees. 
 
-## The On-site Client Application Bounded Context 
-
 ## The Payments Bounded Context 
 
 The Payments bounded context is responsible for managing the 
@@ -169,14 +167,9 @@ individual bounded contexts.
    that report when attendees have been assigned to seats.
 3. Requests for a payment to be made.
 4. Acknowledgement of the success or failure of the payment.
-5. Events that report when conferences have been created, updated, and
-   published. Events that report when seat types have been created or
-   updated.
-6. Events that report when orders have been created and updated.
-7. Events that report when orders have been created and updated.
-8. Events that report when discounts have been created or modified.
-9. Events that report the calculation of totals based on discounts.
-10. Events that report when conferences have been created, updated, and
+5. Events that report when discounts have been created or modified.
+6. Events that report the calculation of totals based on discounts.
+7. Events that report when conferences have been created, updated, and
    published.
 
 > **BharathPersona:** Some of the events raised from the Conference
