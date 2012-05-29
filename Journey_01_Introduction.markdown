@@ -155,21 +155,8 @@ operate wait-lists so that if other attendees cancel, then their seats
 can be re-allocated. 
 
 The system will require that the names of the attendees are associated 
-with the purchased seats so that on-site system can print badges for the 
-attendees when they arrive at the conference. 
-
-### On-site Conference Management
-
-When attendees arrive at the conference their names should be checked 
-against an attendee list and they should be given name badges that 
-identify any additional conference events they are entitled to attend. 
-They should also be given the opportunity to purchase seats for any 
-additional events they would like to attend (assuming there are seats 
-still available). The system that runs on-site at the conference does 
-not assume that it is permanently connected to the main conference 
-management system and continues to operate when it is disconnected, 
-synchronizing its data with the main conference system when it 
-re-establises a connection. 
+with the purchased seats so that an on-site system can print badges for
+the attendees when they arrive at the conference. 
 
 ### Creating a Conference
 

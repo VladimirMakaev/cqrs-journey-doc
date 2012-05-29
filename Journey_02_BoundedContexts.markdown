@@ -109,8 +109,6 @@ the conference.
 The business customer can use the conference management web-site to view 
 a list of orders and attendees. 
 
-## The On-site Client Application Bounded Context 
-
 ## The Payments Bounded Context 
 
 The Payments bounded context is responsible for managing the 
