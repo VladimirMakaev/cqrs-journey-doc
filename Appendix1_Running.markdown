@@ -175,6 +175,11 @@ DefaultEndpointsProtocol=https;AccountName=[your-windows-azure-storage-account-n
 </ServiceConfiguration>
 ```
 
+> **Note:** The **LogLevelFilter** values for these roles is set to
+> either **Warning** or **Information**. If you want to capture logs
+> from the application into the **WADLogsTable**, you should change
+> these values to **Verbose**.
+
 # Creating the Settings.xml File
 
 Before you can build the solution, you must create a **Settings.xml** 
