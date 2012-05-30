@@ -4,19 +4,19 @@
 *The starting point: Where have we come from, what are we taking, and who is coming with us?*
 
 This chapter introduces a fictitious company named Contoso. It describes 
-Contoso's plans to launch the Contoso Conference Management System; a 
+Contoso's plans to launch the Contoso Conference Management System, a 
 new, online service that will enable other companies or individuals to 
 organize and manage their own conferences and events. The chapter 
-describes, at a high-level some of the functional and non-functional 
+describes, at a high-level, some of the functional and non-functional 
 requirements of the new system, and why Contoso wants to implement parts 
 of the new system using the CQRS pattern and event sourcing. As with any 
 company considering this process, there are many issues to consider and 
 challenges to be met, particularly because this is the first time 
 Contoso has used both the CQRS pattern and event sourcing. The chapters 
-that follow this one show, step-by-step, how Contoso architected and 
+that follow this one show, step-by-step, how Contoso designed and 
 built its conference management application. 
 
-The chapter also also introduces a panel of fictional experts to comment 
+The chapter also introduces a panel of fictional experts to comment 
 on the development efforts. 
 
 # The Contoso Corporation 
@@ -26,7 +26,7 @@ specializes in developing solutions using Microsoft&reg; technologies.
 The developers at Contoso are knowledgeable about various Microsoft 
 products and technologies, including the .NET Framework, ASP.NET MVC, 
 and Windows Azure. Some of the developers have previous experience of 
-using the Domain-Driven Design (DDD) approach, but none have them have 
+using the Domain-Driven Design (DDD) approach, but none of them have 
 used the CQRS pattern previously. 
 
 The Conference Management System application is one of the first 
@@ -44,7 +44,7 @@ to scale applications as demand grows.
 # Who Is Coming With Us On the Journey? 
 
 As mentioned earlier, this guide and the accompanying RI describe a CQRS 
-journey. A panel of experts comment on our development efforts as we go. 
+journey. A panel of experts comments on our development efforts as we go. 
 This panel includes a CQRS expert, a software architect, a developer, a 
 domain expert, an IT Pro, and a business manager. They will all comment 
 from their own perspectives. 
@@ -116,16 +116,16 @@ the specialists whose interests align with yours.
 
 # The Conference Management System 
 
-This section describes the Contoso Conference Management System as it 
-was envisaged at the start of the journey. The team has not used the 
-CQRS pattern before, therefore the system that is delivered at the end 
-of our journey may not match this description exactly because: 
+This section describes the Contoso Conference Management System as the  
+team envisaged it at the start of the journey. The team has not 
+used the CQRS pattern before; therefore the system that is delivered at 
+the end of our journey may not match this description exactly because: 
 
 * What we learn as we go may impact on what we plan to deliver.
 * It is more difficult to estimate what can be achieved in the available
   time.
 
-  ## Overview of the System
+## Overview of the System
 
 Contoso plans to build an online conference management system that will 
 enable Contoso's customers to plan and manage conferences that are held 
@@ -137,7 +137,7 @@ at a physical location. The system will enable Contoso's customers to:
 * Create a conference and define characteristics of that conference.
 * Plan the tracks, sessions, and speakers that make up a conference.
 
-The Contoso Conference Management System will be a multi-tennant, 
+The Contoso Conference Management System will be a multi-tenant, 
 cloud-hosted application. Business Customers will need to register with 
 the system before they can create and manage their conferences. 
 
@@ -150,7 +150,7 @@ attendees must have a separate ticket. The business customer will also
 define how many seats are available for these events. 
 
 The system manages the sale of seats to ensure that the conference and 
-sub-events are not over subscribed. This part of the system will also 
+sub-events are not oversubscribed. This part of the system will also 
 operate wait-lists so that if other attendees cancel, then their seats 
 can be re-allocated. 
 
@@ -166,14 +166,14 @@ Business Customer can also make a conference visible on the Contoso
 Conference Management System web site by publishing it, or hide it by 
 un-publishing it. 
 
-Additionally the Business Customer defines the seat types and avaialable 
+Additionally the Business Customer defines the seat types and available 
 quantity of each seat type for the conference. 
 
 Contoso also plans to enable the Business Customer to specify the 
 following characteristics of a conference: 
 
-* Will the paper submission process require reviewers.
-* What will be the fee structure for paying Contoso.
+* Will the paper submission process require reviewers?
+* What will be the fee structure for paying Contoso?
 * Assigning key personnel such as the Program Chair and the Event
   Planner.
 
@@ -202,11 +202,11 @@ potential for elastic scalability.
 
 Although cloud platforms such as Windows Azure enable you to scale 
 applications by adding (or removing) role instances, you must still 
-architect your application to be scalable. By splitting responsibility 
+design your application to be scalable. By splitting responsibility 
 for the application's read operations and write operations into separate 
 objects, the CQRS pattern gives you the ability to split your 
 application's read and write operations into separate Windows Azure 
-roles that you can scale independantly of each other. This recognizes 
+roles that you can scale independently of each other. This recognizes 
 the fact that for many applications the number of read operations vastly 
 exceeds the number of write operations. This gives Contoso the 
 opportunity to scale the Conference Management System more efficiently, 
@@ -224,7 +224,7 @@ flexibility breaks down into a number of related aspects:
   and to respond to changes in the market. 
 
 * The system must be able to run multiple versions of its software 
-  simultaneously in order to support customer's who are in the middle of 
+  simultaneously in order to support customers who are in the middle of 
   a conference and who do not wish to upgrade to a new version 
   immediately. Other customers may wish to migrate their existing 
   conference data to a new version of the software as it becomes 
@@ -234,8 +234,7 @@ flexibility breaks down into a number of related aspects:
 > for all our customers while we perform upgrades with no downtime.
 
 * Contoso intends the software to last for at least five years. It 
-  must be able to accomodate significant changes over that period of 
-  time. 
+  must be able to accomodate significant changes over that period. 
 
 * Contoso does not want the complexity of some parts of the system to 
   become a barrier to changes. 
@@ -243,7 +242,7 @@ flexibility breaks down into a number of related aspects:
 * Contoso would like to be able to use different developers for 
   different elements of the system, using cheaper developers for simpler 
   tasks and restricting its use of more expensive and experienced 
-  developers for the more critical aaspects of the system. 
+  developers for the more critical aspects of the system. 
 
 > **BharathPersona:** There is some debate in the CQRS community 
 > about whether, in practice, you can use different development teams 

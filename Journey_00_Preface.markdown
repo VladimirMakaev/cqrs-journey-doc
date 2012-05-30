@@ -14,8 +14,8 @@ sourcing, and all explaining how they can help you to improve the
 maintainability, testability, scalability, and flexibility of your 
 systems. 
 
-However, like anything new, it takes some time before a pattern or 
-approach or methodology is fully understood and consistently defined by 
+However, like anything new, it takes some time before a pattern, 
+approach, or methodology is fully understood and consistently defined by 
 the community and has useful, practical guidance to help you to apply or
 implement it. 
 
@@ -47,7 +47,7 @@ There are two, closely related, parts to this guidance:
   development, and what trade-offs were considered. 
 
 This written guidance is itself split into two distinct sections that 
-you can read independently: description of the journey we took as we 
+you can read independently: a description of the journey we took as we 
 learned about CQRS, and a collection of CQRS reference materials. The 
 map in figure 1 illustrates the relationship between the two sections: a 
 journey with some defined stopping points that enables us to explore a 
@@ -62,7 +62,7 @@ space.
 This section is closely related to the RI and the chapters follow the 
 chronology of the project to develop the RI. Each chapter describes 
 relevant features of the domain model, infrastructure elements, 
-architecture, and UI that the team were concerned with during that phase 
+architecture, and UI that the team was concerned with during that phase 
 of the project. Some parts of the system are discussed in several 
 chapters and this reflects the fact that the team revisited certain 
 areas during later stages. Each of these chapters will discuss how and 
@@ -113,9 +113,10 @@ route we planned to take and an idea of what the final destination
 should be. We needed to select an appropriate domain for the RI. 
 
 We engaged with the community and our advisory board to help us choose a 
-domain that would showcase as many of the features and concepts of CQRS 
-as possible. To help us to select between our candidate domains we used 
-criteria in the following list. The domain selected should be: 
+domain that would enable us to highlight as many of the features and 
+concepts of CQRS as possible. To help us to select between our candidate 
+domains we used criteria in the following list. The domain selected 
+should be: 
 
 * **Non-trivial.** The domain must be complex enough to exhibit real 
 problems, but at the same time common enough for most people to 
@@ -139,7 +140,7 @@ cloud-hosted applications.
 * **Large.** We wanted to be able to show how our domain can be broken 
 down into multiple bounded contexts to highlight when to use and when 
 not use CQRS. We also wanted to illustrate how multiple architectural 
-approaches (CQRS, CQRS/ES, CRUD) and legacy systems can co-exist 
+approaches (CQRS, CQRS/ES, and CRUD) and legacy systems can co-exist 
 within the same domain. We also wanted to show how multiple 
 development teams could carry out work in parallel. 
 

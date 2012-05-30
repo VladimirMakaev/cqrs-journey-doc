@@ -7,7 +7,7 @@
 
 This chapter provides a high-level overview of the Contoso Conference 
 Management System. It will help you to understand the structure of the 
-application, how the parts of the application are related to each other, 
+application, how the parts of the application relate to each other, 
 and the integration points. 
 
 It describes this high-level structure in terms borrowed from the 
@@ -18,19 +18,19 @@ prerequisite for implementing the CQRS pattern successfully, the team
 decided to use many of the concepts from the DDD approach, such as 
 **Domain**, **Bounded Context**, and **Aggregate** in line with common 
 practice within the CQRS community. The chapter [CQRS in 
-Context][r_chapter1] in the Reference Guide discusses the realtionship 
+Context][r_chapter1] in the Reference Guide discusses the relationship 
 between the DDD approach and the CQRS pattern in more detail. 
 
 # Definitions Used in This Chapter 
 
-The following definitions are used for the remainder of this chapter. 
+The remainder of this chapter uses the following definitions. 
 For more detail, and possible alternative definitions see [CQRS in 
 Context][r_chapter1] in the Reference Guide. 
 
 ## Domain 
 
 The **Domain** refers to the business domain for the Contoso Conference 
-Management System (the reference implmentation). The previous chapter 
+Management System (the reference implementation). The previous chapter 
 [The Contoso Conference Management System][j_chapter1] provides an 
 overview of this domain. 
 
@@ -38,13 +38,13 @@ overview of this domain.
 
 The term **Bounded Context** comes from the book "Domain-Driven Design: 
 Tackling Complexity in the Heart of Software" by Eric Evans. In brief, 
-this concept is introduced as a way to decompose a large, complex system 
-into more manageable pieces: a large system is composed of multiple 
-bounded contexts. Each bounded context is the context for its own 
-self-contained domain model, and has its own **Ubiquitous Language**.
-You can also view a bounded context as autonomous business component 
-defining clear consistency boundaries: one bounded context typically 
-communicates with another bounded context by raising events.
+Evans introduces this conceptas a way to decompose a large, complex 
+system into more manageable pieces: a large system is composed of 
+multiple bounded contexts. Each bounded context is the context for its 
+own self-contained domain model, and has its own **Ubiquitous 
+Language**. You can also view a bounded context as autonomous business 
+component defining clear consistency boundaries: one bounded context 
+typically communicates with another bounded context by raising events. 
 
 > **BharathPersona:** When you use the CQRS pattern, you often use
 > events to communicate between bounded contexts. There are alternative
@@ -81,10 +81,10 @@ does not pay for the tickets within _n_ minutes, the system deletes the
 **Reservation** and the seats become available to other registrants to 
 reserve. 
 
-> **CarlosPersona:** We discussed making the period of time that
-> reservations are held a parameter that a Business Customer can adjust
-> for a conference. This may be a feature that we add if we determine
-> that there is a demand for this level of control.
+> **CarlosPersona:** We discussed making the period of time that the
+> system holds reservations a parameter that a Business Customer can
+> adjust for a conference. This may be a feature that we add if we
+> determine that there is a requirement for this level of control.
 
 ## The Conference Management Bounded Context
 
@@ -103,10 +103,10 @@ conference:
 * The different types and quotas of seats available at the conference.
 
 Additionally, the business customer can control the visibility of the 
-conference on the public web-site by either publishing or un-publishing 
+conference on the public website by either publishing or un-publishing 
 the conference. 
 
-The business customer can use the conference management web-site to view 
+The business customer can use the conference management website to view 
 a list of orders and attendees. 
 
 ## The Payments Bounded Context 
@@ -138,7 +138,7 @@ the system is put together.
 > system. Often, you can perform some static analysis on the code to
 > determine where events and commands are handled, but it is more
 > difficult to automatically determine where they originate. At a
-> high-level, a context map can help to understand the the integration
+> high-level, a context map can help to understand the integration
 > between the different bounded contexts and the events involved.
 > Maintaining up to date documentation about the commands and events can
 > offer a more detailed view. Additionally, if you have tests that use
@@ -172,8 +172,8 @@ individual bounded contexts.
 7. Events that report when conferences have been created, updated, and
    published.
 
-> **BharathPersona:** Some of the events raised from the Conference
-> Management bounded context are coarse-grained and contain multiple
+> **BharathPersona:** Some of the events that the Conference Management
+> bounded context raises are coarse-grained and contain multiple
 > fields. Remember that Conference Management is a CRUD-style bounded
 > context and does not raise fine-grained domain-style events. For more
 > information, see
@@ -184,7 +184,7 @@ individual bounded contexts.
 During the planning stage of the journey, it became clear that these 
 were the natural divisions in the domain that could each contain their 
 own, independent domain-models. Some of these divisions were easier to 
-identify that others. For example, it was clear from early on that the 
+identify than others. For example, it was clear from early on that the 
 Conference Management bounded context is independent of the 
 remainder of the domain. It has clearly defined responsibilities that 
 relate to defining conferences and seat-types and clearly defined 

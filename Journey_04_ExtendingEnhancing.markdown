@@ -5,25 +5,25 @@
 
 # A Description of the Orders and Registrations Bounded Context 
 
-The **Orders and Registrations** bounded context was described in some 
-detail in the previous chapter. This chapter describes some changes that 
+The previous chapter describes the **Orders and Registrations** bounded context in some 
+detail. This chapter describes some changes that 
 the team made in this bounded context during the second stage of their 
 CQRS journey. 
 
 The specific topics described in this chapter include:
 
 * Improvements to the way that message correlation works with the 
-  **RegistrationProcess**. This illustrates how aggregate instances 
-  within the bounded context can interact in a complex manner.
+  **RegistrationProcess** workflow. This illustrates how aggregate
+  instances within the bounded context can interact in a complex manner.
 * Implementing a record locator to enable a registrant to retrieve an 
-  order that was saved during a previous session. This illustrates
+  order that she saved during a previous session. This illustrates
   adding some additional logic to the write-side that enables you to
   locate an aggregate instance without knowing its unique Id.
 * Adding a countdown timer to the UI to enable a registrant to track how 
   much longer they have to complete an order. This illustrates
   enhancements to the write-side to support displaying rich information
   in the UI.
-* Supporting orders for multiple seat types simultaneously. For example
+* Supporting orders for multiple seat types simultaneously. For example,
   a registrant requests five seats for pre-conference event and eight
   seats for the full conference. This adds more complex business logic
   into the write-side.
@@ -39,7 +39,7 @@ The specific topics described in this chapter include:
 
 ## Working Definitions for this Chapter 
 
-The following definitions are used for the remainder of this chapter. 
+The remainder of this chapter uses the following definitions. 
 For more detail, and possible alternative definitions, see [A CQRS/ES 
 Deep Dive][r_chapter4] in the Reference Guide. 
 
@@ -48,11 +48,11 @@ Deep Dive][r_chapter4] in the Reference Guide.
 A command is a request for the system to perform an action that changes 
 the state of the system. Commands are imperatives, for example 
 **MakeSeatReservation**. In this bounded context, commands originate 
-either from the UI as a result of a user initiating a request, or from 
+from either the UI as a result of a user initiating a request, or from 
 a workflow when the workflow is directing an aggregate to perform an 
 action. 
 
-Commands are processed once by a single recipient. A command bus 
+A single recipient processes a Command. A command bus 
 transports commands that command handlers then dispatch to aggregates. 
 Sending a command is an asynchronous operation with no return value. 
 
@@ -89,7 +89,7 @@ Registrations** bounded context.
 ### Implement a Login using a Record Locator
 
 When a registrant creates an order for seats at a conference, the system 
-generates a five character **order access code** and sends it to the 
+generates a five-character **order access code** and sends it to the 
 registrant by email. The registrant can use her email address and the 
 **order access code** on the conference web site to retrieve the order 
 from the system at a later date. The registrant may wish to retrieve the 
@@ -104,7 +104,7 @@ reservations expire. To complete an order, the registrant must submit
 her details, such as name and email address, and make a successful 
 payment. 
 
-To help the registrant, the system displays a count-down timer to inform 
+To help the registrant, the system displays a countdown timer to inform 
 the registrant how much time remains to complete the order before the 
 seat reservations expire. 
 
@@ -156,9 +156,9 @@ should not contain any sensitive information.
 
 ## Querying the Read-side
 
-The previous chapter focused on the write-side model and implementation, 
+The previous chapter focused on the write-side model and implementation; 
 in this chapter we'll explore the read-side implementation in more 
-detail. In particular you'll see how the team implemented the read model 
+detail. In particular, you'll see how the team implemented the read model 
 and the querying mechanism from the MVC controllers. 
 
 In this initial exploration of the CQRS pattern, the team decided to use 
@@ -176,8 +176,8 @@ the same database as the normalized tables that the write model uses.
 ### Storing Denormalized Views in a Database
 
 One common option for storing the read-side data is to use a set of 
-relational database tables to hold the de-normalized views. The 
-read-side should be optimized for fast reads, so there is typically no 
+relational database tables to hold the de-normalized views. You should
+optimize the read-side for fast reads, so there is typically no 
 benefit in storing normalized data because this will require complex 
 queries to construct the data for the client. This implies that goals 
 for the read-side should be to keep the queries as simple as possible, 
@@ -219,12 +219,12 @@ var orderdetails = repository.Query<OrderDetails>().Where(LINQ query to retrieve
 This approach has a number of advantages:
 
 * **Simplicity #1.** This approach uses a thin abstraction layer over 
-  the underlying database. It is supported by multiple ORMs and
+  the underlying database. Many ORMs suport this approach and it
   minimizes the amount of code that you must write. 
 * **Simplicity #2.** You only need to define a single repository and a 
   single **Query** method. 
 * **Simplicity #3.** You don't need a separate query object. On the 
-  read-side the queries should be simple because you have already 
+  read-side, the queries should be simple because you have already 
   de-normalized the data from the write-side to support the read-side
   clients. 
 * **Simplicity #4.** You can make use of LINQ to provide support for 
@@ -284,7 +284,7 @@ This approach has a number of advantages:
 * **Flexibility #2.** The **Get** and **Find** methods could use an ORM, 
   LINQ, and the **IQueryable** interface behind the scenes to get the
   data from the data store. This is a choice that you could make on a
-  method by method basis. 
+  method-by-method basis. 
 * **Performance #1.** You can easily optimize the queries that the 
   **Find** and **Get** methods run. 
 * **Performance #2.** The data access layer executes all queries. There 
@@ -304,7 +304,7 @@ Possible objections to this approach include:
   UI.
   
 The team decided to adopt the second approach because of the clarity it 
-brings to the code; in this context they did not see any significant 
+brings to the code; in this context, they did not see any significant 
 advantage in the flexibility of the approach that uses the 
 **IQueryable** interface. For examples, see the **ConferenceDao** and 
 **OrderDao** classes in the **Registration** project. 
@@ -315,8 +315,8 @@ The UI displays data about orders that it obtains by querying the model
 on the read-side. Part of the data that the UI displays to the 
 registrant is information about partially fulfilled orders: for each 
 seat type in the order, the number of seats requested and the number of 
-seats that are available. This information is temporary data that is 
-only used while the registrant is creating the order using the UI; the 
+seats that are available. This is temporary data that the system only
+uses while the registrant is creating the order using the UI; the 
 business only needs to store information about seats that were actually
 purchased, not the difference between what the registrant requested and 
 what the registrant purchased. 
@@ -329,10 +329,10 @@ read-side.
 > because the registrant may leave the site in between requesting the
 > seats and completing the order.
 
-A further consequence, is that the underlying storage on the read-side 
+A further consequence is that the underlying storage on the read-side 
 cannot be simple SQL views because it includes data that is not stored 
-in the underlying table storage on the write-side. This means that this 
-information must be passed to the read-side by using events. 
+in the underlying table storage on the write-side. Therefore you must
+pass this information to the read-side using events. 
 
 Figure 2 shows all the commands and events that the **Order** and 
 **SeatsAvailability** aggregates use and how the **Order** aggregate 
@@ -342,11 +342,11 @@ pushes changes to the read-side by raising events.
 
 **The new architecture of the reservation process**
 
-The **OrderPlaced**, **OrderUpdated**, **OrderPartiallyReserved**, 
+The **OrderViewModelGenerator** class handles the **OrderPlaced**, 
+**OrderUpdated**, **OrderPartiallyReserved**, 
 **OrderRegistrantAssigned**, and **OrderReservationCompleted** events 
-are handled by the **OrderViewModelGenerator** class that uses 
-**DraftOrder** and **DraftOrderItem** instances to persist changes to the 
-view tables. 
+and uses **DraftOrder** and **DraftOrderItem** instances to persist 
+changes to the view tables. 
 
 > **BharathPersona:** If you look ahead to the next chapter, [Preparing
 > for the V1 Release][j_chapter5], you'll see that the team extended the
@@ -366,46 +366,46 @@ features in ASP.NET MVC 3.
 You should be careful to distinguish between errors and business
 failures. Examples of errors include: 
 
-* A message not being delivered due to a failure in the messaging
+* A message is not delivered due to a failure in the messaging
   infrastructure.
-* Data not being persisted due to a connectivity problem with the
+* Data is not persisted due to a connectivity problem with the
   database.
 
 In many cases, especially in the cloud, you can handle these errors by
- retrying the operation.
+retrying the operation.
 
 A business failure should have a predetermined business response. For
  example:
 
-* If a seat cannot be reserved because there are no seats left, then the
-  system should add the request to a wait-list.
-* If a credit card payment fails, the user should be given the chance to
-  try a different card, or to set up payment by invoice.
+* If the system cannot reserve a seat because there are no seats left, 
+  then it should add the request to a wait-list.
+* If a credit card payment fails, the user should be given the chance
+  either to try a different card, or to set up payment by invoice.
 
 > **BharathPersona:** Your domain experts should help you to identify
 > possible business failures and determine the way that you handle
 > them. 
 
-## The Count-down Timer and the Read-model
+## The Countdown Timer and the Read-model
 
-The count-down timer that displays how much time remains to complete the 
+The countdown timer that displays how much time remains to complete the 
 order to the registrant is part of the business data in the system, and 
 not just a part of the infrastructure. When a registrant creates an 
-order and reserves seats, the count-down begins. The count-down 
+order and reserves seats, the countdown begins. The countdown 
 continues, even if the registrant leaves the conference web site. The UI 
-must be able to display the correct count-down value if the registrant 
+must be able to display the correct countdown value if the registrant 
 returns to the site, therefore the reservation expiry time is a part of 
 the data that is available from the read-model. 
 
 # Implementation Details 
 
 This section describes some of the significant features of the 
-implementation of the Orders and Registrations bounded context that are 
-described in this chapter. You may find it useful to have a copy of the 
-code so you can follow along. You can download a copy of the code from 
-the repository on github: [mspnp/cqrs-journey-code][repourl]. 
+implementation of the Orders and Registrations bounded context. You may 
+find it useful to have a copy of the code so you can follow along. You 
+can download a copy of the code from the repository on github: 
+[mspnp/cqrs-journey-code][repourl]. 
 
-> **Note:** Do not expect the code samples to exactly match the code in
+> **Note:** Do not expect the code samples to match exactly the code in
 > the reference implementation. This chapter describes a step in the
 > CQRS journey, the implementation may well change as we learn more and
 > refactor the code.
@@ -475,9 +475,9 @@ public IQueryable<T> Query<T>() where T : class
 }
 ```
 
-## The Count-down Timer
+## The Countdown Timer
 
-When a registrant creates and order and makes a seat reservation, those 
+When a registrant creates an order and makes a seat reservation, those 
 seats are reserved for a fixed period of time. The 
 **RegistrationProcess** instance, which forwards the reservation from 
 the **SeatsAvailability** aggregate, passes the time that the 
@@ -501,22 +501,22 @@ public void MarkAsReserved(DateTime expirationDate, IEnumerable<SeatQuantity> se
 
 > **MarkusPersona:** The **ReservationExpirationDate** is intially set
 > in the **Order** constructor to a time 15 minutes after the **Order**
-> is instantiated. This time may be revised by the
-> **RegistrationProcess** workflow based on when the reservations
-> are actually made. It is this time the workflow sends to the **Order**
-> aggregate in the **MarkSeatsAsReserved** command.
+> is instantiated. The **RegistrationProcess** workflow may revise this
+> time based on when the reservations are actually made. It is this time
+> the workflow sends to the **Order** aggregate in the
+> **MarkSeatsAsReserved** command.
 
 When the **RegistrationProcess** sends the **MarkSeatsAsReserved** 
-command to the **Order** aggregate with the expiry time that will be 
-displayed in the UI, it also sends a command to itself to initate the 
+command to the **Order** aggregate with the expiry time that the UI will 
+display, it also sends a command to itself to initate the 
 process of releasing the reserved seats. This 
 **ExpireRegistrationProcess** command is held for the expiry duration 
 plus a buffer of five minutes. This buffer ensures that time differences 
 between the servers don't cause the **RegistrationProcess** workflow to 
 release the reserved seats before the timer in UI counts down to zero. 
 In the following code sample from the **RegistrationProcess** workflow, 
-the **Expiration** property in the **MarkSeatsAsReserved** command is 
-used by the UI to display the countdown timer, and the **Delay** 
+the UI uses the **Expiration** property in the **MarkSeatsAsReserved**
+to display the countdown timer, and the **Delay** 
 property in the **ExpireRegistrationProcess** command determines when 
 the reserved seats are released. 
 
@@ -555,9 +555,9 @@ public void Handle(SeatsReserved message)
 ```
 
 The MVC **RegistrationController** class retrieves the order information 
-on the read-side. The **DraftOrder** class includes the reservation expiry 
-time that is then passed to the view using the **ViewBag** class, as 
-shown in the following code sample. 
+on the read-side. The **DraftOrder** class includes the reservation 
+expiry time that the controller passes to the view using the **ViewBag** 
+class, as shown in the following code sample. 
 
 ```Cs
 [HttpGet]
@@ -581,7 +581,7 @@ public ActionResult SpecifyRegistrantDetails(string conferenceCode, Guid orderId
 }
 ```
 
-The MVC view then uses Javascript to display an animated count-down 
+The MVC view then uses Javascript to display an animated countdown 
 timer. 
 
 ## Using ASP.NET MVC 3 Validation for Commands
@@ -644,8 +644,8 @@ the model is populated.
 
 ```
 
-Client-side validation based on the **DataAnnotations** attributes is 
-configured in the **Web.config** file as shown in the following snippet. 
+The **Web.config** file configures the client-side validation based on 
+the **DataAnnotations** attributes as shown in the following snippet. 
 
 ```XML
 <appSettings>
@@ -655,8 +655,8 @@ configured in the **Web.config** file as shown in the following snippet.
 </appSettings>
 ```
 
-The server-side validation occurs in the controller before the command 
-is sent. The following code sample from the **RegistrationController** 
+The server-side validation occurs in the controller before it sends the
+command. The following code sample from the **RegistrationController** 
 class shows how the controller uses the **IsValid** property to validate 
 the command. Remember that this example uses an instance of the command 
 as the model. 
@@ -856,10 +856,10 @@ public class ConferenceDao : IConferenceDao
 > methods that return data. It is is used by the MVC controllers to
 > retrieve data to display in the UI.
 
-## Refactoring the SeatsAvailability Aggregates
+## Refactoring the SeatsAvailability Aggregate
 
 In the first stage of our CQRS, the domain included a 
-**ConferenceSeatsAvailabilty** aggregate root class that modelled the 
+**ConferenceSeatsAvailabilty** aggregate root class that modeled the 
 number of seats remaining for a conference. In this stage of the 
 journey, the team replaced the **ConferenceSeatsAvailabilty** aggregate 
 with a **SeatsAvailability** aggregate to reflect the fact that there 
@@ -881,9 +881,9 @@ The domain now includes a **SeatQuantity** value type that you can use
 to represent a quantity of a particular seat type. 
 
 Previously, the aggregate raised either a **ReservationAccepted** or 
-**ReservationRejected** event depending on whether there were sufficient 
+a **ReservationRejected** event depending on whether there were sufficient 
 seats. Now the aggregate raises a **SeatsReserved** event that reports 
-how many seats of a particular type could be reserved. This means that 
+how many seats of a particular type it could reserve. This means that 
 the number of seats reserved may not match the number of seats 
 requested; this information is passed back to the UI for the registrant 
 to make a decision on how to proceed with the registration. 
@@ -914,9 +914,10 @@ basis of a set of acceptance tests for the system.
 
 The team had the following goals for their acceptance testing approach:
 
-* The acceptance tests should be clearly and unambiguously expressed in
-  a format that the domain expert could understand.
-* It should be possible to execute the acceptance tests automatically.
+* That the acceptance tests should be expressed clearly and
+  unambiguously in a format that the domain expert could understand.
+* That it should be possible to execute the acceptance tests
+  automatically.
 
 To achieve these goals the team used [SpecFlow][specflow].
 
@@ -929,8 +930,8 @@ project. The following code sample from the
 Features\UserInterface\Views\Management folder shows an acceptance test 
 for the Conference Management bounded context. A typical SpecFlow test 
 scenario consists of a collection of **Given**, **When**, and **Then** 
-statements. Some of these statements include the data that is used in 
-the test. 
+statements. Some of these statements include the data that the test is
+uses. 
 
 ```
 Feature:  Conference configuration scenarios for creating and editing Conference settings
@@ -979,7 +980,7 @@ An acceptance test in a feature file is not directly executable: you
 must provide some plumbing code to bridge the gap between the SpecFlow 
 feature file and your application. 
 
-To examples of how this is implemented, see the classes in the **Steps** 
+For examples of implementations, see the classes in the **Steps** 
 folder in the **Conference.Specflow** project in the 
 **Conference.AcceptanceTests** solution. 
 
@@ -991,7 +992,7 @@ open source library. The advantages of this approach are that it
 exercises the system in exactly the same way that a real user would 
 interact with the system and that it is simple implement initially. 
 However, these tests are fragile and will require a considerable 
-maintenance effort to keep up to date as the UI and system change. The 
+maintenance effort to keep them up to date as the UI and system change. The 
 following code sample shows an example of this approach, defining some 
 of the **Given**, **When**, and **Then** steps from the feature file 
 shown previously. SpecFlow uses the **Given**, **When**, and **Then** 
@@ -1089,13 +1090,13 @@ into, UI elements in the web browser.
 
 The second approach is to implement the tests by interacting with the 
 MVC controller classes. In the longer-term, this approach will be less 
-fragile at the cost of an intially more complex implementation that 
+fragile at the cost of an initially more complex implementation that 
 requires some knowledge of the internal implementation of the system. 
 The following code samples show an example of this approach.
 
-First, a scenario from the 
+First, an example scenario from the 
 **SelfRegistrationEndToEndWithControllers.feature** file in the 
-Features\UserInterface\Controllers\Registration older: 
+Features\UserInterface\Controllers\Registration project folder: 
 
 ```
 Scenario: End to end Registration implemented using controllers
@@ -1188,7 +1189,7 @@ public void ThenTheOrderShouldBeCreatedWithTheFollowingOrderItems(Table table)
 You can see how this approach uses the **RegistrationController** MVC 
 class directly. 
 
-> **Note:** In these code samples you can see how the values in
+> **Note:** In these code samples, you can see how the values in
 > the attributes link the step implementation to the statements in the
 > related SpecFlow feature files.
 
@@ -1253,8 +1254,8 @@ This unit test creates an **Order** instance and directly invokes the
 person reading the test code about the command or event that causes this 
 method to be invoked. 
 
-Consider this second example that performs the same test, but in this 
-case it does so by sending a command. 
+Now consider this second example that performs the same test, but in 
+this case it does so by sending a command: 
 
 ```Cs
 public class given_placed_order

@@ -1,7 +1,7 @@
 ## Chapter 6
 # Versioning our System 
 
-*"Variety is the very spice of life". William Cowper,Olney Hymns (1779)*
+*"Variety is the very spice of life." William Cowper, Olney Hymns (1779)*
 
 # Upgrading the Code and Migrating the Data 
 
@@ -16,7 +16,7 @@ with no downtime for the live system running in Windows Azure.
 
 ## Working Definitions for this Chapter 
 
-The following definitions are used for the remainder of this chapter. 
+The remainder of this chapter uses the following definitions. 
 For more detail, and possible alternative definitions, see [A CQRS/ES 
 Deep Dive][r_chapter4] in the Reference Guide. 
 
@@ -25,11 +25,11 @@ Deep Dive][r_chapter4] in the Reference Guide.
 A command is a request for the system to perform an action that changes 
 the state of the system. Commands are imperatives, for example 
 **MakeSeatReservation**. In this bounded context, commands originate 
-either from the UI as a result of a user initiating a request, or from 
+from either the UI as a result of a user initiating a request, or from 
 a workflow when the workflow is directing an aggregate to perform an 
 action. 
 
-Commands are processed once by a single recipient. A command bus 
+A single recipient processes a Command. A command bus 
 transports commands that command handlers then dispatch to aggregates. 
 Sending a command is an asynchronous operation with no return value. 
 
@@ -75,7 +75,23 @@ page for the order.
 
 ## Architecture 
 
-What are the key architectural features? Server-side, UI, multi-tier, cloud, etc. 
+The application is designed to deploy to Windows Azure. At this stage in 
+the journey, the application consists of a web role that contains the 
+MVC web application and a worker role that contains the message handlers 
+and domain objects. The application uses SQL Azure databases for data 
+storage, both on the write-side and the read-side. The application uses 
+the Windows Azure Service Bus to provide its messaging infrastructure. 
+
+While you are exploring and testing the solution, you can run it 
+locally, either using the Windows Azure compute emulator or by running 
+the MVC web application directly and running a console application that 
+hosts the handlers and domain objects. When you run the application 
+locally, you can use a local SQL Express database instead of SQL Azure, 
+and use a simple messaging infrastructure implemented in a SQL Express 
+database. 
+
+For more information about the options for running the application, see 
+[Appendix 1][appendix1]. 
 
 # Patterns and Concepts 
 
@@ -87,14 +103,14 @@ This section describes some of those challenges.
 
 When the team examined the requirements for the V2 release, it became 
 clear that they would need to change some of the events used in the 
-Orders and Registrations bounded context to accomodate some of the new 
+Orders and Registrations bounded context to accommodate some of the new 
 features: the **RegistrationProcess** would change and the system would 
 provide a better user experience when the order had a zero cost. 
 
 The Orders and Registrations bounded context uses event sourcing, so 
 after the migration to V2 then event store will contain the old events 
-but will start saving the new events. When events are replayed, the 
-system will need to operate correctly when it processes both the old and 
+but will start saving the new events. When the system replays events are 
+replayed, it must operate correctly when it processes both the old and 
 new sets of events. 
 
 The team considered two approaches to handle this type of change in the 
@@ -118,7 +134,7 @@ and new messages. This may be an appropriate strategy in the short-term,
 but will eventually cause the domain-model to become polluted with 
 legacy event handlers.
 
-This is the option the team selected for the V2 release because it 
+The team selected this option for the V2 release because it 
 involved the minimum amount of code changes. 
 
 > **JanaPersona:** Dealing with both old and new events in the
@@ -133,7 +149,7 @@ some messages might be processed more than once and result in incorrect
 or inconsistent data in the system. 
 
 > **JanaPersona:** Message idempotency is important in any system that
-> use messaging, not just systems that implement the CQRS pattern or use
+> uses messaging, not just systems that implement the CQRS pattern or use
 > event sourcing.
 
 In some scenarios, it would be possible to design idempotent messages, 
@@ -143,18 +159,18 @@ safely process the first message multiple times, but not the second.
 
 However, it is not always possible to use idempotent messages, so the 
 team decided to use the de-duplication feature of the Windows Azure 
-Service Bus to ensure that messages are only delivered once. The team 
+Service Bus to ensure that it delivers messages once only. The team 
 made some changes to the infrastructure to ensure that Windows Azure 
 Service Bus can detect duplicate messages, and configured Windows Azure 
 Service Bus to perform duplicate message detection. 
 
-To understand how this is implemented, see the section "De-duplicating 
+To understand how Contoso implemented this, see the section "De-duplicating 
 Messages" below. 
 
 Additionally, you need to consider how the message handlers in the 
 system retrieve messages from queues and topics. The current approach 
-uses the Windows Azure Service Bus peek/lock mechanism. This is a three 
-stage process: 
+uses the Windows Azure Service Bus peek/lock mechanism. This is a
+three-stage process: 
 
 1. The handler retrieves a message from the queue or topic and leaves a
    locked copy of the message on the queue or topic. Other clients

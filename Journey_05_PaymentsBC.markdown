@@ -8,8 +8,8 @@
 This chapter describes the changes made by the team to prepare for the 
 first production release of the Contoso Conference Management System. 
 This work includes some refactoring and additions to the **Orders and 
-Registrations** bounded context that was introduced in the previous two 
-chapters as well as a new **Conference Management** bounded context and
+Registrations** bounded context that the previous two chapters introduce
+as well as a new **Conference Management** bounded context and
 **Payments** bounded context. 
 
 One of the key refactorings undertaken by the team during this phase of 
@@ -25,12 +25,12 @@ system. The following chapters will describe what happens after the V1
 release. 
 
 This chapter also describes the Metro-inspired UI that the team added to 
-the public web-site during this phase and includes a discussion of 
+the public website during this phase and includes a discussion of 
 task-based UIs. 
 
 ## Working Definitions for this Chapter 
 
-The following definitions are used for the remainder of this chapter. 
+The remainder of this chapter uses the following definitions. 
 For more detail, and possible alternative definitions, see [A CQRS/ES 
 Deep Dive][r_chapter4] in the Reference Guide. 
 
@@ -93,16 +93,16 @@ conference:
 * The different types and quotas of seats available at the conference.
 
 Additionally, the business customer can control the visibility of the 
-conference on the public web-site by either publishing or un-publishing 
+conference on the public website by either publishing or un-publishing 
 the conference. 
 
-The business customer can use the conference management web-site to view 
+The business customer can use the conference management website to view 
 a list of orders and attendees. 
 
 ### Ordering and Registration User Stories
 
-When a registrant creates an order, it may not be possible to completely 
-fulfill the order. For example, a registrant may request a registrant 
+When a registrant creates an order, it may not be possible to fulfill  
+the order completely. For example, a registrant may request a registrant 
 may request five seats for the full conference, five seats for the 
 drinks reception, and three seats for the pre-conference workshop. There 
 may only be three seats available and one seat for the drinks reception, 
@@ -136,7 +136,7 @@ of two web sites and three bounded contexts. The infrastructure includes
 SQL databases, an event store, and messaging infrastructure. 
 
 The first table that follows figure 1 lists all of the messages that the 
-artefacts (aggregates, MVC contollers, read-model generators, and data
+artifacts (aggregates, MVC controllers, read-model generators, and data
 access objects) shown on the diagram exchange with each other. 
 
 > **Note:** For reasons of clarity, the handlers (such as the
@@ -315,7 +315,7 @@ The following list outlines the message naming conventions in the Contoso Confer
 * All DTOs are nouns.
 
 The application is designed to deploy to Windows Azure. At this stage in 
-the journey, the application consists of two web roles that contains the 
+the journey, the application consists of two web roles that contain the 
 MVC web applications and a worker role that contains the message 
 handlers and domain objects. The application uses SQL Azure databases 
 for data storage, both on the write-side and the read-side. The Orders 
@@ -348,7 +348,7 @@ CRUD-style web application. It is implemented using MVC 4 and Entity
 Framework. 
 
 > **JanaPersona:** The team implemented this bounded context after it
-> implemented the public Conference Management web-site that uses MVC 3.
+> implemented the public Conference Management website that uses MVC 3.
 
 This bounded context must integrate with other bounded contexts that 
 implement the CQRS pattern. 
@@ -366,7 +366,7 @@ bounded context without using event sourcing. However, during the
 implementation it became clear that using event sourcing would help to 
 simplify this bounded context. 
 
-In the previous chapter [Extending and Enhancing the Orders and 
+In the previous chapter, [Extending and Enhancing the Orders and 
 Registrations Bounded Contexts][j_chapter4] the team found that they 
 needed to use events to push changes from the write-side to the 
 read-side. On the read-side the **OrderViewModelGenerator** class 
@@ -388,13 +388,13 @@ and the implementation of the Orders and Registrations becomes simpler.
 > problem in the future of migrating from one event store to another.
 
 
-> Evolution is key here; for example one could show how implementing
+> Evolution is key here; for example, one could show how implementing
 > event sourcing allows you to get rid of those tedious data migrations,
 > and even allows you to build reports from the past.  
 > Tom Janssens - CQRS Advisors Mail List
 
 The team implemented the basic event store using Windows Azure table 
-storage. If you are hosting your application in Windows Azure you could 
+storage. If you are hosting your application in Windows Azure, you could 
 also consider using Windows Azure blobs or SQL Azure to store your 
 events.
 
@@ -422,25 +422,26 @@ reliability, scale, and performance for your application.
 > cloud, it’s a different case...  
 > Mark Seeman - CQRS Advisors Mail List
 
-### Identifying Aggegates
+### Identifying Aggregates
 
 In the Windows Azure table storage based implementation of the event 
 store that the team created for the V1 release, they used the aggregate 
 id as the partition key. This makes it efficient to locate the partition 
 that holds the events for any particular aggregate. 
 
-In some cases the system must locate related aggregates. For example, an 
-order aggregate may have a related registrations aggregate that holds 
+In some cases, the system must locate related aggregates. For example,
+an order aggregate may have a related registrations aggregate that holds 
 details of the attendees assigned to specific seats. In this scenario, 
 the team decided to reuse the same aggregate id for the related pair of 
-aggregates, the order and registration, in order to facilitate look-ups. 
+aggregates (the order and registration aggregates) in order to
+facilitate look-ups. 
 
 > **BharathPersona:** You want to consider in this case whether you
 > should have two aggregates. You could model the registrations as an
 > entity inside the order aggregate.
 
 A more common scenario is to have a one-to-many relationship between 
-aggregates instead of a one-to-one. In this case it is not possible to 
+aggregates instead of a one-to-one. In this case, it is not possible to 
 share aggregate ids: instead the aggregate on the one-side can store a 
 list of the ids of the aggregates on the many-side, and each aggregate 
 on the many-side can store the id of the aggregate on the one-side. 
@@ -449,8 +450,8 @@ on the many-side can store the id of the aggregate on the one-side.
 > bounded contexts. If you have aggregates in different bounded contexts
 > that model different facets of the same real-world entity, it makes
 > sense for them to share the same id. This makes it easier to follow a
-> real-world entity as it is processed by different bounded contexts in
-> your system.  
+> real-world entity as different bounded contexts in your system process 
+> it.  
 > Greg Young - Conversation with the PnP team.
 
 ## Task-based UI
@@ -483,7 +484,7 @@ transfer object (DTO) to exchange data between the back-end and the UI.
 The UI will request data from the back-end that will arrive encapsulated 
 in a DTO, it will modify the data in the DTO, and then return the DTO 
 to the back-end. The back-end will use the DTO to figure out what CRUD 
-operations it must perform on the underlying datastore. 
+operations it must perform on the underlying data store. 
 
 The second screen is more explicit about what is happening in terms of 
 the business process: the user is selecting quantities of seat types as 
@@ -519,7 +520,7 @@ system displays if the payment fails.
 > some scenarios, simple CRUD-style UIs work well. You must evaluate
 > whether benefits of task-based UIs outweigh the additional 
 > implementation effort of a task-based UI. Very often, the bounded
-> contexts where you choose to implement the CQRS pattern, are also the
+> contexts where you choose to implement the CQRS pattern are also the
 > bounded contexts that benefit from task-based UIs because of the 
 > more complex business logic and more complex user interactions. 
 
@@ -530,7 +531,7 @@ architecture: you should implement the pattern only in those bounded
 contexts where it brings clear benefits. In the Contoso Conference 
 Management System, the conference management bounded context is a 
 relatively simple, stable, and low volume part of the overall system. 
-Therefore the team decided that they would implement this bounded 
+Therefore, the team decided that they would implement this bounded 
 context using a traditional two-tier, CRUD-style architecture. 
 
 ## Integration between Bounded Contexts
@@ -541,13 +542,13 @@ customer changes the quota for a seat type in the Conference Management
 bounded context, this change must be propagated to the Orders and 
 Registrations bounded context. Also, if a registrant adds a new attendee 
 to a conference, the business customer must be able to view details of 
-the attendee in the list in the Conference Management web-site. 
+the attendee in the list in the Conference Management website. 
 
 ### Pushing Changes from the Conference Management Bounded Context
 
 The following conversation between several developers and the domain 
 expert highlights some of the key issues that the team needed to address 
-in planning how this integration should be implemented. 
+in planning how to implement this integration. 
 
 > *Developer #1*: I want to talk about how we should implement two
 > pieces of the integration story associated with our CRUD-style,
@@ -578,7 +579,7 @@ in planning how this integration should be implemented.
 > *Developer #2*: What implementation approaches are you considering for
 > these integration scenarios?
 
-> *Developer #1*: Because we have a two tier CRUD-style bounded context,
+> *Developer #1*: Because we have a two-tier CRUD-style bounded context,
 > for the first scenario I was planning on exposing the conference and
 > seat type information directly from the database as a simple read-only
 > service. For the second scenario, I was planning to publish events
@@ -593,7 +594,7 @@ in planning how this integration should be implemented.
 > *Developer #1*: I can see that it would be easier to adapt to changing
 > requirements in the future if we used events. For example, if a new
 > bounded context required information about who changed the quota, we
-> add this information to the event. For existing bounded contexts we
+> add this information to the event. For existing bounded contexts, we
 > could add an adapter that converted the new event format to the old.
 
 > *Developer #2*: You implied that the events that notify subscribers of
@@ -612,7 +613,7 @@ in planning how this integration should be implemented.
 > guarantee that your bounded context persists its data to storage and
 > publishes the events on a message queue.
 
-> *Developer #1*: We can wrap the database write and the add to queue
+> *Developer #1*: We can wrap the database write and the add-to-queue
 > operations in a transaction.
 
 > *Developer #2*: That's going to be problematic for two reasons.
@@ -623,7 +624,7 @@ in planning how this integration should be implemented.
 > long-run.
 
 > *Domain Expert*: We have a similar scenario with another bounded
-> context that we'll be looking at later. In this case we can't make any
+> context that we'll be looking at later. In this case, we can't make any
 > changes to the bounded context, we no longer have an up to date copy
 > of the source code.
 
@@ -631,28 +632,29 @@ in planning how this integration should be implemented.
 > what can we do if we don't have access to the source code and so can't
 > make any changes?
 
-> *Developer #2*: In both cases we use the same technique to solve the
+> *Developer #2*: In both cases, we use the same technique to solve the
 > problem. Instead of publishing the events from within the application
 > code, we can use another process that monitors the database and sends
 > the events when it detects a change in the database. This solution may
 > introduce a small amount of latency, but it does avoid the need for a
-> two-phase commit and it can be implemented without making any changes
+> two-phase commit and you can implement it without making any changes
 > to the application code.
 
 A further issue relates to when and where to persist integration events. 
-In the example discussed above, the events are raised in the Conference 
-Management bounded context and handled in the Orders and Registrations 
-bounded context that uses them to populate its read-model. If a failure 
-occurs that causes the system to loose the read-model data, then without 
-saving the events there is no way to re-create this read-model data. 
+In the example discussed above, the Conference Management bounded 
+context publishes the events and the Orders and Registrations bounded 
+context handles them and uses them to populate its read-model. If a 
+failure occurs that causes the system to lose the read-model data, then 
+without saving the events there is no way to re-create this read-model 
+data. 
 
 Whether you need to persist these integration events will depend on the 
 specific requirements and implementation of your application. For 
 example: 
 
-* Integration events may be handled in the write-model (and not on the
-  read-side as in the current example) and will then result in changes
-  on the write-side that are persisted as other events.
+* The write-side may handle the integration, not the
+  read-side as in the current example. The events will then result in
+  changes on the write-side it persists as other events.
 * Integration events may represent transient data that does not need to
   be persisted.
 * Integration events from a CRUD-style bounded context may contain state
@@ -660,8 +662,8 @@ example:
   from the Conference Management bounded context includes the current
   seat quota, you may not be interested in previous values.
 
-> Another approach to consider is to use an event-store that is shared
-> by multiple bounded contexts. In this way the originating bounded
+> Another approach to consider is to use an event-store that multiple
+> bounded contexts share. In this way, the originating bounded
 > context (for example the CRUD-style Conference Management bounded
 > context) could be responsible for persisting the integration events.  
 > Greg Young - Conversation with the PnP team.
@@ -720,7 +722,7 @@ but will evaluate alternatives during the next stage of the journey.
 These alternative approaches will include: 
 
 1. Modify the Orders and Registrations bounded context to generate more
-   useful events that are designed explicitly for integration.
+   useful events designed explicitly for integration.
 2. Generate the de-normalized data in the Orders and Registrations
    bounded context and notify the Conference Management bounded context
    when the data is ready. The Conference Management bounded context can
@@ -733,11 +735,10 @@ These alternative approaches will include:
 
 In the Conference Management bounded context, the business customer can 
 change the description of a seat type. This results in a **SeatUpdated** 
-event that is handled in the Orders and Registrations bounded context 
-by the **ConferenceViewModelGenerator** class that updates the 
-read-model data to reflect the new information about the seat type. The 
-UI displays the new seat description when a registrant is making an 
-order. 
+event that the **ConferenceViewModelGenerator** class in the Orders and 
+Registrations bounded context handles; This class updates the read-model 
+data to reflect the new information about the seat type. The UI displays 
+the new seat description when a registrant is making an order. 
 
 However, if a registrant views a previously created order (for example 
 to assign attendees to seats), the registrant sees the original seat 
@@ -785,12 +786,12 @@ bounded context is responsible for managing the interaction with an
 external payments system so that registrants can pay for the seats that 
 they have ordered. 
 
-When the team were examining the domain models for these two bounded 
-contexts, they discovered that neither of them knew anything about 
+When the team was examining the domain models for these two bounded 
+contexts, it discovered that neither of them knew anything about 
 pricing. The **Orders and Registrations** bounded context created an 
 order that listed the quantities of the different seat types that the 
 registrant requested. The **Payments** bounded context simply passed a 
-total to the external payments system. At some point the system needed 
+total to the external payments system. At some point, the system needed 
 to calculate the total from the order before invoking the payment 
 process. 
 
@@ -799,11 +800,11 @@ favoring autonomy and favoring authority.
 
 ### Favoring Autonomy
 
-In this approach, the responsibility for calculating the order total is 
-assigned to the **Orders and Registrations** bounded context. The 
+This approach assigns the responsibility for calculating the order total
+to the **Orders and Registrations** bounded context. The 
 **Orders and Registrations** bounded context is not dependent on another 
 bounded context at the time that it needs to perform the calculation 
-because it already has the necessary data. At some point in the past it 
+because it already has the necessary data. At some point in the past, it 
 will have collected the pricing information it needs from other bounded 
 contexts (such as the **Conference Management** bounded context) and 
 cached it. 
@@ -823,9 +824,9 @@ have reached the **Orders and Registrations** bounded context.
 In this approach, the part of the system that calculates the order total 
 obtains the pricing information from the bounded contexts (such as the 
 **Conference Management** bounded context) at the point in time that it 
-performs the calculation. The calculation could still be performed by 
-the **Orders and Registrations** bounded context, or be handled by 
-another bounded context or service within the system. 
+performs the calculation. The **Orders and Registrations** bounded
+context could still perform the calculation, or it could delegate the 
+calculation to another bounded context or service within the system. 
 
 The advantage of this approach is that the system always uses the latest 
 pricing information whenever it is calculating an order total. 
@@ -868,7 +869,7 @@ the Orders and Registrations bounded context, the system uses Windows
 Azure blobs to store information about the seat assignments. 
 
 > **BharathPersona:** When you are choosing the underlying storage
-> mechanism for the read-side you should consider the costs associated
+> mechanism for the read-side, you should consider the costs associated
 > with the storage (especially in the cloud) in addition to the
 > requirement that the read-side data should be easy and efficient to
 > access using the queries on the read-side.
@@ -890,12 +891,12 @@ assignments to propagate to the read-model, and sometimes the tester
 viewed the information queried from the read-model too quickly. 
 
 The team decided to add a note to the view page warning users about this 
-possibility, although in a production system the read-model is likely to 
-be updated faster than in a debug version of the application running 
+possibility, although a production system is likely to update the 
+read-model faster than a debug version of the application running 
 locally. 
 
 > **CarlosPersona:** So long as the registrant knows that the changes
-> have been persisted, and that what is displayed in the UI could be a
+> have been persisted, and that what the UI displays could be a
 > few seconds out of date, they are not going to be concerned.
 
 # Implementation Details 
@@ -905,7 +906,7 @@ this stage of the journey. You may find it useful to have a copy of the
 code so you can follow along. You can download a copy of the code from 
 the repository on github: [mspnp/cqrs-journey-code][repourl]. 
 
-> **Note:** Do not expect the code samples to exactly match the code in
+> **Note:** Do not expect the code samples to match exactly the code in
 > the reference implementation. This chapter describes a step in the
 > CQRS journey, the implementation may well change as we learn more and
 > refactor the code.
@@ -913,8 +914,8 @@ the repository on github: [mspnp/cqrs-journey-code][repourl].
 ## The Conference Management Bounded Context
 
 The Conference Management Bounded Context that enables a Business 
-Customer to define and manage conferences is implemented using a simple 
-two-tier, CRUD-style application using MVC 4. 
+Customer to define and manage conferences is i a simple 
+two-tier, CRUD-style application that uses MVC 4. 
 
 In the Visual Studio solution, the **Conference** project contains the 
 model code, and the **Conference.Web** project contains the MVC views 
@@ -936,12 +937,12 @@ changes to conferences by publishing the following events.
 * **SeatCreated:** The bounded context publishes this event whenever a
   Business Customer defines a new seat type.
 * **SeatsAdded:** The bounded context publishes this event whenever a
-  Business Customer increase the quota of a seat type.
+  Business Customer increases the quota of a seat type.
   
 The **ConferenceService** class in the Conference project publishes 
 these events to the event bus. 
 
-> **MarkusPersona:** At the moment there is no distributed transaction
+> **MarkusPersona:** At the moment, there is no distributed transaction
 > to wrap the database update and the message publishing.
 
 ## The Payments Bounded Context
@@ -1020,7 +1021,7 @@ your site:
   account, is based on an API. It typically uses two steps. First, the
   payment service verifies that your customer can pay the required
   amount, and sends you a token. Second, you can use the token within a
-  fixed time to complete the payment by sending th token back to the
+  fixed time to complete the payment by sending the token back to the
   payment service. 
 
 Contoso assumes that its business customers do not have a merchant 
@@ -1039,8 +1040,8 @@ command validation.
 
 A key benefit of embracing eventual consistency is to remove the 
 requirement for using distributed transactions that have a significant, 
-negative impact on the scalability and performance of large systems as a 
-consequence of the number and duration of locks that they must hold in 
+negative impact on the scalability and performance of large systems 
+because of the number and duration of locks that they must hold in 
 the system. In this specific scenario, you could take steps to avoid the 
 potential problem of accepting payment without seats being available in 
 two ways: 
@@ -1054,19 +1055,19 @@ two ways:
   take: you must reserve (lock) the seats for an indeterminate period
   while you wait for the registrant to complete the payment.
 
-The approach the team chose to allow the possibility that a registrant 
-could pay for seats only to find that they are no longer available, in 
-addition to being very unlikely to happen in practice (a timeout 
-occuring while a registrant is paying for the very last seats), also has 
-the least impact on the system because it doesn't require a long-term 
-reservation (lock) on any seats.
+The team chose to allow for the possibility that a registrant could pay 
+for seats only to find that they are no longer available; in addition to 
+being very unlikely to happen in practice (a timeout occurring while a 
+registrant is paying for the very last seats), this approach has the 
+least impact on the system because it doesn't require a long-term 
+reservation (lock) on any seats. 
 
-> **MarkusPersona:** To further minimize the chance of this scenario
-> occuring, the team decided to increase the buffer time for releasing
-> reserved seats from five minutes to fourteen minutes. The orginal
+> **MarkusPersona:** To minimize further the chance of this scenario
+> occurring, the team decided to increase the buffer time for releasing
+> reserved seats from five minutes to fourteen minutes. The original
 > value of five minutes was chosen to account for any possible clock
 > skew between the servers so that reservations were not released before
-> the fifteen minute countdown timer in the UI expired.
+> the fifteen-minute countdown timer in the UI expired.
 
 In more general terms, you could re-state the two options above as:
 
@@ -1078,16 +1079,16 @@ If the command only affects a single aggregate and does not need to
 reference anything outside of the consistency boundary defined by the 
 aggregate, then there is no problem because all of the information 
 required to validate the command is within the aggregate. This is not 
-the case in the current scenario: if you could validate that the seats 
-were still available just before you made the payment, this check would 
-involve checking information outside of the current aggregate. 
+the case in the current scenario: if you could validate whether the 
+seats were still available just before you made the payment, this check 
+would involve checking information from outside the current aggregate. 
 
-If, in order to validate the command, you need to look at data outside 
-of the aggregate, for example by querying a read model, or looking in a 
-cache, this is going to impact the scalability of the system. Also, if 
-you are querying a read-model remember that read-models are eventually 
-consistent. In the current scenario, you would need to query an 
-eventually consistent read-model to check on the seats avaialbility. 
+If, in order to validate the command you need to look at data outside 
+of the aggregate, for example, by querying a read model, or by looking 
+in a cache, this is going to affect the scalability of the system. Also, 
+if you are querying a read-model remember that read-models are 
+eventually consistent. In the current scenario, you would need to query 
+an eventually consistent read-model to check on the seats availability. 
 
 If you decide to lock all of the relevant resources until the command 
 completes, be aware of the impact this will have on the scalability of 
@@ -1105,8 +1106,7 @@ For a detailed discussion of this issue, see
 The initial implementation of the event sourcing infrastructure is 
 extremely basic: the team intends to replace it with a production 
 quality event store in the near future. This section describes the 
-initial, basic, implementation and lists the various ways it must be 
-improved. 
+initial, basic, implementation and lists the various ways to improve it. 
 
 The core elements of this basic event sourcing solution are:
 
@@ -1122,7 +1122,7 @@ The core elements of this basic event sourcing solution are:
 
 The following two methods from the **Order** aggregate are examples of 
 methods that the **OrderCommandHandler** class invokes when it receives 
-a command for the order. Neither of these methods update the state of 
+a command for the order. Neither of these methods updates the state of 
 the **Order** aggregate, instead they raise an event that will be 
 handled by the **Order** aggregate. In the **MarkAsReserved** method, 
 there is some minimal logic to determine which of two events to raise. 
@@ -1153,10 +1153,9 @@ public void ConfirmPayment()
 }
 ```
 
-The **Update** method is defined in the abstract base class of the 
-**Order** class. The following code sample shows this method and the 
-**Id** and **Version** properties in the **EventSourced** class. 
-
+The abstract base class of the **Order** class defines the **Update** 
+method. The following code sample shows this method and the **Id** and 
+**Version** properties in the **EventSourced** class. 
 
 ```Cs
 private readonly Guid id;
@@ -1179,12 +1178,12 @@ protected void Update(VersionedEvent e)
 }
 ```
 
-The **Update** method sets the Id and increments the version of the 
-aggregate, and determines which event handler in the aggregate it should 
-invoke to handle the event type. 
+The **Update** method sets the **Id** and increments the version of the 
+aggregate. It also determines which of the event handlers in the 
+aggregate it should invoke to handle the event type. 
 
-> **MarkusPersona:** The version of the aggregate is incremented every
-> time its state is updated.
+> **MarkusPersona:** Every time the system updates the state of an
+> aggregate, it increments the version number of the aggregate.
 
 The following code sample shows the event handler methods in the 
 **Order** class that are invoked when the command methods shown above 
@@ -1242,7 +1241,7 @@ property of the abstract **EventSourced** class called **Events**.
 The following code sample from the **OrderCommandHandler** class shows 
 how the handler invokes a method in the **Order** class to handle a 
 command, and then uses a repository to persist the current state of the 
-**Order** aggregate by appending all of the pending events to the store. 
+**Order** aggregate by appending all pending events to the store. 
 
 
 ```Cs
@@ -1302,13 +1301,13 @@ the state of the instance by replaying the stored event stream.
 > **PoePersona:** We later found that using event sourcing and being
 > able to replay events was invaluable as a technique for analyzing bugs
 > in the production system running in the cloud. We could make a local
-> copy of the event store and then replay the event stream locally and
-> debug the application in Visual Studio to undestand exactly what
+> copy of the event store, then replay the event stream locally, and
+> debug the application in Visual Studio to understand exactly what
 > happened in the production system.
 
 The following code sample from the **OrderCommandHandler** class shows 
-how this process is initiated by calling the **Find** method in the 
-repository. 
+how calling the **Find** method in the repository initiates this
+process. 
 
 ```Cs
 public void Handle(MarkSeatsAsReserved command)
@@ -1383,8 +1382,8 @@ number of the aggregate instance.
 ### Issues with the Simple Event Store Implementation
 
 The simple implementation of event sourcing and an event store outlined 
-in the previous sections has a number of short-comings. The following 
-list identifies some of these short-comings that should be overcome in a 
+in the previous sections has a number of shortcomings. The following 
+list identifies some of these shortcomings that should be overcome in a 
 production quality implementation. 
 
 1. There is no guarantee in the **Save** method in the
@@ -1401,7 +1400,7 @@ production quality implementation.
 ## Windows Azure Table Storage Based Event Store
 
 The Windows Azure table storage based event store addresses some of the 
-short-comings of the simple SQL-based event store. Howevere, at this 
+shortcomings of the simple SQL-based event store. However, at this 
 point on time, it is still _not_ a production quality implementation. 
 
 The team designed this implementation to guarantee that events are both 
@@ -1475,7 +1474,7 @@ public void Save(string partitionKey, IEnumerable<EventData> events)
 
 The **Save** method in the repository class is shown below. This method 
 is invoked by the event handler classes, invokes the **Save** method 
-shown in the previous code sample, and also invokes the **SendAsync** 
+shown in the previous code sample, and invokes the **SendAsync** 
 method of the **EventStoreBusPublisher** class. 
 
 ```Cs
@@ -1531,7 +1530,7 @@ the **Order** aggregate and the **PricingService** class for details.
 > **JanaPersona:** The UI also displays a dynamically calculated total
 > as the registrant adds seats to an order. The application calculates
 > this value using Javascript. When the registrant makes a payment, the
-> system uses the total that was calculated by the **Order** aggregate.
+> system uses the total that the **Order** aggregate calculates.
 
 # Testing
 
@@ -1541,31 +1540,31 @@ the **Order** aggregate and the **PricingService** class for details.
 > correctly together.
 
 > **MarkusPersona:** Don't forget to create unit tests for your
-> read-models. Contoso discovered a bug just prior to the V1 release
-> where order items were removed when an order was updated through a
-> unit test on the read model generator.
+> read-models. A unit test on the read model generator uncovered a bug
+> just prior to the V1 release where the system removed order items when
+> it updated an order.
 
 ## Timing Issues
 
 One of the acceptance tests verifies the behavior of the system when a 
 business customer creates new seat types. The key steps in the test 
 create a conference, create a new seat type for the conference, and then 
-publishes the conference. This raises the corresponding sequence of 
+publish the conference. This raises the corresponding sequence of 
 events: **ConferenceCreated**, **SeatCreated**, and 
 **ConferencePublished**. 
 
-These are integration events that are handled in the Orders and 
-Registrations bounded context. The test determined that the events were 
-received by the Orders and Registrations bounded context in a different 
+The Orders and Registrations bounded context handles these are 
+integration events. The test determined that the the Orders and 
+Registrations bounded context received these events in a different 
 order. 
 
 The Windows Azure Service Bus only offers best-effort FIFO, therefore it 
 may not deliver events in the order that they were sent, it is also 
 possible in this scenario that the issue occurs because of the different 
 times it takes for the steps in the test to create the messages and 
-deliver them to the Windows Azure Service Bus. The problem was solved 
-temporarily by introducing an artificial delay between the steps in the 
-test. 
+deliver them to the Windows Azure Service Bus. The introduction of an 
+artificial delay between the steps in the test provided a temporary 
+solution to this problem. 
 
 In the V2 release, the team plans to address the general issue of 
 messaging ordering and either modify the infrastructure to guarantee 

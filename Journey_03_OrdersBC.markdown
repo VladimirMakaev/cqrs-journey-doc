@@ -5,13 +5,12 @@ _The first stopping point on our CQRS journey._
 
 # A Description of the Orders and Registrations Bounded Context
 
-The **Orders and Registrations** bounded context is partially responsible 
-for the booking process for attendees planning to attend a conference. 
-In the **Orders and Registrations** bounded context, a person (the 
-registrant) purchases seats at a particular conference. In the 
-**Registrations** bounded context the registrant assigns names
- of attendees to the purchased seats (this is described in the chapter
-[Preparing for the V1 Release][j_chapter5]). 
+The **Orders and Registrations** bounded context is partially 
+responsible for the booking process for attendees planning to attend a 
+conference. In the **Orders and Registrations** bounded context, a 
+person (the registrant) purchases seats at a particular conference. The 
+registrant also assigns names of attendees to the purchased seats (this 
+is described in the chapter [Preparing for the V1 Release][j_chapter5]). 
 
 This was the first stop on our CQRS journey, so the team decided to 
 implement a core, but self-contained part of the system. The 
@@ -32,14 +31,15 @@ buses and a persistence mechanism for aggregates.
 > implementation details change in later steps in the journey. These
 > changes are described in subsequent chapters.
 
-Future plans for enhancements to this bounded context include support 
-for wait listing, whereby requests for seats are placed on a wait-list
-if there are not sufficient seats available and enabling the Business 
-Customer to set various types of discount for seat types. 
+Plans for enhancements to this bounded context in a later stage of the 
+journey include support for wait listing, whereby requests for seats are 
+placed on a wait-list if there are not sufficient seats available and 
+enabling the Business Customer to set various types of discount for seat 
+types. 
 
 ## Working Definitions for this Chapter
 
-The following definitions are used for the remainder of this chapter. 
+The remainder of this chapter uses the following definitions. 
 For more detail, and possible alternative definitions, see [A CQRS/ES 
 Deep Dive][r_chapter4] in the Reference Guide. 
 
@@ -52,7 +52,7 @@ either from the UI as a result of a user initiating a request, or from
 a workflow when the workflow is directing an aggregate to perform an 
 action. 
 
-Commands are processed once by a single recipient. A command bus 
+A single recipient processes a Command. A command bus 
 transports commands that command handlers then dispatch to aggregates. 
 Sending a command is an asynchronous operation with no return value.
 
@@ -82,7 +82,7 @@ state machine, so when the workflow responds to an event, it can change
 its internal state in addition to sending a new command.
 
 > **MarkusPersona:** It can be difficult for someone new to the code to
-> follow the flow of caommands and events through the system. For a
+> follow the flow of commands and events through the system. For a
 > discussion of a technique that can help, see the section "Testing" in
 > [Extending and Enhancing the Orders and Registrations Bounded
 > Contexts][j_chapter4].
@@ -92,7 +92,7 @@ subscribe to events.
 
 > **BharathPersona:** The team initially referred to the workflow class
 > in the **Orders** bounded context as a saga. To find out why they
-> decided to change the terminology. See the section [Patterns and
+> decided to change the terminology, see the section [Patterns and
 > Concepts](#patternsandconcepts) later in this chapter.
 
 The Reference Guide contains additional definitions and explanations of 
@@ -100,20 +100,20 @@ CQRS related terms.
 
 ## User Stories
 
-The bounded context descibed in this chapter addresses the following 
+The bounded context described in this chapter addresses the following 
 user story. 
 
 ### Creating Orders
 
 A registrant is the person who reserves and pays for seats at a 
-conference. Ordering is a two-stage process: first the registrant 
+conference. Ordering is a two-stage process: first, the registrant 
 reserves a number of seats, and then the registrant pays for the seats 
 to confirm the reservation. If registrant does not complete the payment, 
-the seat reservations expire after a fixed period of time and the system 
+the seat reservations expire after a fixed period and the system 
 makes the seats available to other registrants to reserve. 
 
 Figure 1 shows some of the early UI mockups that the team used to 
-explore the seat ordering story. 
+explore the seat-ordering story. 
 
 ![Figure 1][fig1]
 
@@ -122,9 +122,9 @@ explore the seat ordering story.
 These UI mockups helped the team in several ways:
 
 * Communicating the core team's vision for the system to the graphic
-  designers who are an independent team at a third-party.
+  designers who are an independent team at a third party.
 * Communicating the domain expert's knowledge to the developers.
-* Refining the definition of terms in the Ubiquitous Lanaguage.
+* Refining the definition of terms in the Ubiquitous Language.
 * Exploring "what if" type questions about alternative scenarios and
   approaches.
 * Forming the basis for the system's suite of acceptance tests.
@@ -149,7 +149,7 @@ bounded contexts.
   Registrant may also be an Attendee.
   
 - **User.** A User is a person such as an Attendee, Registrant, Speaker, 
-  Volunteer who is associated with a conference. Each User has a unique 
+  or Volunteer who is associated with a conference. Each User has a unique 
   Record Locator code that the User can use to access User specific 
   information in the system. For example, a Registrant can use a Record 
   Locator code to access her Orders, an Attendee can use a Record 
@@ -162,39 +162,38 @@ bounded contexts.
 - **Order.** When a Registrant interacts with the system, the system
   creates an Order to manage the Reservations, payment, and 
   Registrations. An Order typically exists in one of four states: 
-  Created, ReservationsMade, Rejected, and Confirmed. An Order is 
-  initially in the Created state. An Order is in the ReservationsMade 
+  **Created**, **ReservationsMade**, **Rejected**, and **Confirmed**. An Order is 
+  initially in the **Created** state. An Order is in the **ReservationsMade** 
   state when the system has reserved some of the Seats requested by the 
-  Registrant (one or more Order Items are in the Reserved state). An 
-  Order is in the Confirmed state when the Registrant has successfully 
-  paid for the Order Items in the Reserved state. An Order is in the 
-  Rejected state if the system cannot reserve any of the Seats requested 
-  by the Registrant (all the Order Items are in the Rejected state) or 
+  Registrant (one or more Order Items are in the **Reserved** state). An 
+  Order is in the **Confirmed** state when the Registrant has successfully 
+  paid for the Order Items in the **Reserved** state. An Order is in the 
+  **Rejected** state if the system cannot reserve any of the Seats requested 
+  by the Registrant (all the Order Items are in the **Rejected** state) or 
   if the payment process fails. An Order contains one of more Order 
   Items.
 
 * **Order Item.** An Order Item represents a Seat Type and a Quantity
   and is associated with an Order. An Order Item exists in one of three 
-  states: Created, Reserved, Rejected. An Order Item is initially in the 
-  Created state. An Order Item is in the Reserved state if the system 
+  states: **Created**, **Reserved**, **Rejected**. An Order Item is initially in the 
+  **Created** state. An Order Item is in the **Reserved** state if the system 
   has reserved the quantity of seats of the seat type requested by the 
-  Registrant. An Order Item is in the Rejected state if the system 
+  Registrant. An Order Item is in the **Rejected** state if the system 
   cannot reserve the quantity of seats of the seat type requested by the 
   Registrant. 
 
 - **Seat.** A Seat represents a space at a conference or access to a 
   specific session at the conference such as a cocktail party, a 
-  tutorial, or a workshop. Each conference has a quota of Seats that may 
-  be changed by the Business Customer. Each session has a quota of Seats 
-  that may be changed by the Business Customer. 
+  tutorial, or a workshop. The Business Customer may change the quota of
+  Seats for each Conference. The Business Customer may also change the
+  quota of Seats for each Session.
 
 - **Reservation.** A Reservation is a temporary reservation of one or 
   more seats. The ordering process creates Reservations. When a 
   Registrant begins the ordering process, the system makes Reservations 
   for the number of Seats requested by the Registrant. These Seats are 
   then not available for other Registrants to reserve. The Reservations 
-  are held for n minutes (n is one of the properties of the conference 
-  defined by the Conference Owner) during which the Registrant can 
+  are held for 15 minutes during which the Registrant can 
   complete the ordering process by making a payment for those Seats. If 
   the Registrant does not pay for the seats within n minutes, the 
   system cancels the Reservation and the Seats become available to other 
@@ -205,12 +204,12 @@ bounded contexts.
   reserve and purchase. When a Seat is reserved, the number of available 
   Seats of that type is decremented. If the system cancels the 
   Reservation, the number of available Seats of that type is 
-  incremented. The initial quota of each seat type is an attribute of 
-  the conference and is defined by the Business Customer. A Conference 
+  incremented. The Business Customer defines the initial quota of each
+  seat type; this is an attribute of a Conference. A Conference 
   Owner may adjust the quotas for the individual seat types. 
 
-- **Conference site.** Every conference defined in the system can be 
-  accessed using a unique URL. Registrants can begin the ordering 
+- **Conference site.** You can access every conference defined in the
+  system by using a unique URL. Registrants can begin the ordering
   process from this site. 
 
 The following conversation between developers and domain experts 
@@ -275,10 +274,10 @@ For more information about the options for running the application, see
 
 > **BharathPersona:** A frequent claim for the CQRS pattern is that it
 > enables you to scale the read-side and write-side independently to
-> support the different usage patterns. In the this bounded context, the
+> support the different usage patterns. In this bounded context, the
 > number of read operations from the UI is not likely to hugely
 > out-number the write-operations: the bounded context focuses on
-> registrants creating orders. Therefore the read-side and the
+> registrants creating orders. Therefore, the read-side and the
 > write-side are deployed to the same Windows Azure worker role rather
 > than to two separate worker roles that could be scaled independently.
 
@@ -304,12 +303,12 @@ pros and cons of alternative approaches.
 > A value I think developers would benefit greatly from recognizing is
 > the de-emphasis on the means and methods for persistence of objects in
 > terms of relational storage. Teach them to avoid modeling the domain
-> as if it were a relational store, and I think it will be easier to
+> as if it was a relational store, and I think it will be easier to
 > introduce and understand both DDD and CQRS.  
 > Josh Elster - CQRS Advisors Mail List
 
 > **BharathPersona:** These diagrams deliberately exclude details of how
-> the commands and events are delivered through command and event
+> the system delivers commands and events through command and event
 > handlers. The diagrams focus on the logical relationships between the
 > aggregates in the domain.
 
@@ -402,7 +401,7 @@ The numbers in the diagram correspond to the following steps:
 > process does not include explicit compensation steps, and does not
 > need to be represented as a long-lived transaction.
 
-For more information about workflows and sagas see the chapter
+For more information about workflows and sagas, see the chapter
 [Coordinating Workflows and Sagas][r_chapter6] in the Reference Guide.
    
 The team identified these questions about these approaches:
@@ -423,10 +422,10 @@ approaches considered by the team.
 Before a registrant can reserve a seat, the system must check that there 
 are enough seats available. Although logic in the UI can attempt to 
 verify that there are sufficient seats available before it sends a 
-command, the business logic in the domain must also perform the check 
-because the state may change between the time the UI performs the 
-validation and the time the command is delivered to the aggregate in the 
-domain. 
+command, the business logic in the domain must also perform the check; 
+this is because the state may change between the time the UI performs
+the validation and the time that the system delivers the command to the
+aggregate in the domain. 
 
 In the first model, the validation must take place in either the 
 **Order** or **SeatsAvailability** aggregate. If it is the 
@@ -434,7 +433,7 @@ former, the **Order** aggregate must discover the current seat
 availability from the **SeatsAvailability** aggregate before 
 the reservation is made and before it raises the event. If it is the 
 later, the **SeatsAvailability** aggregate must somehow notify the
-**Order** aggregate that the seats could not be reserved, and the
+**Order** aggregate that it cannot reserve the seats, and that the
 **Order** aggregate must undo (or compensate for) any work that it has
 completed so far.
 
@@ -455,7 +454,7 @@ other two.
 An aggregate, in the DDD approach, represents a consistency boundary. 
 Therefore, the first model with two aggregates, and the third model with 
 two aggregates and a workflow will involve two transactions: one when the 
-system persists the new **Order** aggregate, and one when the system 
+system persists the new **Order** aggregate and one when the system 
 persists the updated **SeatsAvailability** aggregate. 
 
 To ensure the consistency of the system when a registrant creates an 
@@ -501,7 +500,7 @@ Creating a new entity to act as an aggregate root seems unnecessary.
 The team decided on the model that incorporated a workflow because this 
 offers the best way to handle the concurrency requirements in this 
 bounded context. 
-	
+
 # Implementation Details
 
 This section describes some of the significant features of the 
@@ -510,7 +509,7 @@ find it useful to have a copy of the code so you can follow along. You
 can download a copy of the code from the repository on github: 
 [mspnp/cqrs-journey-code][repourl]. 
 
-> **Note:** Do not expect the code samples to exactly match the code in
+> **Note:** Do not expect the code samples to match exactly the code in
 > the reference implementation. This chapter describes a step in the
 > CQRS journey, the implementation may well change as we learn more and
 > refactor the code.
@@ -609,7 +608,7 @@ forward commands to the correct handler.
 
 The **OrderCommandHandler** class handles the **RegisterToConference** 
 command sent from the UI. Typically, the handler is responsible for 
-initiating any business logic in the domain and persisting any state 
+initiating any business logic in the domain and for persisting any state 
 changes to the data store. 
 
 The following code sample shows how the **OrderCommandHandler** 
@@ -650,15 +649,15 @@ aggregate on the command bus.
 
 To provide feedback to the user, the UI must have a way to check whether 
 the **RegisterToConference** command succeeded. Like all commands in the 
-system, this command is executed asynchronously and does not return a 
+system, this command executes asynchronously and does not return a 
 result. The UI queries the read model to check whether the 
 command succeeded. 
 
 The following code sample shows the initial implementation where the 
 **RegistrationController** class polls the read model until either the 
-order is created or a timeout occurs. The **WaitUntilUpdated** method
-polls the read-model until either it finds that the order has been 
-persisted or it times out.
+system creates the order or a timeout occurs. The **WaitUntilUpdated**
+method polls the read-model until it finds either that the order has
+been persisted or it times out.
 
 
 ```Cs
@@ -687,10 +686,10 @@ public ActionResult StartRegistration(string conferenceCode, OrderViewModel cont
 }
 ```
 
-The team later replaced this mechanism for checking whether the order 
-was saved with an implementation of the Post-Redirect-Get pattern. The 
-following code sample shows the new version of the **StartRegistration** 
-action method. 
+The team later replaced this mechanism for checking whether the system 
+saves the order with an implementation of the Post-Redirect-Get pattern. 
+The following code sample shows the new version of the 
+**StartRegistration** action method. 
 
 ```Cs
 [HttpPost]
@@ -790,13 +789,13 @@ following conversation between two developers explores this decision.
 > using mocking. If you need mocking to test your entities, this is a 
 > clear smell that something is wrong in the design. 
 
-> *Developer #2:* I prefer to be open and extensible by default.You 
+> *Developer #2:* I prefer to be open and extensible by default. You 
 > never know what needs may arise in the future, and making things 
 > virtual is hardly a cost. This is certainly controversial and a bit 
 > non-standard in .NET, but I think it's OK. We may only need virtuals 
 > on lazy-loaded collections. 
 
-> *Developer #1:* Since CQRS usually make the nead for lazy load 
+> *Developer #1:* Since CQRS usually make the need for lazy load 
 > vanish you should not need it either. This leads to even simpler code. 
 
 > *Developer #2:* CQRS does not dictate usage of ES, so if you're 
@@ -807,7 +806,7 @@ following conversation between two developers explores this decision.
 > aggregate boundaries are right, you don't need delay load. 
 
 > *Developer #2:* To be clear, the aggregate boundary is here to group 
-> things that should change together for reasons of consitency. A lazy 
+> things that should change together for reasons of consistency. A lazy 
 > load would indicate that things that have been grouped together don't 
 > really need this grouping? 
 
@@ -824,8 +823,8 @@ following conversation between two developers explores this decision.
 > **Order Items**. Surely we don't need to load the lines to mark it as 
 > Booked? Do we have it modeled wrong there? 
 
-> *Developer #1:* Is the list of **Order Items** that long ? If it is, 
-> the modeling is maybe wrong because you don't necesserily need 
+> *Developer #1:* Is the list of **Order Items** that long? If it is, 
+> the modeling is maybe wrong because you don't necessarily need 
 > transactionality at that level. Often, doing a late roundtrip to get 
 > and update **Order Items** can be more costly that loading them 
 > upfront: you should evaluate the usual size of the collection and do 
@@ -838,8 +837,8 @@ following conversation between two developers explores this decision.
 
 Figure 6 shows the entities that exist in the write-side model. There 
 are two aggregates, **Order** and **SeatsAvailability**, each 
-one containing multiple entity types. There is also a 
-**RegistrationProcess** class that manages the interaction between the
+one containing multiple entity types. Also there is a 
+**RegistrationProcess** class to manage the interaction between the
 aggregates. 
 
 The table in the figure 6 shows how the workflow behaves given a current 
@@ -908,8 +907,8 @@ public void Handle(OrderPlaced message)
 ```
 
 The code sample shows how the workflow changes its state and sends a new 
-**MakeSeatReservation** command that is handled by the 
-**SeatsAvailability** aggregate. The code sample also 
+**MakeSeatReservation** command that the 
+**SeatsAvailability** aggregate handles. The code sample also 
 illustrates how the workflow is implemented as a state machine that receives 
 messages, changes its state, and sends new messages. 
 
@@ -999,7 +998,7 @@ message.
 > **JanaPersona:** The code samples shown in this chapter are from an
 > early version of the Conference Management System. The next chapter
 > shows how the design and implementation evolved as the team explored
-> the domain and and learned more about the CQRS pattern.
+> the domain and learned more about the CQRS pattern.
 
 ### Infrastructure
 
@@ -1079,10 +1078,10 @@ public void Handle(ReservationAccepted @event)
 ```
 
 Typically, an event handler method loads a workflow instance, passes the 
-event to the workflow, and then persists the workflow instance. In this case, 
-the **IRepository** instance is responsible for persisting the workflow 
-instance and sending any commands from the workflow instance to the command 
-bus. 
+event to the workflow, and then persists the workflow instance. In this 
+case, the **IRepository** instance is responsible for persisting the 
+workflow instance and for sending any commands from the workflow 
+instance to the command bus. 
 
 ## Using the Windows Azure Service Bus
 
@@ -1090,9 +1089,9 @@ To transport Command and Event messages, the team decided to use the
 Windows Azure Service Bus to provide the basic, low-level messaging 
 infrastructure. This section describes how the system uses the Windows 
 Azure Service Bus and some of the alternatives and trade-offs the team 
-considered considered during the design phase. 
+considered during the design phase. 
 
-> **JanaPersona:** The team at Contoso desided to use the Windows Azure
+> **JanaPersona:** The team at Contoso decided to use the Windows Azure
 > Service Bus because it offers out-of-the-box support for the messaging
 > scenarios in the Conference Management System. This minimizes the
 > amount of code that the team needs to write, and provides for a
@@ -1105,14 +1104,14 @@ of the two topics in the Windows Azure Service Bus. To receive messages,
 the handler classes register with the **CommandProcessor** and 
 **EventProcessor** instances that retrieve messages from the topics by 
 using the **SubscriptionReceiver** class. The **CommandProcessor** class 
-determines which single handler should receive a command message, the 
+determines which single handler should receive a command message; the 
 **EventProcessor** class determines which handlers should receive an 
 event message. The handler instances are responsible for invoking 
 methods on the domain objects. 
 
 > **Note:** A Windows Azure Service Bus topic can have multiple 
 > subscribers. The Windows Azure Service Bus delivers messages sent to a 
-> topic to all its subscribers. Therefore one message can have multiple 
+> topic to all its subscribers. Therefore, one message can have multiple 
 > recipients. 
 
 ![Figure 8][fig8]
@@ -1139,19 +1138,19 @@ There is just a single handler registered for this subscription. The
 **CommandProcessor** class identifies the handler to receive the command
 by examining its list of registered handlers.
 
-There are a number of questions that arise from this implementation:
+This implementation gives rise to a number of questions:
 
 1. How do you limit delivering a command to a single recipient?
 2. Why have separate **CommandBus** and **EventBus** classes if they are
    so similar?
 3. How scalable is this approach?
-4. How robust is this approch?
+4. How robust is this approach?
 5. What is the granularity of a topic and a subscription?
 6. How are commands and events serialized?
 
-These questions are discussed in the following sections.
+The following sections discuss these questions.
 
-### How do you limit delivering a command to a single recipient?
+### How Do You Limit Delivering a Command To a Single Recipient?
 
 This discussion assumes you that you have a basic understanding of the 
 differences between Windows Azure Service Bus queues and topics. For an 
@@ -1159,21 +1158,21 @@ introduction to Windows Azure Service Bus, see [Technologies Used in the
 Reference Implementation][r_chapter9] in the Reference Guide. 
 
 With the implementation shown in figure 8, two things are necessary to 
-ensure that a command message is handled by a single handler. First, 
+ensure that a single handler handles a command message. First, 
 there should only be a single subscription to the 
 **conference/commands** topic in Windows Azure Service Bus; remember 
 that a Windows Azure Service Bus topic may have multiple subscribers. 
 Second, the **CommandProcessor** should invoke a single handler for each 
 command message that it receives. There is no way in Windows Azure
-Service Bus to restrict a topic to a single subscription, therefore the
+Service Bus to restrict a topic to a single subscription; therefore the
 developers must be careful to create just a single subscription on a
 topic that is delivering commands. 
 
-> **BharathPersona:** A separate issue is to ensure that commands are
-> retrieved from the topic and processed by the handler only once. You
-> must ensure that either the command is idempotent, or that the system
-> guarantees to process the command only once. This issue will be
-> addressed in a later stage of the journey.
+> **BharathPersona:** A separate issue is to ensure that the handler
+> retrieves commands from the topic and processes them only once. You
+> must ensure either that the command is idempotent, or that the system
+> guarantees to process the command only once. The team will address
+> this issue in a later stage of the journey.
 
 > **Note:** It is possible to have multiple **SubscriptionReceiver** 
 > instances running, perhaps in multiple worker role instances. If 
@@ -1242,19 +1241,19 @@ protected virtual BrokeredMessage DoReceiveMessage()
 ```
 
 > **JanaPersona:** This code sample shows how the system uses the
-> [Transient Fault Handling Application Block][tfab] to reliably
-> retrieve messages from the topic.
+> [Transient Fault Handling Application Block][tfab] to retrieve 
+> messages reliably from the topic.
 
 The Windows Azure Service Bus **SubscriptionClient** class uses a 
 peek/lock technique to retrieve a message from a subscription. In the 
 code sample, the **Receive** method locks the message on the 
-subscription. While the message is locked, it cannot be seen by any 
-other client. The **Receive** method then tries to process the message. 
+subscription. While the message is locked, other clients cannot see it. 
+The **Receive** method then tries to process the message. 
 If the client processes the message successfully, it calls the 
 **Complete** method; this deletes the message from the subscription. 
 Otherwise, if the client fails to process the message successfully, it 
 calls the **Abandon** method; this releases the lock on the message and 
-it can be received again by the same, or a different, client. If the 
+the same, or a different, client can then receive it. If the 
 client does not call either the **Complete** or **Abandon** methods 
 within a fixed time, this also releases the lock on the message. 
 
@@ -1312,7 +1311,7 @@ private void OnMessageReceived(object sender, BrokeredMessageEventArgs args)
 > **Complete** and **Abandon** methods of the **BrokeredMessage**
 > reliably using the [Transient Fault Handling Application Block][tfab].
 
-### Why have separate **CommandBus** and **EventBus** classes if they are so similar?
+### Why Have Separate **CommandBus** and **EventBus** Classes if They Are so Similar?
 
 Although at this early stage in the development of the Conference 
 Management system the implementations of the **CommandBus** and 
@@ -1326,9 +1325,9 @@ will diverge in the future.
 > unify the implementations. I've been there before and ended up 
 > splitting them when further requirements came in. 
 
-### How scalable is this approach?
+### How Scalable Is This Approach?
 
-With this approach you can run multiple instances of the 
+With this approach, you can run multiple instances of the 
 **SubscriptionReceiver** class and the various handlers in different 
 Windows Azure worker role instances, which enables you to scale-out your 
 solution. You can also have multiple instances of the **CommandBus**, 
@@ -1339,7 +1338,7 @@ For information about scaling the Windows Azure Service Bus
 infrastructure, see [Best Practices for Performance Improvements Using 
 Service Bus Brokered Messaging][sbperf] on MSDN. 
 
-### How robust is this approch?
+### How Robust Is This Approach?
 
 This approach uses the brokered messaging option of the Windows Azure 
 Service Bus to provided asynchronous messaging. The Service Bus reliably 
@@ -1351,7 +1350,7 @@ consumer fails while it is processing the message. If a consumer fails
 before it calls the **Complete** method, the message is still available 
 for processing when the consumer restarts. 
 
-### What is the granularity of a topic and a subscription?
+### What Is the Granularity of a Topic and a Subscription?
 
 The current implementation uses a single topic (**conference/commands**) 
 for all commands within the system, and a single topic 
@@ -1367,23 +1366,23 @@ context, and multiple subscriptions, for example one per event type.
 These alternatives may simplify the code and facilitate scaling the 
 application across multiple worker roles. 
 
-> **ArchitectPersona:** There are no costs associated with having 
+> **JanaPersona:** There are no costs associated with having 
 > multiple topics, subscriptions, or queues. Windows Azure Service Bus 
 > usage is billed based on the number of messages sent and the amount of 
-> data transfered out of Windows Azure sub-region. 
+> data transferred out of Windows Azure sub-region. 
 
-### How are commands and events serialized?
+### How Are Commands and Events Serialized?
 
 The Contoso Conference Management System uses the [Json.NET][jsonnet] 
-serializer. For details of how this serializer is used within the 
-application, see [Technologies Used in the Reference 
-Implementation][r_chapter9] in the Reference Guide. 
+serializer. For details of how the application uses this serializer,
+see [Technologies Used in the Reference Implementation][r_chapter9] in
+the Reference Guide. 
 
-> You should consider whether you really need to use the Windows Azure
+> You should consider whether you always need to use the Windows Azure
 > Service Bus for commands. Commands are typically used within a bounded
 > context and you may not need to send them across a process boundary
 > (on the write-side you may not need additional tiers), in which case
-> you can use an in memory queue to deliver your commands.
+> you could use an in memory queue to deliver your commands.
   
 > Greg Young - Conversation with the PnP team.
 
@@ -1397,7 +1396,7 @@ summarizes their thoughts:
 are implementing the CQRS pattern without ES.** 
 
 
-> *Developer #1*: If we were using event sourcing it would be easy to use 
+> *Developer #1*: If we were using event sourcing, it would be easy to use 
 > a TDD approach when we are creating our domain objects. The input to the 
 > test would be a command (that perhaps originated in the UI), and we 
 > could then test that the domain object fires the expected events. 
@@ -1491,7 +1490,7 @@ implementation: if you want to change the data store implementation, you
 will need to change the tests on the aggregates in the domain model. 
 
 The following code sample shows an example of a test written using the 
-state of the objects being tested. This style of tests are the ones used
+state of the objects under test. This style of test is the one used
 in the project.
 
 ```Cs
