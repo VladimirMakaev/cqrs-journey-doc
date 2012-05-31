@@ -1237,18 +1237,16 @@ feature file. The steps use the command bus to send the commands.
 [When(@"the Registrant proceed to make the Reservation")]
 public void WhenTheRegistrantProceedToMakeTheReservation()
 {
-    var command = ScenarioContext.Current.Get<RegisterToConference>();
+    registerToConference = ScenarioContext.Current.Get<RegisterToConference>();
     var conferenceAlias = ScenarioContext.Current.Get<ConferenceAlias>();
 
-    command.ConferenceId = conferenceAlias.Id;
-    orderId = command.OrderId;
-    this.commandBus.Send(command);
+    registerToConference.ConferenceId = conferenceAlias.Id;
+    orderId = registerToConference.OrderId;
+    this.commandBus.Send(registerToConference);
 
     // Wait for event processing
     Thread.Sleep(Constants.WaitTimeout);
 }
-
-...
 
 [Then(@"the command to register the selected Order Items is received")]
 public void ThenTheCommandToRegisterTheSelectedOrderItemsIsReceived()
@@ -1263,10 +1261,11 @@ public void ThenTheCommandToRegisterTheSelectedOrderItemsIsReceived()
 [Then(@"the event for Order placed is emitted")]
 public void ThenTheEventForOrderPlacedIsEmitted()
 {
-    //OrderPlaced
-    var draftOrder = RegistrationHelper.FindInContext<DraftOrder>(orderId);
-
-    Assert.NotNull(draftOrder);
+    var orderPlaced = MessageLogHelper.GetEvents<OrderPlaced>(orderId).SingleOrDefault();
+            
+    Assert.NotNull(orderPlaced);
+    Assert.True(orderPlaced.Seats.All(
+        os => registerToConference.Seats.Count(cs => cs.SeatType == os.SeatType && cs.Quantity == os.Quantity) == 1));
 }
 ```
 
