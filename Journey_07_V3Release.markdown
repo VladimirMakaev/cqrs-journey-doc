@@ -1,11 +1,18 @@
 ## Chapter 7
-# Adding Resilience, New Bounded Contexts, and Features 
+# Adding Resilience and Optimizing Performance 
 
-*To be decided*
+*Revisiting the infrastructure and applying some lessons learned*
 
 # Adding Resilience and Adding Features
 
-The top-level goal for this stage in the journey ...
+The two primary goals for this last stage in our journey are to make the 
+system more resilient to failures and to improve the responsiveness of 
+the UI. The focus of the effort to harden the system is on the 
+**RegistrationProcess** workflow in the Orders and Registrations bounded 
+context. The focus on performance is on the way the UI interacts with 
+the domain-model during the order creation process. 
+
+[Possibly describe incorporating two other bounded contexts.]
 
 ## Working Definitions for this Chapter 
 
@@ -77,15 +84,239 @@ What are the key architectural features? Server-side, UI, multi-tier, cloud, etc
 
 # Patterns and Concepts 
 
-During this stage of the journey... 
+During this stage of the journey the team looked at options for 
+hardening the **RegistrationProcess** workflow. This part of the Orders 
+and Registrations bounded context is responsible for managing the 
+interactions between the aggregates in the Orders and Registrations 
+bounded context and for ensuring that they are all consistent with each 
+other. It is important that this workflow is resilient to a wide range 
+of failure conditions if the bounded context as a whole is to maintain 
+its consistent state. 
 
-## Command Optimizations
+When the team tested the V2 release, they discovered that sometimes the 
+UI is waiting for the domain to to complete its processing, and for the 
+read-models to receive data from the write-model before it can display 
+the next screen to the Registrant. 
+
+[Add some stats from test here]
+
+To address this issue, the team identified two possible optimizations: 
+optimizing the interaction between the UI and the domain and optimizing 
+the command handling process. They decided to address the interaction 
+between the UI and the domain first and then to evaluate whether any 
+further optimization was necessary. 
+
+## Making the RegistrationProcess Workflow More Resilient to Failure
+
+Typically, a coordinating workflow receives incoming events, and then 
+based on the state of the workflow, sends out one or more commands to 
+aggregates within the bounded context. When a coordinating workflow 
+sends out commands, it typically changes its own state. 
+
+The Orders and Registrations bounded context contains the 
+**RegistrationProcess** coordinating workflow. This workflow is 
+responsible for coordinating the activities of the aggregates in both 
+this bounded context and the Payments bounded context by routing events 
+and commands between them. The workflow is therefore responsible for 
+ensuring that the aggregates in these bounded contexts are correctly 
+synchronized with each other. 
+
+> **BharathPersona:** An aggregate determines the consistency boundaries
+> within the write-model with respect to the consistency of the data
+> that the system persists to storage. The coordinating workflow manages
+> the relationship between different aggregates, possibly in different
+> bounded contexts, and ensures that the aggregates are eventually
+> consistent with each other.
+
+A failure in the registration process could have adverse consequences 
+for the system: the aggregates could get out of synchronization with 
+each other which may cause unpredicatable behavior in the system; some 
+processes might end up as zombie processes continuing to run and use 
+resources but never completing. The team identified the following 
+specific failure scenarios related to the **RegistrationProcess** 
+workflow. The workflow could: 
+
+* Crash or be unable to persist its state after it receives an event but
+  before it sends any commands. The message processor may not be able to
+  mark the event as complete, so after a timeout the event is placed
+  back in the topic subscription and re-processed.
+* Crash after it persists its state but before it sends any commands.
+  This puts the system into an inconsistent state because the workflow
+  saved its new state without sending out the expected commands. The
+  original event is put back in the topic subscription and 
+  re-processed.
+* Fail to mark that an event has been processed. The workflow will
+  process the event a second time because after a timeout, the system
+  will put the event back onto the service bus topic subscription.
+* Timeout while it waits for a specific event that it is expecting. The
+  workflow cannot continue processing and reach an expected end-state.
+* Receive an event that it does not expect to receive while the workflow
+  is in a particular state. This may indicate a problem elsewhere that
+  implies that it is unsafe for the workflow to continue.
+  
+These scenarios can be summarized to identify two issues to address:
+
+1. The **RegistrationProcess** handles an event successfully but fails
+   to mark the message as complete. The **RegistrationProcess** will
+   then process the event again after it is automatically returned to
+   the subscription to the Windows Azure Service Bus topic.
+2. The **RegistrationProcess** handles an event successfully, marks it
+   as complete, but then fails to send out the commands.
+
+### Making the System Resilient Whan an Event is Reprocessed
+
+If the behavior of the workflow itself is idempotent, then if it 
+receives and processes an event a second time then this does not result 
+in any inconsistencies within the system. This approach would handle the 
+first three failure conditions. After a crash, you can restart the 
+workflow and reprocess the incoming event a second time. 
+
+Instead of making the workflow idempotent, you could ensure that all the 
+commands that the workflow sends are idempotent. Restarting the workflow 
+may result in sending commands a second time, but if those commands are 
+idempotent this will have no adverse affect on the process or the 
+system. For this approach to work, you will still need to modify the 
+workflow to guarantee that it sends all commands at least once. If the 
+commands are idempotent, it doesn't matter if they are sent multiple 
+times, but it does matter if a command is never sent at all. 
+
+In the V1 release, most message handling is already either idempotent, 
+or the system detects duplicate messages and sends them to a dead-letter 
+queue. The exceptions are the **OrderPlaced** event and the 
+**SeatsReserved** event. 
+
+### Ensuring That Commands are Always Sent
+
+To ensure that the system always sends commands when the 
+**RegistrationProcess** saves its state requires transactional behavior. 
+This requires the team to implement a psuedo-transaction because it is 
+not possible to enlist the Windows Azure Service Bus in a distributed 
+transcation. 
+
+## Optimizing the Interactions Between the UI and the Domain
+
+When a registrant creates an order, she visits the following sequence of 
+screens in the UI. 
+
+1. The Register screen. This screen displays the ticket types for the
+   conference, the number of seats currently available. The registrant
+   selects the quantities of each seat type that she would like to
+   purchase.
+2. The Registrant screen. This screen displays a summary of the order
+   that includes a total price and a countdown timer that tells the
+   registrant how long the seats will remain reserved. The registrant
+   enters her details and preferred payment method.
+3. The Payment screen. This simulates a third-party payment processor.
+4. The Registration success screen. This displays if the payment
+   succeeded. It displays to the registrant an order locator code and
+   link to a screen that enables the registrant to assign attendees to
+   seats.
+   
+In the V2 release, the system must process the following commands and 
+events between the Register screen and the Registrant screen: 
+
+* RegisterToConference
+* OrderPlaced
+* MakeSeatReservation
+* SeatsReserved
+* MarkSeatsAsReserved
+* OrderReservationCompleted
+* OrderTotalsCalculated
+
+In addition, the MVC controller is also validating that there are 
+sufficient seats available to fulfill the order before it sends the 
+**RegisterToConference** command. 
+
+During testing, the team observed that sometimes the Registrant had to 
+wait for the Registrant screen to display while the system performed the 
+validation and processed all the commands and events. Behind the scenes, 
+the MVC controller waits until a priced order appears in the read-model 
+(this indicates that all of the processing is complete) before 
+displaying the Registrant screen. 
+
+### Options to Reduce the Delay
+
+The team discussed with the domain expert whether or not is always 
+necessary to validate the seats availability before the UI sends the 
+**RegisterToConference** conference command to the domain. 
+
+> **BharathPersona:** This scenario illustrates some practical issues in
+> relation to eventual consistency. The read-side, in this case the
+> priced order view model, is eventually consistent with the write-side.
+> Typically, when you implement the CQRS pattern you should be able
+> embrace eventual consistency and not need to wait in the UI for
+> changes to propagate to the read-side. However in this case, the UI
+> must wait for the write-model to propagate information that relates to
+> a specific order to the read-side. This perhaps indicates a problem
+> with the original analysis and design of this part of the system.
+
+The domain expert was clear that the system should confirm that seats 
+are available before taking payment. Contoso does not want to sell seats 
+and then have to explain to a Registrant that those seats are not in 
+fact available. Therefore the team looked for ways to streamline getting 
+as far as the Payment screen in the UI. 
+
+> **BethPersona:** This cautious strategy is not appropriate in all
+> scenarios. In some cases the business may prefer to take the money
+> even if it cannot immediately fulfill the order: the business may know
+> that the stock will be replenished soon, or that the customer is happy
+> to wait. In this scenario, although Contoso could refund the money to
+> a Registrant, the Registrant may purchase flight tickets that are not
+> refundable in the belief that the conference registration is
+> confirmed. This type of decision is clearly one for the business and
+> the domain expert.
+
+#### Optimization #1
+
+Most of the time, there are plenty of seats avaialable for a conference 
+and registrants are not competing for the last few that are available. 
+It is only for a brief time that Registrants are competing for the last 
+few seats. 
+
+If there are plenty of available seats for the conference then there is 
+a minimal risk that a Registrant will get as far as the Payment screen 
+only to find that the system could not reserve the seats. In this case, 
+some of the processing that the V2 release performs before getting to 
+the Registrant screen can be allowed to happen asynchronously while the 
+Registrant is entering information on the Registrant screen. This 
+reduces the chance that the Registrant experiences a delay before seeing 
+the Registrant screen. 
+
+However, if the controller checks and finds that there are not enough 
+seats available to fulfill the order _before_ it sends the 
+**RegisterToConference** command, it can re-display the Register screen 
+to enable the Registrant to update her order based on current 
+availability. 
+
+> **JanaPersona:** A possible enhancement to this strategy is to look at
+> whether there are _likely to be_ enough seats available before sending
+> the **RegisterToConference** command. This could reduce the number of
+> occassions that a Registrant has to adjust her order as the last few
+> seats are sold. However, this scenario will occur infrequently enough
+> that it is probably not worth implementing.
+
+#### Optimization #2
+
+In the V2 release, the MVC controller cannot display the Registrant 
+screen until the domain publishes the **OrderTotalsCalculated** event 
+and the system updates the priced order view model. This event is the 
+last event that occurs before the controller can display the screen. 
+
+If the system calculates the total and updates the priced order view 
+model earlier, the controller can display the Registrant screen sooner. 
+The team determined that the **Order** aggregate could calculate the 
+total when the order is placed instead of when the reservation is 
+complete. This will enable the UI flow to move more quickly to the 
+Registrant screen than in the V2 release. 
+
+## Optimizing Command Processing 
 
 The current implementation uses the same messaging infrastructure for 
 both commands and events. The Windows Azure Service Bus provides a 
 reliable, performant, and scalable infrastructure for messaging in 
 Windows Azure. The team plans to evaluate whether the same 
-infrastructure is necesssary for both commands and events. 
+infrastructure is necesssary for all commands and events within the 
+Contoso Conference Management System. 
 
 The system uses events as its primary mechanism for integrating between 
 bounded contexts. One bounded context can raise an event that is then 
@@ -102,16 +333,23 @@ between these worker role instances.
 > transport the events that the system uses to construct the
 > denormalized read-model.
 
-There are two factors that the team will consider when they determine 
-whether to continue using the Windows Azure Service Bus for transporting 
-command messages. 
+There are a number of factors that the team will consider when they 
+determine whether to continue using the Windows Azure Service Bus for 
+transporting all command messages. 
 
 * In a CQRS implementation, commands are typically used within a bounded
-  context, not between bounded contexts. This may mean that a command
-  only exists within a process (or role instance in Windows Azure) and
-  could therefore be handled in-memory without the need for any more
-  robust messaging infrastructure.
-* You can treat commands as a two-way, synchronous messaging pattern.
+  context, not between bounded contexts. This may mean that some
+  commands only exist within a process (or role instance in Windows
+  Azure) and could therefore be handled in memory without the need for
+  a messaging infrastructure to transport commands across process
+  boundaries.
+* How would handling commands in memory instead of using a messaging
+  infrastructure affect the resilience of the system in the face of
+  failures?
+* What performance benefits would actually be gained by handling]
+  commands in memory?
+* If you treat commands as a two-way, synchronous messaging pattern how
+  is this supported by the two alternatives?
 
 > An asynchronous command doesn't exist, it's actually another event. If
 > I must accept what you send me and raise an event if I disagree, it's
@@ -120,6 +358,18 @@ command messages.
 > but it has many implications.  
 > Greg Young - Why lot's of developers use one-way command messaging 
 > (async handling) when it's not needed? - DDD/CQRS Google Groups
+
+Before implementing this optimization, the team plans to evaluate the 
+impact of the optimizations to the interaction between the UI and the 
+domain. 
+
+## Scaling Out
+
+A further optimization that the team considered was to scale out the 
+view model generators that populate the various read-models in the 
+system. Every web-role that hosts a view model generator instance must 
+handle the events published by the write-side by creating a subscription 
+the the Windows Azure Service Bus topics. 
 
 # Implementation Details 
 
@@ -132,6 +382,14 @@ the repository on github: [mspnp/cqrs-journey-code][repourl].
 > the reference implementation. This chapter describes a step in the
 > CQRS journey, the implementation may well change as we learn more and
 > refactor the code.
+
+## Hardening the RegistrationProcess Workflow
+
+**Note:** In the V2 release, the RegistrationProcess workflow generated a Guid in its constructor to use as an Id. This was removed as part of the hardening process in order to...
+
+## Making the SeatsReserved Event Idempotent
+
+## Creating a Psuedo Transaction when the Workflow Saves Its State and Sends a Command
 
 # Testing 
 
