@@ -1299,6 +1299,387 @@ the **Order** instance. Now someone reading the test can see that when
 you send a **RegisterToConference** command you expect to see an 
 **OrderUpdated** event. 
 
+# A Journey into Code Comprehension
+
+*A tale of pain, relief, and learning*
+
+This section describes the journey taken by Josh Elster, a member of the 
+CQRS Advisory Board, as he explored the source code of the Contoso 
+Conference Management System. 
+
+##Testing is Important
+
+I've once believed that well-factored applications are easy to 
+comprehend, no matter how large or broad the code base. Any time I had a 
+problem understanding how some feature of an application behaved, the 
+fault would lie with the code and not in me. 
+
+Never let your ego get in the way of common sense. 
+
+Truth was, up until a certain point in my career, I simply hadn't had 
+exposure to a large, well-factored code base. I wouldn't have known what 
+one looked like if it walked up and hit me in the face. Thankfully, as I 
+got more experienced reading code, I learned to recognize the 
+difference. 
+
+> **Note:** In any well-organized project, tests are a cornerstone of
+> comprehension for developers seeking to understanding of the project.
+> Topics ranging from naming conventions and coding styles to design
+> approaches and usage patterns are baked into test suites, providing an
+> excellent starting spot for integrating into a codebase. It's also
+> good practice in code literacy - and practice makes perfect!
+
+My first action after cloning the Conference code was to skim the tests. 
+After a perusal of the integration and unit test suites in the 
+Conference Visual Studio solution, I focused my attention on the 
+Conference.AcceptanceTests Visual Studio solution that contains the 
+[SpecFlow][specflow] acceptance tests. Other members of the project team 
+had done some initial work on the '.feature' files, which worked out 
+nicely for me since I wasn't intimiate with the business rules. 
+Implementing step bindings for these features would be an excellent way 
+to both contribute to the project and to learn about how the system 
+worked. 
+
+##Domain Tests
+My goal then was to take a feature file looking something like this:
+
+```
+    Feature: Self Registrant scenarios for making a Reservation for a Conference site with all Order Items initially available
+	In order to reserve Seats for a conference
+	As an Attendee
+	I want to be able to select an Order Item from one or many of the available Order Items and make a Reservation
+
+    Background: 
+	Given the list of the available Order Items for the CQRS summit 2012 conference with the slug code SelfRegFull
+	| seat type                 | rate | quota |
+	| General admission         | $199 | 100   |
+	| CQRS Workshop             | $500 | 100   |
+	| Additional cocktail party | $50  | 100   |
+	And the selected Order Items
+	| seat type                 | quantity |
+	| General admission         | 1        |
+	| CQRS Workshop             | 1        |
+	| Additional cocktail party | 1        |
+
+    Scenario: All the Order Items are available and all get reserved
+	When the Registrant proceed to make the Reservation		
+	Then the Reservation is confirmed for all the selected Order Items
+	And these Order Items should be reserved
+		| seat type                 |
+		| General admission         |
+		| CQRS Workshop             |
+		| Additional cocktail party |
+	And the total should read $749
+	And the countdown started
+```
+ 
+And bind it to code that either performs an action, creates expectations, or makes assertions:
+
+```Cs
+    [Given(@"the '(.*)' site conference")]
+    public void GivenAConferenceNamed(string conference)
+    {
+        ...
+    }
+```
+
+All at a level just below the UI, but above (and beyond) infrastructure 
+concerns. Testing is tightly focused on the behavior of the overall 
+solution domain, which is why I'll call these types of tests Domain 
+Tests. Other terms such as BDD can be used to describe this style of 
+testing. 
+
+It may seem a little redundant to re-write application logic already 
+implemented in the web site, but there are a number of reasons why it is 
+worth the time: 
+
+1. You aren't interested (for these purposes) in testing how the website
+   or any other piece of infrastructure behaves, only the domain. Unit
+   and Integration -level tests will validate the correct functioning of
+   that code, so there's no need to duplicate those tests.
+2. When iterating stories with product owners, spending time on pure UI
+   concerns can slow down the feedback cycle, reducing the quality and
+   usefulness of feedback.
+3. Discussing a feature in more abstract terms can lead to better
+   understanding of the problem that the business is trying to solve,
+   given the sometimes large impedence mismatch between people of
+   varying lexicons for technological concerns.
+4. Obstacles encountered in implementing the testing logic can help
+   improve the system's overall design quality. Difficulty in separating
+   infrastructure code from application logic is generally regarded as a
+   smell. 
+
+> **Note:** There are a whole lot more reasons why these types of tests
+> are a good idea than are listed here, but these are the important ones
+> for this example.
+
+The architecture for the [Contoso Conference Management System](repourl) 
+is loosely-coupled, utilizing messages to transfer commands and events 
+to interested parties. Commands are routed to a single handler via a 
+Command Bus, while Events are routed to their *0...N* handlers via an 
+Event Bus. A bus isn't tied to any specific technology as far as 
+consuming applications are concerned, allowing arbitrary implementations 
+to be created and used throughout the system transparent to users. 
+
+Another bonus when it comes to behavioral testing of a loosely-coupled 
+message architecture is related to the fact that BDD (or 
+similarly-styled) tests do not involve themselves with the inner 
+workings of application code. They only care about the observable 
+*behavior* of the application under test. This means that for the 
+SpecFlow tests, we need only concern ourselves with publishing some 
+commands to the bus and examining the outward results by asserting 
+expected message traffic and payloads against the actual traffic/data. 
+
+> **Note**: It's OK to use mocks and stubs with these types of tests
+> where appropriate. An appropriate example would be in using a mock
+> ICommandBus object instead of the AzureCommandBus type. Not
+> appropriate? Mocking a domain service *in totum*. Stick to mocking
+> minimally, limiting yourself to infrastructure concerns and you'll
+> make your life - and your tests - a lot less stressful.
+
+##The Other Side of the Coin
+
+With all of the pixels I just spent on talking how awesome and easy 
+things are, where's the pain? The pain is in comprehending what goes on 
+in a system. The loose coupling of the architecture has a wicked back 
+edge; techniques such as Inversion of Control and Dependency Injection 
+hinder code readability by their very nature, since one can never be 
+sure what concrete class is being injected at a particular point without 
+examing the container's initialization closely. In the journey code, 
+**IProcess** marks classes representing long-running business processes 
+(also known as Sagas) responsible for coordinating business logic 
+between different Aggregates. In order to maintain the integrity, 
+idempotency, and transactionality of the system's data and state, 
+Processes leave the actual publishing of their issued commands to the 
+individual persistence repository's implementation. Since IoC and DI 
+containers hide these types of details from consumers, it and other 
+properties of the system create a bit of difficulty when it comes to 
+answering seemingly trivial questions such as: 
+
+- Who issue(s)d a particular command or event?
+- What class handles a particular command or event?
+- Where are processes or Aggregates created/persisted?
+- When is a command sent in relation to other commands/events?
+- Why does the system behave the way it does?
+- How does the application's state change as a result of a particuler
+  command?
+
+Because the application's dependencies are so loose, many traditional 
+tools and methods of code analysis become either less useful or even 
+completely useless. 
+
+Let's take an example of this and work out some heuristics involved in 
+answering these questions. We'll use as an example the 
+**RegistrationProcess**. 
+
+1. Open the RegistrationProcess.cs file, noting that, like many
+   processes (or Sagas, as they are known in the community) it has a 
+   **ProcessState** enumeration. We take note of the beginning state for
+   the process, **NotStarted**. Next, we want to find code that does one
+   of the following:
+       - A new instance of the process is created (where are processes
+	     created/persisted?)
+       - The initial state is changed to a different state (how does
+	     state change?)
+
+2. Locate the first location in source code where either or both of the
+   above occur. In this case, it's the **Handle** method in the 
+   **RegistrationProcessRouter** class. **Important:** this does NOT
+   necessarily mean that the Process is a Command Handler! Processes
+   (Sagas) are responsible for creating/retrieving Aggregate Roots (AR)
+   from storage for the purpose of routing messages to the AR, so while
+   they have methods similar in naming and signature to an
+   **ICommandHandler<T>** implementation, they do not implement a
+   command's logic. 
+
+3. Take note of the message type that is received as a parameter to the
+   method where the state change occurs, since we now need to figure out
+   where that message originated. 
+       - We also note that a new command, **MakeSeatReservation**, is
+         being issued by the **RegistrationProcess**. 
+       - As mentioned above, this command isn't actually published by
+         the Process issuing it; rather, publication occurs when the
+         Process is saved to disk. 
+       - These heuristics will need to be repeated to some degree or
+         another on any commands issued as side-effects of a Process
+         handling a command.
+
+4. Do a find references on the **OrderPlaced** symbol to locate the
+   (or a) top-most (external facing) component which publishes a message
+   of that type via **Send** method on the ICommandBus interface.
+       - Since internally-issued commands are indirectly published (by a
+         Repository) on save, it may be safe to assume that any
+         non-infrastructure logic which directly calls the **Send**
+         method is an external point of entry. 
+
+While there is certainly more to these heuristics than what is given, I 
+think that what is there is sufficient to demonstrate the point that 
+even discussing the interactions is a rather lengthy, cumbersome 
+process. That makes it prone to misunderstanding without expending 
+considerable effort. Comprehension of the various command/event 
+messaging interactions is possible in this way, but it is not gained 
+very efficiently. 
+
+> **Note:** As a rule, a person can really only maintain between 4-8
+> distinct thoughts in their head at any given time. To illustrate this
+> concept, let's take a conservative count of the number of simultaneous
+> items you'll need to maintain in your short-term memory while
+> following the above heuristics:  
+> Process type + Process state property + Initial State (NotStarted) +
+> new() location + message type + intermediary routing class types + 2
+> *N^n Commands issued (location, type, steps) + discrimination rules
+> (logic is data too!) > 8
+
+When infrastructure requirements get mixed into the equation, the issue 
+of information saturation becomes even more apparent. Being the 
+competent, capable, developers that we all are (right?), we can start 
+looking for ways to optimize these steps and increase the signal to 
+noise ratio of relevant information. 
+
+To summarize, we have two problems:
+
+1. The number of items we are forced to keep in our head is too many to
+   make for efficient comprehension
+2. Discussion and documentation for messaging interactions is verbose,
+   error-prone, and complicated
+
+Fortunately, it is quite possible to kill two birds with a single stone,
+with MIL (Messaging Intermediate Language). 
+
+MIL began as a series of LINQPad scripts and snippets that I created to 
+help juggle all these facts while answering questions. Initially, all 
+that these scripts accomplished was to reflect through one or more 
+project assemblies and output the various types of messages and 
+handlers. In discussions with members of the team it became apparent 
+that others were experiencing the same types of problems I was. A few 
+skype chats and brainstorming sessions later, we came up with the idea 
+of introducing a small DSL that would encapsulate the interactions being 
+discussed. The tentatively-named SawMIL toolbox, located here 
+[http://jelster.github.com/CqrsMessagingTools/][mil] provides utilities, 
+scripts, and examples that enable you to use MIL as part of your 
+development and analysis workflows. 
+
+In MIL, messaging components and interactions are represented in a 
+specific manner: commands, since they are requests for the system to 
+perform some action, are denoted by '?', as in 'DoSomething?'. Events 
+represent something definite that happened in the system, and hence gain 
+a '!' suffix, as in 'SomethingHappened!'. 
+
+Another important element of MIL is message publication and reception. 
+Messages received from a messaging source (such as Windows Azure Service 
+Bus, nServiceBus, etc) are always preceded by the '->' symbol, while 
+messages that are being sent have the symbol following it. To keep the 
+examples simple for now, the optional nil element, '.', is used to 
+indicate explicitly a no-op (in other words, nothing is receiving the 
+message). The following snippet shows an example of the nil element 
+sysntax: 
+
+````
+SendCustomerInvoice? -> .
+CustomerInvoiceSent! -> .
+````
+
+Once a Command or Event has been published, something needs to do 
+something with it. Commands have one and only one handler, while events 
+can have multiple handlers. MIL represents this relationship between 
+message and handler by placing the name of the handler on the other side 
+of the messaging operation as shown in the following snippet: 
+
+````
+SendCustomerInvoice? -> CustomerInvoiceHandler
+CustomerInvoiceSent! ->
+    -> CustomerNotificationHandler
+    -> AccountsAgeingViewModelGenerator
+````
+
+Notice how the command handler is on the same line as the command while 
+the event is separated from its handlers? That's because in CQRS, there 
+is a 1:1 correlation between commands and command handlers. Putting them 
+together helps reinforce that concept, while keeping events separate 
+from event handlers helps reinforce the idea that a given event can have 
+0...*N* handlers. 
+
+Aggregate Roots are prefixed with the '@' sign, a convention that should 
+be familiar to anyone who has ever used twitter. Aggregate Roots never 
+handle commands, but occasionally may handle events. Aggregate Roots are 
+most frequently event sources, raising events in response to business 
+operations invoked on the aggregate. Something that should be made clear 
+about these events however, is that in most systems there are other 
+elements that decide upon and actually perform the publication of domain 
+events. This is an interesting case where business and technical 
+requirements blur boundaries, with the requirements being met by 
+infrastructure logic rather than application or business logic. An 
+example of this lies in the Journey code: in order to ensure consistency 
+between event sources and event subscribers, the implementation of the 
+repository which persists the Aggregate Root is the element responsible 
+for actually publishing the events to a bus. The following snippet shows 
+an example of the AggregateRoot syntax: 
+
+````
+SendCustomerInvoice? -> CustomerInvoiceHandler
+@Invoice::CustomerInvoiceSent! -> .
+````
+
+In the above example, a new language element called the scope context 
+operator appears alongside the '@AggregateRoot'. Denoted by double 
+colons - '::' - the scope context element may or may not have whitespace 
+between its two characters, and is used to identify relationships 
+between two objects. Above, the AR '@Invoice' is generating the 
+'CustomerSent!' event in response to logic invoked by the 
+'CustomerInvoiceHandler'. The next example demonstrates use of the scope 
+element on an AR which generates multiple events in response to a single 
+command: 
+
+````
+'SendCustomerInvoice? -> CustomerInvoiceHandler
+'@Invoice:
+    :CustomerInvoiceSent! -> .
+    :InvoiceAged! -> .
+````
+
+Scope context is also used to signify intra-element routing that does
+not involve infrastructure messaging apparatus:
+
+````
+SendCustomerInvoice? -> CustomerInvoiceHandler
+@Invoice::CustomerInvoiceSent! ->
+    -> InvoiceAgeingProcessRouter::InvoiceAgeingProcess
+````
+
+The last element that I'll introduce is the State Change element. State 
+changes are one of the best ways to track what is happening within a 
+system, and thus MIL treats them as 1st class citizens. These statements 
+must appear on their own line of text, and are prefixed with the '*' 
+character. It's the only time in MIL that there is any mention or 
+appearance of assignment because it's just that important! The following
+snippet shows an example of the State Change element: 
+
+````
+SendCustomerInvoice? -> CustomerInvoiceHandler
+@Invoice::CustomerInvoiceSent! ->
+    -> InvoiceAgegingProcessRouter::InvoiceAgeingProcess
+        *InvoiceAgeingProcess.ProcessState = Unpaid
+````
+
+### Summary
+
+We've just walked through the basic steps used when describing messaging 
+interactions in a loosely-coupled application. Although the interactions 
+described are only a subset of possible interactions, MIL is evolving 
+into a powerful way to compactly describe the interactions of a 
+message-based system. Different nouns and verbs (elements and actions) 
+are represented by distinct, mnemonically significant symbols. This 
+provides a cross-substrate (squishy human brains < - > silicon CPU) 
+means of communicating meaningful information about systems as a whole. 
+Although the language describes some types of messaging interactions 
+very well, it is very much a work in progress with many elements of the 
+language and tooling that have need of development and/or improvement. 
+This presents some great opportunities for people looking to contribute 
+to OSS, so if you've been on the fence about contributing or are 
+wondering about OSS participation, there's no time like the present to 
+head over to [http://jelster.github.com/CqrsMessagingTools/][mil], fork 
+the repos, and get started! 
+
 [j_chapter3]:       Journey_03_OrdersBC.markdown
 [j_chapter5]:       Journey_05_PaymentsBC.markdown
 [r_chapter4]:       Reference_04_DeepDive.markdown
@@ -1313,3 +1694,4 @@ you send a **RegisterToConference** command you expect to see an
 [specflow]:         http://www.specflow.org/
 [watin]:            http://watin.org
 [xUnit]:            http://xunit.codeplex.com/
+[mil]:              http://jelster.github.com/CqrsMessagingTools/
