@@ -45,7 +45,6 @@ Before you begin, you should install the following pre-requisites:
 
 * Visual Studio 2010 or later
 * SQL Server 2008 Express or later
-* ASP.NET MVC 3 (Visual Studio 2010)
 * ASP.NET MVC 4 Installer (Visual Studio 2010)
 * Windows Azure SDK for .NET - November 2011 or later
 
@@ -53,8 +52,12 @@ Before you begin, you should install the following pre-requisites:
 > libraries in order to compile. This is true even for scenario 1. The
 > Windows Azure SDK includes these libraries. 
 
+> **Note:** The V1 and V2 releases of the sample application used
+> ASP.NET MVC 3 in addition to ASP.NET MVC 4. As of the V3 release all
+> of the web applications in the project use ASP.NET MVC 4.
+
 You can download and install all of these except for Visual Studio by
-using the Web Platform Installer 4.0. 
+using the Microsoft Web Platform Installer 4.0. 
 
 You can install the remaining dependencies from NuGet by running the
 script **install-packages.ps1** included with the downloadable source.

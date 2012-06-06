@@ -349,6 +349,8 @@ Framework.
 
 > **JanaPersona:** The team implemented this bounded context after it
 > implemented the public Conference Management website that uses MVC 3.
+> In a later stage of the journey, as part of the V3 release, the
+> Conference Management site will be upgraded to MVC 4.
 
 This bounded context must integrate with other bounded contexts that 
 implement the CQRS pattern. 
