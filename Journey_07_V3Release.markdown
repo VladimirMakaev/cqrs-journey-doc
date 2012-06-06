@@ -188,10 +188,17 @@ queue. The exceptions are the **OrderPlaced** event and the
 ### Ensuring That Commands are Always Sent
 
 To ensure that the system always sends commands when the 
-**RegistrationProcess** saves its state requires transactional behavior. 
-This requires the team to implement a psuedo-transaction because it is 
-not possible to enlist the Windows Azure Service Bus in a distributed 
-transcation. 
+**RegistrationProcess** workflow saves its state requires transactional 
+behavior. This requires the team to implement a psuedo-transaction 
+because it is not possible to enlist the Windows Azure Service Bus in a 
+distributed transcation. 
+
+The solution adopted by the team for the V3 release ensures that the 
+system persists any commands that the **RegistrationProcess** tries to 
+send but that fail. When the system next reloads the 
+**RegistrationProcess** workflow, it tries to re-send the failed 
+commands. If this fails, then the workflow cannot be loaded and cannot 
+process any further messages until the cause of the failure is resolved. 
 
 ## Optimizing the Interactions Between the UI and the Domain
 
@@ -387,13 +394,151 @@ the repository on github: [mspnp/cqrs-journey-code][repourl].
 
 **Note:** In the V2 release, the RegistrationProcess workflow generated a Guid in its constructor to use as an Id. This was removed as part of the hardening process in order to...
 
+
+
 ## Making the SeatsReserved Event Idempotent
+
+https://github.com/mspnp/cqrs-journey-code/issues/475
 
 ## Creating a Psuedo Transaction when the Workflow Saves Its State and Sends a Command
 
+It is not possible to have a transaction in Windows Azure that spans 
+persisting the **RegistrationProcess** to storage and sending the 
+command. Therefore the team decided to save any failed commands that the 
+workflow sends, and to automatically retry those commands the next time 
+that the system loads the workflow from storage. 
+
+The following code sample from the **SqlProcessDataContext** class shows 
+how the system persists the failed commands along with the state of the 
+workflow: 
+
+```Cs
+public void Save(T process)
+{
+    var entry = this.context.Entry(process);
+
+    if (entry.State == System.Data.EntityState.Detached)
+        this.context.Set<T>().Add(process);
+
+    var commandIndex = 0;
+    var commands = process.Commands.ToList();
+
+    try
+    {
+        for (int i = 0; i < commands.Count; i++)
+        {
+            this.commandBus.Send(commands[i]);
+            commandIndex++;
+        }
+    }
+    catch (Exception) // We catch a generic exception as we don't know what implementation of ICommandBus we might be using.
+    {
+        var pending = this.context.Set<PendingCommandsEntity>().Find(process.Id);
+        if (pending == null)
+        {
+            pending = new PendingCommandsEntity(process.Id);
+            this.context.Set<PendingCommandsEntity>().Add(pending);
+        }
+
+        pending.Commands = this.serializer.Serialize(commands.Skip(commandIndex));
+    }
+
+    // Saves both the state of the process as well as the pending commands if any.
+    this.context.SaveChanges();
+}
+```
+
+The following code sample from the **SqlProcessDataContext** class shows 
+how the system retries the failed commands when the system next reloads 
+the workflow: 
+
+```Cs
+public T Find(Expression<Func<T, bool>> predicate)
+{
+    var process = this.context.Set<T>().Where(predicate).FirstOrDefault();
+    if (process == null)
+        return default(T);
+
+    var pendingCommands = this.context.Set<PendingCommandsEntity>().Find(process.Id);
+    if (pendingCommands != null)
+    {
+        // Must dispatch pending commands before the process 
+        // can be further used.
+        var commands = this.serializer.Deserialize<IEnumerable<Envelope<ICommand>>>(pendingCommands.Commands).OfType<Envelope<ICommand>>().ToList();
+        var commandIndex = 0;
+
+        // Here we try again, one by one. Anyone might fail, so we have to keep 
+        // decreasing the pending commands count until no more are left.
+        try
+        {
+            for (int i = 0; i < commands.Count; i++)
+            {
+                this.commandBus.Send(commands[i]);
+                commandIndex++;
+            }
+        }
+        catch (Exception) // We catch a generic exception as we don't know what implementation of ICommandBus we might be using.
+        {
+            pendingCommands.Commands = this.serializer.Serialize(commands.Skip(commandIndex));
+            this.context.SaveChanges();
+            // If this fails, we propagate the exception.
+            throw;
+        }
+
+        // If succeed, we delete the pending commands.
+        this.context.Set<PendingCommandsEntity>().Remove(pendingCommands);
+        this.context.SaveChanges();
+    }
+
+    return process;
+}
+```
+
+> **Note:** If it is still not possible to send a command when it is
+> re-tried. The **Find** method throws an exception and the system is
+> not able to load it.
+
+## Optimizing the UI
+https://github.com/mspnp/cqrs-journey-code/issues/473
+
 # Testing 
 
-During this stage of the journey...
+During this stage of the journey the team re-organized the 
+**Conference.Specflow** project in the **Conference.AcceptanceTests** 
+Visual Studio solution to better reflect the purpose of the tests. 
 
+## Integration Tests
+
+The tests in the **Features\Integration** folder in the 
+**Conference.Specflow** project are designed to test the behavior of the 
+domain directly, verifying the behavior of the domain by looking at the 
+commands and events that are sent and received. These tests are designed 
+to be understood by "programmers" rather than "domain experts" and are 
+formulated using a more technical vocabulary than the ubiquitous 
+language. In addition to verifying the behavior of the domain and 
+helping developers to understand the flow of commands and events in the 
+system, these tests proved to be useful in testing the behavior of the 
+domain in scenarios where events are lost or are received out of order. 
+
+The **Conference** folder contains integration tests for the Conference 
+Management bounded context, and the **Registration** folder contains 
+tests for the Orders and Registrations bounded context.
+
+> **MarkusPersona:** These integration tests make the assumption that
+> the command handlers trust the sender of the commands to send valid
+> command messages. This may not be appropriate for other systems that
+> you may be designing tests for.
+
+## User Interface Tests
+
+The **UserInterface** folder contains the acceptance tests. These tests 
+are described in more detail in [Chapter 4, Extending and Enhancing the 
+Orders and Registrations Bounded Context][j_chapter4]. The 
+**Controllers** folder contains the tests that use the MVC controllers 
+as the point of entry, and the **Views** folder contains the tests that 
+use [WatiN][watin] to drive the system through its UI. 
+
+[j_chapter4]:        Journey_04_ExtendingEnhancing.markdown
 
 [repourl]:           https://github.com/mspnp/cqrs-journey-code
+[watin]:             http://watin.org

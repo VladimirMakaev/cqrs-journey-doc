@@ -1,5 +1,5 @@
 ## Chapter 4
-# Extending and Enhancing the Orders and Registrations Bounded Contexts 
+# Extending and Enhancing the Orders and Registrations Bounded Context
 
 *Exploring further in the Orders and Registrations bounded context*
 
