@@ -46,7 +46,7 @@ Language**. You can also view a bounded context as autonomous business
 component defining clear consistency boundaries: one bounded context 
 typically communicates with another bounded context by raising events. 
 
-> **BharathPersona:** When you use the CQRS pattern, you often use
+> **VikramPersona:** When you use the CQRS pattern, you often use
 > events to communicate between bounded contexts. There are alternative
 > approaches to integration such as sharing data at the database level.
 
@@ -132,7 +132,7 @@ shows the relationships between the different bounded contexts that make
 the complete system and as such it provides a high-level overview of how 
 the system is put together. 
 
-> **BharathPersona:** A frequent comment about CQRS projects is the
+> **VikramPersona:** A frequent comment about CQRS projects is the
 > difficulty in understanding how all of the pieces fit together,
 > especially if there is a large number of commands and events in the
 > system. Often, you can perform some static analysis on the code to
@@ -172,7 +172,7 @@ individual bounded contexts.
 7. Events that report when conferences have been created, updated, and
    published.
 
-> **BharathPersona:** Some of the events that the Conference Management
+> **VikramPersona:** Some of the events that the Conference Management
 > bounded context raises are coarse-grained and contain multiple
 > fields. Remember that Conference Management is a CRUD-style bounded
 > context and does not raise fine-grained domain-style events. For more
@@ -197,7 +197,7 @@ of the application that all concepts relating to payments disappeared
 from the Orders and Registrations bounded context when the 
 **OrderPaymentConfirmed** event became the **OrderConfirmed** event. 
 
-> **BharathPersona:** We continued to refine the domain-models right
+> **VikramPersona:** We continued to refine the domain-models right
 > through the journey as our understanding of domain deepened.
 
 More practically, from the perspective of the journey, we wanted a set 

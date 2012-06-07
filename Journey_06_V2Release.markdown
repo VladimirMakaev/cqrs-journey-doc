@@ -270,7 +270,7 @@ The first option is not always viable. In this particular case it would
 work because the same team is implementing both bounded contexts and the 
 infrastructure making it easy to use a shared event store. 
 
-> **BharathPersona:** Although from a purist's perspective, the first
+> **VikramPersona:** Although from a purist's perspective, the first
 > option breaks the strict isolation between bounded contexts, in some
 > scenarios it may be an acceptable and pragmatic solution.
 
@@ -911,7 +911,7 @@ that are sent. This will enable the Orders and Registrations bounded
 context to query this log for the events from the Conference Management 
 bounded context that it requires to build its read-models. 
 
-> **BharathPersona:** This message log ensures that no messages are
+> **VikramPersona:** This message log ensures that no messages are
 > lost, so that in the future it will be possible to meet additional
 > requirements.
 
@@ -973,7 +973,7 @@ When Contoso migrates the system from V1 to V2, it will use the message
 log to rebuild the conference and priced-order read-models in the Orders 
 and Registrations bounded context. 
 
-> **BharathPersona:** Contoso can use the message log whenever it needs
+> **VikramPersona:** Contoso can use the message log whenever it needs
 > to rebuild the read-models that are built from events that are not
 > associated with an aggregate such as the integration events from the
 > Conference Management bounded context.
@@ -1189,7 +1189,7 @@ The following code sample shows the
 **Conference.AcceptanceTests** Visual Studio solution. Notice how the 
 **When** and **Then** clauses use commands and events. 
 
-> **BharathPersona:** Typically, you would expect the **When** clauses
+> **VikramPersona:** Typically, you would expect the **When** clauses
 > to send commands and the **Then** clauses to see events or exceptions
 > if your domain-model uses just aggregates. However in this example,
 > the domain-model includes a coordinating workflow that responds to

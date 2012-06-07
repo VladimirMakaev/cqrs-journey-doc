@@ -438,7 +438,7 @@ the team decided to reuse the same aggregate id for the related pair of
 aggregates (the order and registration aggregates) in order to
 facilitate look-ups. 
 
-> **BharathPersona:** You want to consider in this case whether you
+> **VikramPersona:** You want to consider in this case whether you
 > should have two aggregates. You could model the registrations as an
 > entity inside the order aggregate.
 
@@ -518,7 +518,7 @@ example, the real flow includes pages that the system will display based
 on the payment type selected by the registrant, and error pages that the 
 system displays if the payment fails. 
 
-> **BharathPersona:** You don't always need to use task-based UIs. In
+> **VikramPersona:** You don't always need to use task-based UIs. In
 > some scenarios, simple CRUD-style UIs work well. You must evaluate
 > whether benefits of task-based UIs outweigh the additional 
 > implementation effort of a task-based UI. Very often, the bounded
@@ -751,7 +751,7 @@ description.
 > they create an order.
 
 
-> **BharathPersona:** If we did want to update the seat description on
+> **VikramPersona:** If we did want to update the seat description on
 > existing orders, we would need to modify the
 > **PricedOrderViewModelGenerator** class to handle the **SeatUpdated**
 > and adjust its view model.
@@ -870,7 +870,7 @@ example the file system or in Windows Azure table or blob storage. In
 the Orders and Registrations bounded context, the system uses Windows 
 Azure blobs to store information about the seat assignments. 
 
-> **BharathPersona:** When you are choosing the underlying storage
+> **VikramPersona:** When you are choosing the underlying storage
 > mechanism for the read-side, you should consider the costs associated
 > with the storage (especially in the cloud) in addition to the
 > requirement that the read-side data should be easy and efficient to

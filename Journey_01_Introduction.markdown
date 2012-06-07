@@ -49,8 +49,8 @@ This panel includes a CQRS expert, a software architect, a developer, a
 domain expert, an IT Pro, and a business manager. They will all comment 
 from their own perspectives. 
 
-![Bharath][personabharath]
-Bharath is a CQRS expert. He checks that a CQRS based solution will work 
+![Vikram][personavikram]
+Vikram is a CQRS expert. He checks that a CQRS based solution will work 
 for a company and will provide tangible benefits. He is a cautious 
 person, for good reason. 
 
@@ -132,10 +132,7 @@ enable Contoso's customers to plan and manage conferences that are held
 at a physical location. The system will enable Contoso's customers to: 
 
 * Manage the sale of different seat types for the conference.
-* Manage the conference on site, including badge printing and attendee
-  lists.
 * Create a conference and define characteristics of that conference.
-* Plan the tracks, sessions, and speakers that make up a conference.
 
 The Contoso Conference Management System will be a multi-tenant, 
 cloud-hosted application. Business Customers will need to register with 
@@ -177,17 +174,6 @@ following characteristics of a conference:
 * Assigning key personnel such as the Program Chair and the Event
   Planner.
 
-### Building a Program
-
-The business customer defines the conference program. This consists of 
-the following tasks: 
-
-* Identifying Tracks and Track Chairs.
-* Identifying Reviewers.
-* Making calls for submissions.
-* Reviewing the papers and assigning speakers to sessions.
-* Finalizing Track programs.
-
 ## Non-functional Requirements
 
 Contoso has two major non-functional requirements for its Conference 
@@ -222,6 +208,10 @@ flexibility breaks down into a number of related aspects:
 
 * Contoso must be able to evolve the system to meet new requirements 
   and to respond to changes in the market. 
+  
+> **BethPersona:** Contoso plans to compete by being quick to respond to
+> changes in the market and to changing customer requirements. Contoso
+> must be able to evolve the system quickly and painlessly.
 
 * The system must be able to run multiple versions of its software 
   simultaneously in order to support customers who are in the middle of 
@@ -244,7 +234,7 @@ flexibility breaks down into a number of related aspects:
   tasks and restricting its use of more expensive and experienced 
   developers for the more critical aspects of the system. 
 
-> **BharathPersona:** There is some debate in the CQRS community 
+> **VikramPersona:** There is some debate in the CQRS community 
 > about whether, in practice, you can use different development teams 
 > for different parts of the CQRS pattern implementation. 
 
@@ -256,7 +246,7 @@ some of the high-level parts of the system. Subsequent chapters describe
 the stages of journey as Contoso implements the Conference Management 
 System. 
 
-[personabharath]: images/PersonaBharath.png?raw=true
+[personavikram]:  images/PersonaVikram.png?raw=true
 [personajana]:    images/PersonaJana.png?raw=true
 [personamarkus]:  images/PersonaMarkus.png?raw=true
 [personacarlos]:  images/PersonaCarlos.png?raw=true
