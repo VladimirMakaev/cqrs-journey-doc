@@ -1,5 +1,7 @@
 ## Chapter 6
-# Coordinating Workflows and Sagas (Chapter Title)
+# A Saga on Sagas (Chapter Title)
+
+**Coordinating Workflows, Process Managers, and Sagas**
 
 # Clarifying the Terminology
 
