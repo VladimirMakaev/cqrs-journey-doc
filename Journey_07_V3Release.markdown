@@ -33,6 +33,8 @@ Commands are processed once by a single recipient. A command bus
 transports commands that command handlers then dispatch to aggregates. 
 Sending a command is an asynchronous operation with no return value. 
 
+[TODO: Verify whether they are still async]
+
 ### Event
 
 An event describes something that has happened in the system, typically 
@@ -121,7 +123,7 @@ and commands between them. The workflow is therefore responsible for
 ensuring that the aggregates in these bounded contexts are correctly 
 synchronized with each other. 
 
-> **BharathPersona:** An aggregate determines the consistency boundaries
+> **GaryPersona:** An aggregate determines the consistency boundaries
 > within the write-model with respect to the consistency of the data
 > that the system persists to storage. The coordinating workflow manages
 > the relationship between different aggregates, possibly in different
@@ -241,13 +243,13 @@ the MVC controller waits until a priced order appears in the read-model
 (this indicates that all of the processing is complete) before 
 displaying the Registrant screen. 
 
-### Options to Reduce the Delay
+### Options to Reduce the Delay in the UI
 
 The team discussed with the domain expert whether or not is always 
 necessary to validate the seats availability before the UI sends the 
 **RegisterToConference** conference command to the domain. 
 
-> **BharathPersona:** This scenario illustrates some practical issues in
+> **GaryPersona:** This scenario illustrates some practical issues in
 > relation to eventual consistency. The read-side, in this case the
 > priced order view model, is eventually consistent with the write-side.
 > Typically, when you implement the CQRS pattern you should be able
@@ -275,7 +277,7 @@ as far as the Payment screen in the UI.
 
 #### Optimization #1
 
-Most of the time, there are plenty of seats avaialable for a conference 
+Most of the time, there are plenty of seats available for a conference 
 and registrants are not competing for the last few that are available. 
 It is only for a brief time that Registrants are competing for the last 
 few seats. 
@@ -314,7 +316,29 @@ model earlier, the controller can display the Registrant screen sooner.
 The team determined that the **Order** aggregate could calculate the 
 total when the order is placed instead of when the reservation is 
 complete. This will enable the UI flow to move more quickly to the 
-Registrant screen than in the V2 release. 
+Registrant screen than in the V2 release.
+
+#### Optimization #3
+
+As part of the V3 release the team upgraded the Conference.Web.Public 
+site to MVC 4. This enabled them to update the 
+**RegistrationController** MVC controller to use the new task support 
+for asynchronous controllers. The following code sample shows an example 
+of this: 
+
+```Cs
+[HttpGet]
+[OutputCache(Duration = 0, NoStore = true)]
+public Task<ActionResult> SpecifyRegistrantAndPaymentDetails(Guid orderId, int orderVersion)
+{
+    return this.WaitUntilOrderIsPriced(orderId, orderVersion)
+    .ContinueWith<ActionResult>(
+
+    ...
+
+    );
+}
+```
 
 ## Optimizing Command Processing 
 
@@ -334,7 +358,7 @@ integrates with the Orders and Registrations bounded context. The
 Windows Azure Service Bus provides a mechanism to transport messages 
 between these worker role instances. 
 
-> **BharathPersona:** It's also possible in the future that for some
+> **GaryPersona:** It's also possible in the future that for some
 > bounded contexts, the read-model will be hosted in a separate role
 > instance from the write-model. Windows Azure Service Bus will
 > transport the events that the system uses to construct the
@@ -378,6 +402,12 @@ system. Every web-role that hosts a view model generator instance must
 handle the events published by the write-side by creating a subscription 
 the the Windows Azure Service Bus topics. 
 
+## Other Optimizations
+
+This section describes some of the other optimizations that the team included in the V3 release.
+
+
+
 # Implementation Details 
 
 This section describes some of the significant implementation details in 
@@ -392,21 +422,128 @@ the repository on github: [mspnp/cqrs-journey-code][repourl].
 
 ## Hardening the RegistrationProcess Workflow
 
-**Note:** In the V2 release, the RegistrationProcess workflow generated a Guid in its constructor to use as an Id. This was removed as part of the hardening process in order to...
+This section describes how the team hardened the **RegistrationProcess** 
+workflow by checking for duplicate instances of the **SeatsReserved** 
+and **OrderPlaced** messages. 
 
+### Detecting Duplicate SeatsReserved Events
 
+Typically, the **RegistrationProcess** workflow sends a 
+**MakeSeatReservation** command to the **SeatAvailability** aggregate, 
+the **SeatAvailability** aggregate publishes a **SeatsReserved** event 
+when it has made the reservation, and the **RegistrationProcess** 
+receives this notification. In the V2 release, the **SeatsReserved** 
+event is not idempotent and the **RegistrationProcess** could, 
+potentially, receive multiple copies of this event. The solution 
+described in this section enables the **RegistrationProcess** to 
+identify any duplicate **SeatsReserved** messages and then ignore them 
+instead of re-processing them. 
 
-## Making the SeatsReserved Event Idempotent
+Before the **RegistrationProcess** workflow sends the 
+**MakeSeatReservation** command, it saves the **Id** of the command in 
+the **SeatReservationCommandId** variable as shown in the following code 
+sample: 
 
-https://github.com/mspnp/cqrs-journey-code/issues/475
+```Cs
+public void Handle(OrderPlaced message)
+{
+    if (this.State == ProcessState.NotStarted)
+    {
+        this.ConferenceId = message.ConferenceId;
+        this.OrderId = message.SourceId;
+        // use the order id as the opaque reservation id for the seat reservation
+        this.ReservationId = message.SourceId;
+        this.ReservationAutoExpiration = message.ReservationAutoExpiration;
+        this.State = ProcessState.AwaitingReservationConfirmation;
 
-## Creating a Psuedo Transaction when the Workflow Saves Its State and Sends a Command
+        var seatReservationCommand =
+            new MakeSeatReservation
+            {
+                ConferenceId = this.ConferenceId,
+                ReservationId = this.ReservationId,
+                Seats = message.Seats.ToList()
+            };
+        this.SeatReservationCommandId = seatReservationCommand.Id;
+        this.AddCommand(seatReservationCommand);
+
+        ...
+}
+```
+
+Then, when it handles the **SeatsReserved** event, it checks that the 
+**CorrelationId** property of the event matches the most recent value of 
+the **SeatReservationCommandId** variable as shown in the following code 
+sample: 
+
+```Cs
+public void Handle(Envelope<SeatsReserved> envelope)
+{
+    if (this.State == ProcessState.AwaitingReservationConfirmation)
+    {
+        if (envelope.CorrelationId != null)
+        {
+            if (string.CompareOrdinal(this.SeatReservationCommandId.ToString(), envelope.CorrelationId) != 0)
+            {
+                // skip this event
+                Trace.TraceWarning("Seat reservation response for reservation id {0} does not match the expected correlation id.", envelope.Body.ReservationId);
+                return;
+            }
+        }
+
+        ...
+}
+```
+
+Notice how this **Handle** method handles an **Envelope** instance 
+instead of a **SeatsReserved** instance. As a part of the V3 release, 
+events are wrapped in an **Envelope** instance that includes the 
+**CorrelationId** property. The **DoDispatchMessage** method in the 
+**EventDispatcher** assigns the value of the correlation Id. 
+
+> **MarkusPersona:** As a side-effect of adding this feature, the
+> **EventProcessor** class can no longer use the **dynamic** keyword
+> when it forwards events to handlers. Now in V3 it uses the new
+> **EventDispatcher** class: this class uses reflection to identify the
+> correct handlers for a given message type.
+
+### Detecting Duplicate OrderPlaced Events
+
+To achieve this, the **RegistrationProcessRouter** class now performs a 
+check to see of the event is has already been processed. The new V3 
+version of the code is shown in the following code sample: 
+
+```Cs
+public void Handle(OrderPlaced @event)
+{
+    using (var context = this.contextFactory.Invoke())
+    {
+        lock (lockObject)
+        {
+            var process = context.Find(x => x.OrderId == @event.SourceId && x.Completed == false);
+            if (process == null)
+            {
+                // If the process already exists, it means that the OrderPlaced event is being reprocessed because the message 
+                // could not be completed. No need to handle it again.
+                process = new RegistrationProcess();
+                process.Handle(@event);
+
+                context.Save(process);
+            }
+        }
+    }
+}
+```
+
+### Creating a Psuedo Transaction when the Workflow Saves Its State and Sends a Command
 
 It is not possible to have a transaction in Windows Azure that spans 
 persisting the **RegistrationProcess** to storage and sending the 
 command. Therefore the team decided to save any failed commands that the 
 workflow sends, and to automatically retry those commands the next time 
 that the system loads the workflow from storage. 
+
+> **MarkusPersona:** The migration utility for moving to the V3 release
+> updates the database schema to accomodate the new storage requirement.
 
 The following code sample from the **SqlProcessDataContext** class shows 
 how the system persists the failed commands along with the state of the 
@@ -498,8 +635,179 @@ public T Find(Expression<Func<T, bool>> predicate)
 > re-tried. The **Find** method throws an exception and the system is
 > not able to load it.
 
+### Adding Optimistic Locking to the RegistrationProcess Workflow
+
+The team also added an optimistic concurrency check when the system saves the **RegistrationProcess** workflow by adding a timestamp property to the **RegistrationProcess** class as shown in the following code sample:
+
+```Cs
+[ConcurrencyCheck]
+[Timestamp]
+public byte[] TimeStamp { get; private set; }
+```
+
+For more information, see [Code First Data Annotations][codefirst] on
+the MSDN website.
+
 ## Optimizing the UI
-https://github.com/mspnp/cqrs-journey-code/issues/473
+
+The first optimization is to allow the UI to navigate directly to the 
+Registrant screen provided that there are plenty of seats still 
+available for the conference. This change is introduced in the 
+**StartRegistration** method in the **RegistrationController** class 
+that now performs an additional check to verify that there are enough 
+remaining seats to stand a good chance of making the reservation before 
+it sends the **RegisterToConference** command as shown in the following 
+code sample: 
+
+```Cs
+[HttpPost]
+public ActionResult StartRegistration(RegisterToConference command, int orderVersion)
+{
+    var existingOrder = orderVersion != 0 ? this.orderDao.FindDraftOrder(command.OrderId) : null;
+    var viewModel = existingOrder == null ? this.CreateViewModel() : this.CreateViewModel(existingOrder);
+    viewModel.OrderId = command.OrderId;
+    
+    if (!ModelState.IsValid)
+    {
+        return View(viewModel);
+    }
+
+    // checks that there are still enough available seats, and the seat type IDs submitted ar valid.
+    ModelState.Clear();
+    bool needsExtraValidation = false;
+    foreach (var seat in command.Seats)
+    {
+        var modelItem = viewModel.Items.FirstOrDefault(x => x.SeatType.Id == seat.SeatType);
+        if (modelItem != null)
+        {
+            if (seat.Quantity > modelItem.MaxSelectionQuantity)
+            {
+                modelItem.PartiallyFulfilled = needsExtraValidation = true;
+                modelItem.OrderItem.ReservedSeats = modelItem.MaxSelectionQuantity;
+            }
+        }
+        else
+        {
+            // seat type no longer exists for conference.
+            needsExtraValidation = true;
+        }
+    }
+
+    if (needsExtraValidation)
+    {
+        return View(viewModel);
+    }
+
+    command.ConferenceId = this.ConferenceAlias.Id;
+    this.commandBus.Send(command);
+
+    return RedirectToAction(
+        "SpecifyRegistrantAndPaymentDetails",
+        new { conferenceCode = this.ConferenceCode, orderId = command.OrderId, orderVersion = orderVersion });
+}
+```
+
+If there are not enough available seats, the controller redisplays the current screen, displaying the currently available seat quantities to enable the registrant to revise her order.
+
+This remaining part of the change is in the **SpecifyRegistrantAndPaymentDetails** method in the **RegistrationController** class. The following code sample from the V2 release shows how before the optimization the controller calls the **WaitUntilSeatsAreConfirmed** method before continuing to the Registrant screen:
+
+```Cs
+[HttpGet]
+[OutputCache(Duration = 0, NoStore = true)]
+public ActionResult SpecifyRegistrantAndPaymentDetails(Guid orderId, int orderVersion)
+{
+    var order = this.WaitUntilSeatsAreConfirmed(orderId, orderVersion);
+    if (order == null)
+    {
+        return View("ReservationUnknown");
+    }
+
+    if (order.State == DraftOrder.States.PartiallyReserved)
+    {
+        return this.RedirectToAction("StartRegistration", new { conferenceCode = this.ConferenceCode, orderId, orderVersion = order.OrderVersion });
+    }
+
+    if (order.State == DraftOrder.States.Confirmed)
+    {
+        return View("ShowCompletedOrder");
+    }
+
+    if (order.ReservationExpirationDate.HasValue && order.ReservationExpirationDate < DateTime.UtcNow)
+    {
+        return RedirectToAction("ShowExpiredOrder", new { conferenceCode = this.ConferenceAlias.Code, orderId = orderId });
+    }
+
+    var pricedOrder = this.WaitUntilOrderIsPriced(orderId, orderVersion);
+    if (pricedOrder == null)
+    {
+        return View("ReservationUnknown");
+    }
+
+    this.ViewBag.ExpirationDateUTC = order.ReservationExpirationDate;
+
+    return View(
+        new RegistrationViewModel
+        {
+            RegistrantDetails = new AssignRegistrantDetails { OrderId = orderId },
+            Order = pricedOrder
+        });
+}
+```
+
+The following code sample shows the V3 version of this method that no longer waits for the reservation to be confirmed:
+
+```Cs
+[HttpGet]
+[OutputCache(Duration = 0, NoStore = true)]
+public ActionResult SpecifyRegistrantAndPaymentDetails(Guid orderId, int orderVersion)
+{
+    var pricedOrder = this.WaitUntilOrderIsPriced(orderId, orderVersion);
+    if (pricedOrder == null)
+    {
+        return View("PricedOrderUnknown");
+    }
+
+    if (!pricedOrder.ReservationExpirationDate.HasValue)
+    {
+        return View("ShowCompletedOrder");
+    }
+
+    if (pricedOrder.ReservationExpirationDate < DateTime.UtcNow)
+    {
+        return RedirectToAction("ShowExpiredOrder", new { conferenceCode = this.ConferenceAlias.Code, orderId = orderId });
+    }
+
+    return View(
+        new RegistrationViewModel
+        {
+            RegistrantDetails = new AssignRegistrantDetails { OrderId = orderId },
+            Order = pricedOrder
+        });
+}
+```
+The second optimization is to perform the calculation of the order total earlier in the process. In the previous code sample, the **SpecifyRegistrantAndPaymentDetails** method still calls the **WaitUntilOrderIsPriced** method which pauses the UI flow until the system calculates an order total and makes it available to the controller by saving it in the priced order view model on the read-side.
+
+The key change to implement this is in the **Order** aggregate. The constructor in the **Order** class now invokes the **CalculateTotal** method and raises an **OrderTotalsCalculated** method as shown in the following code sample:
+
+```Cs
+public Order(Guid id, Guid conferenceId, IEnumerable<OrderItem> items, IPricingService pricingService)
+    : this(id)
+{
+    var all = ConvertItems(items);
+    var totals = pricingService.CalculateTotal(conferenceId, all.AsReadOnly());
+
+    this.Update(new OrderPlaced
+    {
+        ConferenceId = conferenceId,
+        Seats = all,
+        ReservationAutoExpiration = DateTime.UtcNow.Add(ReservationAutoExpiration),
+        AccessCode = HandleGenerator.Generate(6)
+    });
+    this.Update(new OrderTotalsCalculated { Total = totals.Total, Lines = totals.Lines != null ? totals.Lines.ToArray() : null, IsFreeOfCharge = totals.Total == 0m });
+}
+```
+
+Previously, in the V2 release the **Order** aggregate waited until it received a **MarkAsReserved** command before it called the **CalculateTotal** method.
 
 # Testing 
 
@@ -542,3 +850,4 @@ use [WatiN][watin] to drive the system through its UI.
 
 [repourl]:           https://github.com/mspnp/cqrs-journey-code
 [watin]:             http://watin.org
+[codefirst]:         http://msdn.microsoft.com/en-us/library/gg197525(VS.103).aspx
