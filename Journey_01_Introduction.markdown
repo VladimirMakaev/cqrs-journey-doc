@@ -49,8 +49,8 @@ This panel includes a CQRS expert, a software architect, a developer, a
 domain expert, an IT Pro, and a business manager. They will all comment 
 from their own perspectives. 
 
-![Vikram][personavikram]
-Vikram is a CQRS expert. He checks that a CQRS based solution will work 
+![Gary][personagary]
+Gary is a CQRS expert. He checks that a CQRS based solution will work 
 for a company and will provide tangible benefits. He is a cautious 
 person, for good reason. 
 
@@ -234,7 +234,7 @@ flexibility breaks down into a number of related aspects:
   tasks and restricting its use of more expensive and experienced 
   developers for the more critical aspects of the system. 
 
-> **VikramPersona:** There is some debate in the CQRS community 
+> **GaryPersona:** There is some debate in the CQRS community 
 > about whether, in practice, you can use different development teams 
 > for different parts of the CQRS pattern implementation. 
 
@@ -246,7 +246,7 @@ some of the high-level parts of the system. Subsequent chapters describe
 the stages of journey as Contoso implements the Conference Management 
 System. 
 
-[personavikram]:  images/PersonaVikram.png?raw=true
+[personagary]:    images/personaGary.png?raw=true
 [personajana]:    images/PersonaJana.png?raw=true
 [personamarkus]:  images/PersonaMarkus.png?raw=true
 [personacarlos]:  images/PersonaCarlos.png?raw=true

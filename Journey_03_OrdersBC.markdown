@@ -56,7 +56,7 @@ A single recipient processes a Command. A command bus
 transports commands that command handlers then dispatch to aggregates. 
 Sending a command is an asynchronous operation with no return value.
 
-> **VikramPersona:** For a discussion of some possible optimizations
+> **GaryPersona:** For a discussion of some possible optimizations
 > that also involve a slightly different definition of a command, see
 > [Chapter 6, Versioning our System][j_chapter6].
 
@@ -90,7 +90,7 @@ its internal state in addition to sending a new command.
 The workflow in this bounded context can receive commands as well as 
 subscribe to events.
 
-> **VikramPersona:** The team initially referred to the workflow class
+> **GaryPersona:** The team initially referred to the workflow class
 > in the **Orders** bounded context as a saga. To find out why they
 > decided to change the terminology, see the section [Patterns and
 > Concepts](#patternsandconcepts) later in this chapter.
@@ -272,7 +272,7 @@ database.
 For more information about the options for running the application, see 
 [Appendix 1][appendix1].
 
-> **VikramPersona:** A frequent claim for the CQRS pattern is that it
+> **GaryPersona:** A frequent claim for the CQRS pattern is that it
 > enables you to scale the read-side and write-side independently to
 > support the different usage patterns. In this bounded context, the
 > number of read operations from the UI is not likely to hugely
@@ -307,7 +307,7 @@ pros and cons of alternative approaches.
 > introduce and understand both DDD and CQRS.  
 > Josh Elster - CQRS Advisors Mail List
 
-> **VikramPersona:** These diagrams deliberately exclude details of how
+> **GaryPersona:** These diagrams deliberately exclude details of how
 > the system delivers commands and events through command and event
 > handlers. The diagrams focus on the logical relationships between the
 > aggregates in the domain.
@@ -393,7 +393,7 @@ The numbers in the diagram correspond to the following steps:
    **SeatsAvailability** aggregate and it is persisted to the
    data store.
 
-> **VikramPersona:** Workflow or saga? Initially the team referred to
+> **GaryPersona:** Workflow or saga? Initially the team referred to
 > the **RegistrationProcess** workflow as a saga. However, after they
 > reviewed the original definition of a saga from the paper
 > [Sagas][sagapaper] by Hector Garcia-Molina and Kenneth Salem, they
@@ -1168,7 +1168,7 @@ Service Bus to restrict a topic to a single subscription; therefore the
 developers must be careful to create just a single subscription on a
 topic that is delivering commands. 
 
-> **VikramPersona:** A separate issue is to ensure that the handler
+> **GaryPersona:** A separate issue is to ensure that the handler
 > retrieves commands from the topic and processes them only once. You
 > must ensure either that the command is idempotent, or that the system
 > guarantees to process the command only once. The team will address

@@ -184,7 +184,7 @@ for the read-side should be to keep the queries as simple as possible,
 and to structure the tables in the database in such a way that they can 
 be read quickly and efficiently.
 
-> **VikramPersona:** Application scalability and a responsive UI are
+> **GaryPersona:** Application scalability and a responsive UI are
 > often explicit goals when people choose to implement the CQRS pattern.
 > Optimizing the read-side to provide fast responses with low
 > resource utilization to queries will help you to achieve these goals.
@@ -348,7 +348,7 @@ The **OrderViewModelGenerator** class handles the **OrderPlaced**,
 and uses **DraftOrder** and **DraftOrderItem** instances to persist 
 changes to the view tables. 
 
-> **VikramPersona:** If you look ahead to the next chapter, [Preparing
+> **GaryPersona:** If you look ahead to the next chapter, [Preparing
 > for the V1 Release][j_chapter5], you'll see that the team extended the
 > use of events and migrated the **Orders and Registrations** bounded
 > context to use event sourcing. 
@@ -382,7 +382,7 @@ A business failure should have a predetermined business response. For
 * If a credit card payment fails, the user should be given the chance
   either to try a different card, or to set up payment by invoice.
 
-> **VikramPersona:** Your domain experts should help you to identify
+> **GaryPersona:** Your domain experts should help you to identify
 > possible business failures and determine the way that you handle
 > them. 
 
