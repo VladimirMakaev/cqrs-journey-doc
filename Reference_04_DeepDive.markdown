@@ -749,8 +749,9 @@ three guarantees simultaneously:
 3. Partition tolerance. A guarantee that the system continues to operate
    despite the nodes being unable to communicate. 
 
-For more information about the [CAP theorem][captheorem], see CAP 
-theorem on Wikipedia. 
+For more information about the CAP theorem, see [CAP 
+theorem][captheorem] on Wikipedia and the article [CAP Twelve Years
+Later: How the "Rules" Have Changed][capinfoq] on the InfoQ website.
 
 The concept of *eventual consistency* offers to way to make these three 
 guarantees simultaneously by relaxing the guarantee of consistency. In 
@@ -1420,6 +1421,7 @@ the Reference Implementation][r_chapter9].
 [youngeventual]:  http://codebetter.com/gregyoung/2010/04/14/quick-thoughts-on-eventual-consistency/
 [topaz]:          http://msdn.microsoft.com/en-us/library/hh680934(PandP.50).aspx
 [azurestorage]:   https://www.windowsazure.com/en-us/develop/net/fundamentals/cloud-storage/
+[capinfoq]:       http://www.infoq.com/articles/cap-twelve-years-later-how-the-rules-have-changed
 
 [fig1]:           images/Reference_04_Consistency_01.png?raw=true
 [fig2]:           images/Reference_04_Consistency_02.png?raw=true
