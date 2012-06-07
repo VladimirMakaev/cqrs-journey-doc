@@ -246,7 +246,7 @@ some of the high-level parts of the system. Subsequent chapters describe
 the stages of journey as Contoso implements the Conference Management 
 System. 
 
-[personagary]:    images/personaGary.png?raw=true
+[personagary]:    images/PersonaGary.png?raw=true
 [personajana]:    images/PersonaJana.png?raw=true
 [personamarkus]:  images/PersonaMarkus.png?raw=true
 [personacarlos]:  images/PersonaCarlos.png?raw=true
