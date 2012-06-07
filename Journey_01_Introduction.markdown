@@ -141,19 +141,19 @@ the system before they can create and manage their conferences.
 ### Selling Seats for a Conference
 
 The Business Customer defines how many seats are available for the 
-conference. The business customer may also specify events at a 
+conference. The Business Customer may also specify events at a 
 conference such as workshops, receptions, and premium sessions for which 
-attendees must have a separate ticket. The business customer will also 
+Attendees must have a separate ticket. The Business Customer will also 
 define how many seats are available for these events. 
 
 The system manages the sale of seats to ensure that the conference and 
 sub-events are not oversubscribed. This part of the system will also 
-operate wait-lists so that if other attendees cancel, then their seats 
+operate wait-lists so that if other Attendees cancel, then their seats 
 can be re-allocated. 
 
-The system will require that the names of the attendees are associated 
+The system will require that the names of the Attendees are associated 
 with the purchased seats so that an on-site system can print badges for
-the attendees when they arrive at the conference. 
+the Attendees when they arrive at the conference. 
 
 ### Creating a Conference
 

@@ -66,19 +66,19 @@ details of how different bounded contexts interact with each other.
 
 ## The Orders and Registrations Bounded Context
 
-When a registrant interacts with the system, the system creates an 
+When a Registrant interacts with the system, the system creates an 
 **Order** to manage the **Reservations**, payment, and 
 **Registrations**. An Order contains one of more Order Items. 
 
 A **Reservation** is a temporary reservation of one or more seats at 
-conference. When a registrant begins the ordering process to purchase a 
+conference. When a Registrant begins the ordering process to purchase a 
 number of seats at conference, the system creates **Reservations** for 
-the number of seats requested by the registrant. These seats are then 
-not available for other registrants to reserve. The **Reservations** are 
-held for 15 minutes during which the registrant can complete the 
-ordering process by making a payment for those seats. If the registrant 
+the number of seats requested by the Registrant. These seats are then 
+not available for other Registrants to reserve. The **Reservations** are 
+held for 15 minutes during which the Registrant can complete the 
+ordering process by making a payment for those seats. If the Registrant 
 does not pay for the tickets within _n_ minutes, the system deletes the 
-**Reservation** and the seats become available to other registrants to 
+**Reservation** and the seats become available to other Registrants to 
 reserve. 
 
 > **CarlosPersona:** We discussed making the period of time that the
@@ -88,13 +88,13 @@ reserve.
 
 ## The Conference Management Bounded Context
 
-A business customer can create new conferences and manage them. After a 
-business customer creates a new conference, he can access the details of 
+A Business Customer can create new conferences and manage them. After a 
+Business Customer creates a new conference, he can access the details of 
 the conference by using his email address and conference locator access 
-code. The system generates the access code when the business customer 
+code. The system generates the access code when the Business Customer 
 creates the conference. 
 
-The business customer can specify the following information about a 
+The Business Customer can specify the following information about a 
 conference: 
 
 * The name, description, and slug (part of the URL used to access the
@@ -102,12 +102,12 @@ conference:
 * The start and end dates of the conference.
 * The different types and quotas of seats available at the conference.
 
-Additionally, the business customer can control the visibility of the 
+Additionally, the Business Customer can control the visibility of the 
 conference on the public website by either publishing or un-publishing 
 the conference. 
 
-The business customer can use the conference management website to view 
-a list of orders and attendees. 
+The Business Customer can use the conference management website to view 
+a list of orders and Attendees. 
 
 ## The Payments Bounded Context 
 
@@ -162,7 +162,7 @@ individual bounded contexts.
    published. Events that report when seat types have been created or
    updated.
 2. Events that report when orders have been created and updated. Events
-   that report when attendees have been assigned to seats.
+   that report when Attendees have been assigned to seats.
 3. Requests for a payment to be made.
 4. Acknowledgement of the success or failure of the payment.
 

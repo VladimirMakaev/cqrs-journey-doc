@@ -2,8 +2,8 @@ Archived notes about the On-site Conference Management
 
 ### On-site Conference Management
 
-When attendees arrive at the conference their names should be checked 
-against an attendee list and they should be given name badges that 
+When Attendees arrive at the conference their names should be checked 
+against an Attendee list and they should be given name badges that 
 identify any additional conference events they are entitled to attend. 
 They should also be given the opportunity to purchase seats for any 
 additional events they would like to attend (assuming there are seats 

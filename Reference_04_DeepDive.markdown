@@ -471,18 +471,18 @@ A common scenario for commands is that some of the information included
 in the command is provided by the user of the system through the UI, and 
 some of the information is retrieved from the read-model. For example, 
 the UI builds a list of orders by querying the read-model, the user 
-selects one of those orders and modifies the list of attendees 
+selects one of those orders and modifies the list of Attendees 
 associated with that order. The UI then sends the command that contains 
-the list of attendees associated with the order to the write-model for 
+the list of Attendees associated with the order to the write-model for 
 processing. 
 
 However, because of eventual consistency, it is possible that the 
 information that the UI retrieves from the read-side is not yet fully 
 consistent with changes that have just been made on the write-side 
 (perhaps by another user of the system). This raises the possibility 
-that the command that is sent to update the list of attendees results in 
+that the command that is sent to update the list of Attendees results in 
 an inconsistent change to the write-mode. For example, someone else 
-could have deleted the order, or already modified the list of attendees. 
+could have deleted the order, or already modified the list of Attendees. 
 
 A solution to this problem is to use version numbers in the read-model 
 and the commands. Whenever the write-model sends details of a change to 

@@ -15,16 +15,16 @@ The specific topics described in this chapter include:
 * Improvements to the way that message correlation works with the 
   **RegistrationProcess** workflow. This illustrates how aggregate
   instances within the bounded context can interact in a complex manner.
-* Implementing a record locator to enable a registrant to retrieve an 
+* Implementing a record locator to enable a Registrant to retrieve an 
   order that she saved during a previous session. This illustrates
   adding some additional logic to the write-side that enables you to
   locate an aggregate instance without knowing its unique Id.
-* Adding a countdown timer to the UI to enable a registrant to track how 
+* Adding a countdown timer to the UI to enable a Registrant to track how 
   much longer they have to complete an order. This illustrates
   enhancements to the write-side to support displaying rich information
   in the UI.
 * Supporting orders for multiple seat types simultaneously. For example,
-  a registrant requests five seats for pre-conference event and eight
+  a Registrant requests five seats for pre-conference event and eight
   seats for the full conference. This adds more complex business logic
   into the write-side.
 * CQRS command validation using MVC. This illustrates how to make use
@@ -58,8 +58,9 @@ Sending a command is an asynchronous operation with no return value.
 
 ### Event
 
-An event describes something that has happened in the system, typically 
-as a result of a command. Aggregates in the domain model raise events. 
+An event, such as **OrderConfirmed**, describes something that has 
+happened in the system, typically as a result of a command. Aggregates 
+in the domain model raise events. 
 
 Multiple subscribers can handle a specific event. Aggregates publish 
 events to an event bus; handlers register for specific types of event on 
@@ -88,30 +89,30 @@ Registrations** bounded context.
 
 ### Implement a Login using a Record Locator
 
-When a registrant creates an order for seats at a conference, the system 
+When a Registrant creates an order for seats at a conference, the system 
 generates a five-character **order access code** and sends it to the 
-registrant by email. The registrant can use her email address and the 
+Registrant by email. The Registrant can use her email address and the 
 **order access code** on the conference web site to retrieve the order 
-from the system at a later date. The registrant may wish to retrieve the 
+from the system at a later date. The Registrant may wish to retrieve the 
 order to review it, or to complete the registration process by assigning 
-attendees to seats. 
+Attendees to seats. 
 
 ### Inform the Registrant How Much Time Remains to Complete an Order
 
-When a registrant creates an order, the system reserves the seats 
-requested by the registrant until the order is complete or the 
-reservations expire. To complete an order, the registrant must submit 
+When a Registrant creates an order, the system reserves the seats 
+requested by the Registrant until the order is complete or the 
+reservations expire. To complete an order, the Registrant must submit 
 her details, such as name and email address, and make a successful 
 payment. 
 
-To help the registrant, the system displays a countdown timer to inform 
-the registrant how much time remains to complete the order before the 
+To help the Registrant, the system displays a countdown timer to inform 
+the Registrant how much time remains to complete the order before the 
 seat reservations expire. 
 
 ### Enabling a Registrant to Create an Order that Includes Multiple Seat Types
 
-When a registrant creates an order, the registrant may request different 
-numbers of different seat types. For example, a registrant may request 
+When a Registrant creates an order, the Registrant may request different 
+numbers of different seat types. For example, a Registrant may request 
 five seats for the full conference and three seats for the 
 pre-conference workshop. 
 
@@ -119,10 +120,11 @@ pre-conference workshop.
 
 The application is designed to deploy to Windows Azure. At this stage in 
 the journey, the application consists of a web role that contains the 
-MVC web application and a worker role that contains the message handlers 
-and domain objects. The application uses SQL Azure databases for data 
-storage, both on the write-side and the read-side. The application uses 
-the Windows Azure Service Bus to provide its messaging infrastructure. 
+ASP.NET MVC web application and a worker role that contains the message 
+handlers and domain objects. The application uses SQL Azure databases 
+for data storage, both on the write-side and the read-side. The 
+application uses the Windows Azure Service Bus to provide its messaging 
+infrastructure. 
 
 While you are exploring and testing the solution, you can run it 
 locally, either using the Windows Azure compute emulator or by running 
@@ -144,14 +146,14 @@ challenges met by the team when they addressed these areas.
 ## Record Locators
 
 The system uses **Access Codes** instead of passwords to avoid the 
-overhead for the registrant of setting up an account with the system. 
-Many registrants may use the system only once, so there is no need to 
+overhead for the Registrant of setting up an account with the system. 
+Many Registrants may use the system only once, so there is no need to 
 create a permanent account with a user ID and a password. 
 
 The system needs to be able to retrieve order information quickly based 
-on the registrant's email address and access code. To provide a minimum 
+on the Registrant's email address and access code. To provide a minimum 
 level of security, the access codes that the system generates should not 
-be predictable, and the order information that registrants can retrieve 
+be predictable, and the order information that Registrants can retrieve 
 should not contain any sensitive information. 
 
 ## Querying the Read-side
@@ -313,20 +315,20 @@ advantage in the flexibility of the approach that uses the
 
 The UI displays data about orders that it obtains by querying the model 
 on the read-side. Part of the data that the UI displays to the 
-registrant is information about partially fulfilled orders: for each 
+Registrant is information about partially fulfilled orders: for each 
 seat type in the order, the number of seats requested and the number of 
 seats that are available. This is temporary data that the system only
-uses while the registrant is creating the order using the UI; the 
+uses while the Registrant is creating the order using the UI; the 
 business only needs to store information about seats that were actually
-purchased, not the difference between what the registrant requested and 
-what the registrant purchased. 
+purchased, not the difference between what the Registrant requested and 
+what the Registrant purchased. 
 
 The consequence of this is that the information about how many seats 
-the registrant requested only needs to exist in the model on the 
+the Registrant requested only needs to exist in the model on the 
 read-side. 
 
 > **JanaPersona:** You can't store this information in an HTTP session
-> because the registrant may leave the site in between requesting the
+> because the Registrant may leave the site in between requesting the
 > seats and completing the order.
 
 A further consequence is that the underlying storage on the read-side 
@@ -389,11 +391,11 @@ A business failure should have a predetermined business response. For
 ## The Countdown Timer and the Read-model
 
 The countdown timer that displays how much time remains to complete the 
-order to the registrant is part of the business data in the system, and 
-not just a part of the infrastructure. When a registrant creates an 
+order to the Registrant is part of the business data in the system, and 
+not just a part of the infrastructure. When a Registrant creates an 
 order and reserves seats, the countdown begins. The countdown 
-continues, even if the registrant leaves the conference web site. The UI 
-must be able to display the correct countdown value if the registrant 
+continues, even if the Registrant leaves the conference web site. The UI 
+must be able to display the correct countdown value if the Registrant 
 returns to the site, therefore the reservation expiry time is a part of 
 the data that is available from the read-model. 
 
@@ -402,7 +404,8 @@ the data that is available from the read-model.
 This section describes some of the significant features of the 
 implementation of the Orders and Registrations bounded context. You may 
 find it useful to have a copy of the code so you can follow along. You 
-can download a copy of the code from the repository on github: 
+can download a copy of the code from the [Download center][downloadc], 
+or check the evolution of the code in the repository on github: 
 [mspnp/cqrs-journey-code][repourl]. 
 
 > **Note:** Do not expect the code samples to match exactly the code in
@@ -412,9 +415,9 @@ can download a copy of the code from the repository on github:
 
 ## The Order Access Code Record Locator 
 
-A registrant may need to retrieve an Order, either to view it, or to 
-complete registering attendees to seats. This may happen in a different 
-web session, so the registrant must supply some information to locate 
+A Registrant may need to retrieve an Order, either to view it, or to 
+complete registering Attendees to seats. This may happen in a different 
+web session, so the Registrant must supply some information to locate 
 the previously saved order. 
 
 The following code sample shows how the **Order** class generates an new 
@@ -431,7 +434,7 @@ protected Order()
 }
 ```
 
-To retrieve an **Order** instance, a registrant must provide her email 
+To retrieve an **Order** instance, a Registrant must provide her email 
 address and the order access code. The system will use these two items 
 to locate the correct order. This logic is part of the read-side. 
 
@@ -439,7 +442,7 @@ The following code sample from the **OrderController** class in the web
 application shows how the MVC controller submits the query to the 
 repository to discover the unique **OrderId** value. This **Find** 
 action passes the **OrderId** value to a **Display** action that 
-displays the order information to the registrant. 
+displays the order information to the Registrant. 
 
 ```Cs
 [HttpPost]
@@ -477,7 +480,7 @@ public IQueryable<T> Query<T>() where T : class
 
 ## The Countdown Timer
 
-When a registrant creates an order and makes a seat reservation, those 
+When a Registrant creates an order and makes a seat reservation, those 
 seats are reserved for a fixed period of time. The 
 **RegistrationProcess** instance, which forwards the reservation from 
 the **SeatsAvailability** aggregate, passes the time that the 
@@ -885,7 +888,7 @@ a **ReservationRejected** event depending on whether there were sufficient
 seats. Now the aggregate raises a **SeatsReserved** event that reports 
 how many seats of a particular type it could reserve. This means that 
 the number of seats reserved may not match the number of seats 
-requested; this information is passed back to the UI for the registrant 
+requested; this information is passed back to the UI for the Registrant 
 to make a decision on how to proceed with the registration. 
 
 ### The AddSeats Method
@@ -899,7 +902,7 @@ The Conference Management bounded context raises an event whenever the
 total number of available seats changes, the **SeatsAvailability** class 
 then handles the event when its handler invokes the **AddSeats** method. 
 
-# Testing
+# Impact on Testing
 
 This section discusses some of the testing issues addressed during this 
 stage of the journey. 
@@ -1695,3 +1698,5 @@ the repos, and get started!
 [watin]:            http://watin.org
 [xUnit]:            http://xunit.codeplex.com/
 [mil]:              http://jelster.github.com/CqrsMessagingTools/
+[downloadc]:        http://NEEDFWLINK
+

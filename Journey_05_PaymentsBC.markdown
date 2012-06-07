@@ -78,13 +78,13 @@ the Registrations associated with an Order.
 
 ### Conference Management User Stories
 
-A business customer can create new conferences and manage them. After a 
-business customer creates a new conference, he can access the details of 
+A Business Customer can create new conferences and manage them. After a 
+Business Customer creates a new conference, he can access the details of 
 the conference by using his email address and conference locator access 
-code. The system generates the access code when the business customer 
+code. The system generates the access code when the Business Customer 
 creates the conference. 
 
-The business customer can specify the following information about a 
+The Business Customer can specify the following information about a 
 conference: 
 
 * The name, description, and slug (part of the URL used to access the
@@ -92,41 +92,41 @@ conference:
 * The start and end dates of the conference.
 * The different types and quotas of seats available at the conference.
 
-Additionally, the business customer can control the visibility of the 
+Additionally, the Business Customer can control the visibility of the 
 conference on the public website by either publishing or un-publishing 
 the conference. 
 
-The business customer can use the conference management website to view 
-a list of orders and attendees. 
+The Business Customer can use the conference management website to view 
+a list of orders and Attendees. 
 
 ### Ordering and Registration User Stories
 
-When a registrant creates an order, it may not be possible to fulfill  
-the order completely. For example, a registrant may request a registrant 
+When a Registrant creates an order, it may not be possible to fulfill  
+the order completely. For example, a Registrant may request a Registrant 
 may request five seats for the full conference, five seats for the 
 drinks reception, and three seats for the pre-conference workshop. There 
 may only be three seats available and one seat for the drinks reception, 
 but more than three seats available for the pre-conference workshop. The 
-system displays this information to the registrant and gives the 
-registrant the opportunity to adjust the number of each type of seat in 
+system displays this information to the Registrant and gives the 
+Registrant the opportunity to adjust the number of each type of seat in 
 the order before continuing to the payment process.
 
-After a registrant has selected the quantity of each seat type, the 
-system calculates the total to pay for the order, and the registrant can 
+After a Registrant has selected the quantity of each seat type, the 
+system calculates the total to pay for the order, and the Registrant can 
 then pay for those seats using an online payment service. Contoso does
-not handle payments on behalf of its customers: each business customer
+not handle payments on behalf of its customers: each Business Customer
 must have a mechanism for accepting payments through an online payments
 service. In a later stage of the project, Contoso will add support for
-business customers to integrate their invoicing systems with the
+Business Customers to integrate their invoicing systems with the
 Conference Management System. At some future time, Contoso may offer a
 service to collect payments on behalf of customers.
 
 > **Note:** In this version of the system, the actual payment is
 > simulated.
 
-After a registrant has purchased seats at a conference, she can assign 
-attendees to those seats. The system stores the name and contact details 
-for each attendee.
+After a Registrant has purchased seats at a conference, she can assign 
+Attendees to those seats. The system stores the name and contact details 
+for each Attendee.
 
 ## Architecture 
 
@@ -433,7 +433,7 @@ that holds the events for any particular aggregate.
 
 In some cases, the system must locate related aggregates. For example,
 an order aggregate may have a related registrations aggregate that holds 
-details of the attendees assigned to specific seats. In this scenario, 
+details of the Attendees assigned to specific seats. In this scenario, 
 the team decided to reuse the same aggregate id for the related pair of 
 aggregates (the order and registration aggregates) in order to
 facilitate look-ups. 
@@ -502,20 +502,20 @@ receives a DTO, and sends commands to the write-side.
 
 **Task-based UI flow**
 
-Figure 3 shows a sequence of pages that enable the registrant to 
+Figure 3 shows a sequence of pages that enable the Registrant to 
 complete the "purchase seats at a conference" task. On the first page, 
-the registrant selects the type and quantity of seats. On the second 
-page, the registrant can review the seats she has reserved, enter her 
+the Registrant selects the type and quantity of seats. On the second 
+page, the Registrant can review the seats she has reserved, enter her 
 contact details, and complete the necessary payment details. The system 
-then redirects the registrant to a payment provider, and if the payment 
+then redirects the Registrant to a payment provider, and if the payment 
 completes successfully, the system displays the third page. The third 
 page shows a summary of the order and provides a link to pages where the 
-registrant can start additional tasks. 
+Registrant can start additional tasks. 
 
 The sequence shown in Figure 3 is deliberately simplified in order to 
 highlight the roles of the commands and queries in a task-based UI. For 
 example, the real flow includes pages that the system will display based 
-on the payment type selected by the registrant, and error pages that the 
+on the payment type selected by the Registrant, and error pages that the 
 system displays if the payment fails. 
 
 > **GaryPersona:** You don't always need to use task-based UIs. In
@@ -542,9 +542,9 @@ The Conference Management bounded context needs to integrate with the
 Orders and Registrations bounded context. For example, if the business 
 customer changes the quota for a seat type in the Conference Management 
 bounded context, this change must be propagated to the Orders and 
-Registrations bounded context. Also, if a registrant adds a new attendee 
-to a conference, the business customer must be able to view details of 
-the attendee in the list in the Conference Management website. 
+Registrations bounded context. Also, if a Registrant adds a new Attendee 
+to a conference, the Business Customer must be able to view details of 
+the Attendee in the list in the Conference Management website. 
 
 ### Pushing Changes from the Conference Management Bounded Context
 
@@ -709,9 +709,9 @@ for event sourcing.
 
 For the Conference Management bounded context to capture the information 
 that it requires to display information about registrations and 
-attendees, it must handle all of these events. It can use the 
+Attendees, it must handle all of these events. It can use the 
 information that these events contain to create a de-normalized SQL 
-table of the data, that the business customer can then view in the UI. 
+table of the data, that the Business Customer can then view in the UI. 
 
 The issue with this approach is that the Conference Management bounded 
 context needs to understand a complex set of events from another bounded 
@@ -735,19 +735,19 @@ These alternative approaches will include:
 
 ### Choosing When to Update the Read-side Data
 
-In the Conference Management bounded context, the business customer can 
+In the Conference Management bounded context, the Business Customer can 
 change the description of a seat type. This results in a **SeatUpdated** 
 event that the **ConferenceViewModelGenerator** class in the Orders and 
 Registrations bounded context handles; This class updates the read-model 
 data to reflect the new information about the seat type. The UI displays 
-the new seat description when a registrant is making an order. 
+the new seat description when a Registrant is making an order. 
 
-However, if a registrant views a previously created order (for example 
-to assign attendees to seats), the registrant sees the original seat 
+However, if a Registrant views a previously created order (for example 
+to assign Attendees to seats), the Registrant sees the original seat 
 description. 
 
 > **CarlosPersona:** This is a deliberate business decision: we don't
-> want to confuse registrants by changing the seat description after
+> want to confuse Registrants by changing the seat description after
 > they create an order.
 
 
@@ -783,16 +783,16 @@ events that the bounded context publishes to other bounded contexts.
 ## Autonomy versus Authority
 
 The **Orders and Registrations** bounded context is responsible for 
-creating and managing orders on behalf of registrants. The **Payments** 
+creating and managing orders on behalf of Registrants. The **Payments** 
 bounded context is responsible for managing the interaction with an 
-external payments system so that registrants can pay for the seats that 
+external payments system so that Registrants can pay for the seats that 
 they have ordered. 
 
 When the team was examining the domain models for these two bounded 
 contexts, it discovered that neither of them knew anything about 
 pricing. The **Orders and Registrations** bounded context created an 
 order that listed the quantities of the different seat types that the 
-registrant requested. The **Payments** bounded context simply passed a 
+Registrant requested. The **Payments** bounded context simply passed a 
 total to the external payments system. At some point, the system needed 
 to calculate the total from the order before invoking the payment 
 process. 
@@ -883,9 +883,9 @@ Azure blobs to store information about the seat assignments.
 
 ## Eventual Consistency
 
-During testing, the team discovered a scenario where the registrant 
-might see evidence of eventual consistency in action. If the registrant 
-assigns attendees to seats on an order and then quickly navigates to 
+During testing, the team discovered a scenario where the Registrant 
+might see evidence of eventual consistency in action. If the Registrant 
+assigns Attendees to seats on an order and then quickly navigates to 
 view the assignments, then sometimes this view shows only some of the 
 updates. However, refreshing the page displays the correct information. 
 This happens because it takes time for the events that record the seat 
@@ -897,16 +897,18 @@ possibility, although a production system is likely to update the
 read-model faster than a debug version of the application running 
 locally. 
 
-> **CarlosPersona:** So long as the registrant knows that the changes
+> **CarlosPersona:** So long as the Registrant knows that the changes
 > have been persisted, and that what the UI displays could be a
 > few seconds out of date, they are not going to be concerned.
 
 # Implementation Details 
 
-This section describes some of the significant implementation details in 
-this stage of the journey. You may find it useful to have a copy of the 
-code so you can follow along. You can download a copy of the code from 
-the repository on github: [mspnp/cqrs-journey-code][repourl]. 
+This section describes some of the significant features of the 
+implementation of the Orders and Registrations bounded context. You may 
+find it useful to have a copy of the code so you can follow along. You 
+can download a copy of the code from the [Download center][downloadc], 
+or check the evolution of the code in the repository on github: 
+[mspnp/cqrs-journey-code][repourl]. 
 
 > **Note:** Do not expect the code samples to match exactly the code in
 > the reference implementation. This chapter describes a step in the
@@ -967,7 +969,7 @@ classes to better describe the process.
 
 The diagram shows how the Orders and Registrations bounded context, the 
 Payments bounded context, and the external payments service all interact 
-with each other. In the future, registrants will also be able to pay by
+with each other. In the future, Registrants will also be able to pay by
 invoice instead of using a third-party payments processing service. 
 
 The Registrant makes a payment as a part of the overall flow in the UI 
@@ -1026,13 +1028,13 @@ your site:
   fixed time to complete the payment by sending the token back to the
   payment service. 
 
-Contoso assumes that its business customers do not have a merchant 
+Contoso assumes that its Business Customers do not have a merchant 
 account and must use the simple approach. One consequence of this is 
 that a seat reservation could expire while the customer is completing 
 the payment. If this happens, the system tries to re-acquire the 
 seats after the customer makes the payment. In the event that the seats 
-cannot be re-acquired, the system notifies the business customer of the 
-problem and the business customer must resolve the situation manually.
+cannot be re-acquired, the system notifies the Business Customer of the 
+problem and the Business Customer must resolve the situation manually.
 
 This specific scenario, where the system cannot make itself fully 
 consistent without a manual intervention by a user (in this case the 
@@ -1055,12 +1057,12 @@ two ways:
 * Keep the seats reserved (locked) until the payment is complete. This
   is difficult because you do not know how long the payment process will
   take: you must reserve (lock) the seats for an indeterminate period
-  while you wait for the registrant to complete the payment.
+  while you wait for the Registrant to complete the payment.
 
-The team chose to allow for the possibility that a registrant could pay 
+The team chose to allow for the possibility that a Registrant could pay 
 for seats only to find that they are no longer available; in addition to 
 being very unlikely to happen in practice (a timeout occurring while a 
-registrant is paying for the very last seats), this approach has the 
+Registrant is paying for the very last seats), this approach has the 
 least impact on the system because it doesn't require a long-term 
 reservation (lock) on any seats. 
 
@@ -1530,11 +1532,11 @@ data provided by the read-model. See the **MarkAsReserved** method in
 the **Order** aggregate and the **PricingService** class for details. 
 
 > **JanaPersona:** The UI also displays a dynamically calculated total
-> as the registrant adds seats to an order. The application calculates
-> this value using Javascript. When the registrant makes a payment, the
+> as the Registrant adds seats to an order. The application calculates
+> this value using Javascript. When the Registrant makes a payment, the
 > system uses the total that the **Order** aggregate calculates.
 
-# Testing
+# Impact on Testing
 
 > **MarkusPersona:** Don't let your passing unit tests lull you into a
 > false sense of security. There are lots of moving parts when you
@@ -1549,7 +1551,7 @@ the **Order** aggregate and the **PricingService** class for details.
 ## Timing Issues
 
 One of the acceptance tests verifies the behavior of the system when a 
-business customer creates new seat types. The key steps in the test 
+Business Customer creates new seat types. The key steps in the test 
 create a conference, create a new seat type for the conference, and then 
 publish the conference. This raises the corresponding sequence of 
 events: **ConferenceCreated**, **SeatCreated**, and 
@@ -1585,7 +1587,7 @@ meetings. The domain expert can help to clarify the expected behavior of
 the system, and during the discussion may uncover new user stories. For 
 example, during the triage of a bug related to un-publishing a 
 conferences in the Conference Management bounded context, the domain 
-expert identified a requirement for providing the business customer with 
+expert identified a requirement for providing the Business Customer with 
 the ability to add a redirect link for the un-published conference to a 
 new conference or alternate page. 
 
@@ -1606,3 +1608,5 @@ new conference or alternate page.
 [appfabsdk]:        http://www.microsoft.com/download/en/details.aspx?displaylang=en&id=27421
 [gregyoungqa]:      http://goodenoughsoftware.net/2012/05/08/qa/
 [repourl]:          https://github.com/mspnp/cqrs-journey-code
+[downloadc]:        http://NEEDFWLINK
+

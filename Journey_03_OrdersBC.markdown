@@ -6,21 +6,21 @@ _The first stopping point on our CQRS journey._
 # A Description of the Orders and Registrations Bounded Context
 
 The **Orders and Registrations** bounded context is partially 
-responsible for the booking process for attendees planning to attend a 
+responsible for the booking process for Attendees planning to come to a 
 conference. In the **Orders and Registrations** bounded context, a 
-person (the registrant) purchases seats at a particular conference. The 
-registrant also assigns names of attendees to the purchased seats (this 
+person (the Registrant) purchases seats at a particular conference. The 
+Registrant also assigns names of Attendees to the purchased seats (this 
 is described in the chapter [Preparing for the V1 Release][j_chapter5]). 
 
 This was the first stop on our CQRS journey, so the team decided to 
 implement a core, but self-contained part of the system. The 
-registrations process must be as painless as possible for attendees. The 
+registrations process must be as painless as possible for Attendees. The 
 process must enable the Business Customer to ensure that the maximum 
-possible number of seat can be booked, and give the Business Customer 
+possible number of seats can be booked, and give the Business Customer 
 the flexibility to define a set of custom prices for the different seat
 types at a conference. 
 
-Because this was the first bounded context addressed by the team, they 
+Because this was the first bounded context addressed by the team, we 
 also implemented some infrastructure elements of the system to support 
 the domain's functionality. These included command and event message 
 buses and a persistence mechanism for aggregates. 
@@ -31,11 +31,16 @@ buses and a persistence mechanism for aggregates.
 > implementation details change in later steps in the journey. These
 > changes are described in subsequent chapters.
 
-Plans for enhancements to this bounded context in a later stage of the 
+Plans for enhancements to this bounded context in some future 
 journey include support for wait listing, whereby requests for seats are 
 placed on a wait-list if there are not sufficient seats available and 
 enabling the Business Customer to set various types of discount for seat 
-types. 
+types.
+
+> **Note:** Wait listing is not implemented in this release, but members
+> of the community are working on this and other features. Any
+> out-of-band releases and updates will be announced on the [Project "a
+> CQRS Journey"][cqrsjourneysite] website.
 
 ## Working Definitions for this Chapter
 
@@ -62,8 +67,9 @@ Sending a command is an asynchronous operation with no return value.
 
 ### Event
 
-An event describes something that has happened in the system, typically 
-as a result of a command. Aggregates in the domain model raise events. 
+An event, such as **OrderConfirmed**, describes something that has 
+happened in the system, typically as a result of a command. Aggregates 
+in the domain model raise events. 
 
 Multiple subscribers can handle a specific event. Aggregates publish 
 events to an event bus; handlers register for specific types of event on 
@@ -91,7 +97,7 @@ The workflow in this bounded context can receive commands as well as
 subscribe to events.
 
 > **GaryPersona:** The team initially referred to the workflow class
-> in the **Orders** bounded context as a saga. To find out why they
+> in the **Orders** bounded context as a saga. To find out why we
 > decided to change the terminology, see the section [Patterns and
 > Concepts](#patternsandconcepts) later in this chapter.
 
@@ -105,12 +111,12 @@ user story.
 
 ### Creating Orders
 
-A registrant is the person who reserves and pays for seats at a 
-conference. Ordering is a two-stage process: first, the registrant 
-reserves a number of seats, and then the registrant pays for the seats 
-to confirm the reservation. If registrant does not complete the payment, 
+A Registrant is the person who reserves and pays for seats at a 
+conference. Ordering is a two-stage process: first, the Registrant 
+reserves a number of seats, and then the Registrant pays for the seats 
+to confirm the reservation. If Registrant does not complete the payment, 
 the seat reservations expire after a fixed period and the system 
-makes the seats available to other registrants to reserve. 
+makes the seats available to other Registrants to reserve. 
 
 Figure 1 shows some of the early UI mockups that the team used to 
 explore the seat-ordering story. 
@@ -153,7 +159,13 @@ bounded contexts.
   Record Locator code that the User can use to access User specific 
   information in the system. For example, a Registrant can use a Record 
   Locator code to access her Orders, an Attendee can use a Record 
-  Locator code to access his personalized conference agenda. 
+  Locator code to access his personalized conference agenda.
+  
+> **CarlosPersona:** We intentionally implemented a record locator
+> mechanism to return to a previously submitted order via the 
+> mechanism. This eliminates an often annoying requirement for users to
+> create an account in the system and to sign in order to evaluate its
+> usefulness. Our customers are adamant about this.
 
 - **Seat Assignment.** A Seat Assignment associates an Attendee with a
   Seat in a confirmed Order. An Order may have one or more Seat
@@ -161,17 +173,9 @@ bounded contexts.
 
 - **Order.** When a Registrant interacts with the system, the system
   creates an Order to manage the Reservations, payment, and 
-  Registrations. An Order typically exists in one of four states: 
-  **Created**, **ReservationsMade**, **Rejected**, and **Confirmed**. An Order is 
-  initially in the **Created** state. An Order is in the **ReservationsMade** 
-  state when the system has reserved some of the Seats requested by the 
-  Registrant (one or more Order Items are in the **Reserved** state). An 
-  Order is in the **Confirmed** state when the Registrant has successfully 
-  paid for the Order Items in the **Reserved** state. An Order is in the 
-  **Rejected** state if the system cannot reserve any of the Seats requested 
-  by the Registrant (all the Order Items are in the **Rejected** state) or 
-  if the payment process fails. An Order contains one of more Order 
-  Items.
+  Registrations. An Order is confirmed when the Registrant has
+  successfully paid for the Order Items. An Order contains one of more
+  Order Items.
 
 * **Order Item.** An Order Item represents a Seat Type and a Quantity
   and is associated with an Order. An Order Item exists in one of three 
@@ -182,18 +186,18 @@ bounded contexts.
   cannot reserve the quantity of seats of the seat type requested by the 
   Registrant. 
 
-- **Seat.** A Seat represents a space at a conference or access to a 
-  specific session at the conference such as a cocktail party, a 
-  tutorial, or a workshop. The Business Customer may change the quota of
-  Seats for each Conference. The Business Customer may also change the
-  quota of Seats for each Session.
+- **Seat.** A Seat represents the right to be admitted to a conference
+  or to access a specific session at the conference such as a cocktail
+  party, a tutorial, or a workshop. The Business Customer may change the
+  quota of Seats for each Conference. The Business Customer may also
+  change the quota of Seats for each Session.
 
 - **Reservation.** A Reservation is a temporary reservation of one or 
   more seats. The ordering process creates Reservations. When a 
   Registrant begins the ordering process, the system makes Reservations 
   for the number of Seats requested by the Registrant. These Seats are 
   then not available for other Registrants to reserve. The Reservations 
-  are held for 15 minutes during which the Registrant can 
+  are held for _n_ minutes during which the Registrant can 
   complete the ordering process by making a payment for those Seats. If 
   the Registrant does not pay for the seats within n minutes, the 
   system cancels the Reservation and the Seats become available to other 
@@ -212,25 +216,26 @@ bounded contexts.
   system by using a unique URL. Registrants can begin the ordering
   process from this site. 
 
-The following conversation between developers and domain experts 
-illustrates how the team arrived at a definition of the term 
-**Attendee**. 
+Each of these terms was formulated through active discussions between 
+the development team and the domain experts. The following is a sample 
+conversation between developers and domain experts that illustrates how 
+the team arrived at a definition of the term **Attendee**. 
 
 > *Developer #1:* Here's an initial stab at a definition for 
-> **Attendee**. "An attendee is someone who has paid to attend a 
-> conference. An attendee can interact with the system to perform tasks 
+> **Attendee**. "An Attendee is someone who has paid to attend a 
+> conference. An Attendee can interact with the system to perform tasks 
 > such as manage his agenda, print his badge, and provide feedback after 
 > the conference." 
 
-> *Domain Expert #1:* Not all attendees will pay to attend the 
+> *Domain Expert #1:* Not all Attendees will pay to attend the 
 > conference. For example, some conferences will have volunteer helpers, 
 > also speakers typically don't pay. Also, there may be some cases where 
-> an attendee gets a 100% discount. 
+> an Attendee gets a 100% discount. 
 
-> *Domain Expert #1:* Don't forget that it's not the attendee who 
-> pays; that's done by the registrant. 
+> *Domain Expert #1:* Don't forget that it's not the Attendee who 
+> pays; that's done by the Registrant. 
 
-> *Developer #1:* So we need to say that attendees are people who are 
+> *Developer #1:* So we need to say that Attendees are people who are 
 > authorized to attend a conference? 
 
 > *Developer #2:* We need to be careful about the choice of words 
@@ -240,8 +245,8 @@ illustrates how the team arrived at a definition of the term
 > *Developer #1:* How about *entitled*?
 
 > *Domain Expert #1:* When the system performs tasks such as printing 
-> badges, it will need to know what type of attendee the badge is for. 
-> For example, speaker, volunteer, paid attendee, and so on. 
+> badges, it will need to know what type of Attendee the badge is for. 
+> For example, speaker, volunteer, paid Attendee, and so on. 
 
 > *Developer #1:* Now we have this is a definition that captures 
 > everything we've discussed. An Attendee is someone who is entitled to 
@@ -256,10 +261,11 @@ illustrates how the team arrived at a definition of the term
 
 The application is designed to deploy to Windows Azure. At this stage in 
 the journey, the application consists of a web role that contains the 
-MVC web application and a worker role that contains the message handlers 
-and domain objects. The application uses SQL Azure databases for data 
-storage, both on the write-side and the read-side. The application uses 
-the Windows Azure Service Bus to provide its messaging infrastructure. 
+ASP.NET MVC web application and a worker role that contains the message 
+handlers and domain objects. The application uses SQL Azure databases 
+for data storage, both on the write-side and the read-side. The 
+application uses the Windows Azure Service Bus to provide its messaging 
+infrastructure. 
 
 While you are exploring and testing the solution, you can run it 
 locally, either using the Windows Azure compute emulator or by running 
@@ -277,17 +283,16 @@ For more information about the options for running the application, see
 > support the different usage patterns. In this bounded context, the
 > number of read operations from the UI is not likely to hugely
 > out-number the write-operations: the bounded context focuses on
-> registrants creating orders. Therefore, the read-side and the
+> Registrants creating orders. Therefore, the read-side and the
 > write-side are deployed to the same Windows Azure worker role rather
 > than to two separate worker roles that could be scaled independently.
 
 # Patterns and Concepts <a name="patternsandconcepts"/>
 
-The team decided that they would try to implement the first bounded 
-context without using event sourcing in order to keep things simple. 
-However, they did agree that if they later decided that event sourcing 
-would bring specific benefits to this bounded context, then they would 
-revisit this decision. 
+The team decided to implement the first bounded context without using 
+event sourcing in order to keep things simple. However, they did agree 
+that if they later decided that event sourcing would bring specific 
+benefits to this bounded context, then they would revisit this decision. 
 
 > **Note** For a description of how event sourcing relates to the CQRS
 > pattern, see [Introducing Event Sourcing][r_chapter3] in the Reference
@@ -312,7 +317,7 @@ pros and cons of alternative approaches.
 > handlers. The diagrams focus on the logical relationships between the
 > aggregates in the domain.
 
-This scenario considers what happens when a registrant tries to book
+This scenario considers what happens when a Registrant tries to book
 several seats at a conference. The system must:
 
 - Check that sufficient seats are available.
@@ -332,7 +337,7 @@ separate aggregates.
 
 The numbers in the diagram correspond to the following steps:
 
-1. The UI sends a command to register attendees X and Y onto
+1. The UI sends a command to register Attendees X and Y onto
    conference 157. The command is routed to a new **Order** aggregate.
 2. The **Order** aggregate raises an event that reports that an order
    has been created. The event is routed to the **Conference Seats
@@ -345,6 +350,12 @@ The numbers in the diagram correspond to the following steps:
    aggregate is persisted to the data store.
 6. The new **Order** aggregate, with an ID of 4239, is persisted to the
    data store.
+   
+> **MarkusPersona:** The term re-hydration refers to the process of
+> deserializing the aggregate instance from a datastore.
+
+> **JanaPersona:** You could consider using the [Memento
+> pattern][memento] to handle the persistence and re-hydration.
 
 The second approach considered by the team, shown in figure 3, uses a 
 single aggregate in place of two. 
@@ -355,7 +366,7 @@ single aggregate in place of two.
 
 The numbers in the diagram correspond to the following steps:
 
-1. The UI sends a command to register attendees X and Y onto
+1. The UI sends a command to register Attendees X and Y onto
    conference 157. The command is routed to the **Conference** aggregate
    with an ID of 157.
 2. The **Conference** aggregate with an ID of 157 is re-hydrated from
@@ -378,7 +389,7 @@ workflow to coordinate the interaction between two aggregates.
 
 The numbers in the diagram correspond to the following steps:
 
-1. The UI sends a command to register attendees X and Y onto
+1. The UI sends a command to register Attendees X and Y onto
    conference 157. The command is routed to a new **Order** aggregate.
 2. The new **Order** aggregate, with an ID of 4239,  is persisted to
    the data store.
@@ -411,7 +422,7 @@ The team identified these questions about these approaches:
   **SeatsAvailability** aggregate? 
 - Where are the transaction boundaries? 
 - How does this model deal with concurrency issues when multiple 
-  registrants try to place orders simultaneously? 
+  Registrants try to place orders simultaneously? 
 - What are the aggregate roots?
 
 The following sections discuss these questions in relation to the three
@@ -419,13 +430,16 @@ approaches considered by the team.
 
 ## Validation
 
-Before a registrant can reserve a seat, the system must check that there 
+Before a Registrant can reserve a seat, the system must check that there 
 are enough seats available. Although logic in the UI can attempt to 
 verify that there are sufficient seats available before it sends a 
 command, the business logic in the domain must also perform the check; 
 this is because the state may change between the time the UI performs
 the validation and the time that the system delivers the command to the
-aggregate in the domain. 
+aggregate in the domain.
+
+> **JanaPersona:** When we talk about UI validation here, we are talking
+> about validation that the MVC controller performs, not the browser.
 
 In the first model, the validation must take place in either the 
 **Order** or **SeatsAvailability** aggregate. If it is the 
@@ -437,12 +451,19 @@ later, the **SeatsAvailability** aggregate must somehow notify the
 **Order** aggregate must undo (or compensate for) any work that it has
 completed so far.
 
+> **BethPersona:** Undo is just one of many compensating actions that
+> occur in real life. The compensating actions could even be outside of
+> the system implementation and involve human actors: for example, a
+> Contoso clerk or the Business Customer calls the Registrant to tell
+> them that an error was made and that they should ignore the last
+> confirmation email they received from the Contoso System.
+
 The second model behaves similarly, except that it is **Order** and 
 **SeatsAvailability** entities cooperating within a 
 **Conference** aggregate. 
 
 In the third model, with the workflow, the aggregates exchange messages
-through the workflow about whether the registrant can make the reservation
+through the workflow about whether the Registrant can make the reservation
 at the current time. 
 
 All three models require entities to communicate about the validation 
@@ -455,30 +476,33 @@ An aggregate, in the DDD approach, represents a consistency boundary.
 Therefore, the first model with two aggregates, and the third model with 
 two aggregates and a workflow will involve two transactions: one when the 
 system persists the new **Order** aggregate and one when the system 
-persists the updated **SeatsAvailability** aggregate. 
+persists the updated **SeatsAvailability** aggregate.
 
-To ensure the consistency of the system when a registrant creates an 
+> **Note:** The term _consistency boundary_ refers to a boundary within
+> which you can assume that everything is fully consistent.
+
+To ensure the consistency of the system when a Registrant creates an 
 order, both transactions must succeed. To guarantee this, we must take 
 steps to ensure that the system is eventually consistent by ensuring 
 that infrastructure reliably delivers messages to aggregates. 
 
 The second approach that uses a single aggregate, we will only have a 
-single transaction when a registrant makes an order. This appears to be 
+single transaction when a Registrant makes an order. This appears to be 
 the simplest approach of the three. 
 
 ## Concurrency
 
 The registration process takes place in a multi-user environment where 
-many registrants could attempt to purchase seats simultaneously. The 
+many Registrants could attempt to purchase seats simultaneously. The 
 team decided to use the [reservation pattern][res-pat] to address the 
 concurrency issues in the registration process. In this scenario, this 
-means that a registrant initially reserves seats (which are then 
-unavailable) for other registrants; if the registrant completes the 
+means that a Registrant initially reserves seats (which are then 
+unavailable to other Registrants); if the Registrant completes the 
 payment within a timeout period, the system keeps the reservations; 
 otherwise the system cancels the reservation. 
 
 This reservation system introduces the need for additional message 
-types, for example an event to report that a registrant has made a 
+types, for example an event to report that a Registrant has made a 
 payment, or report that a timeout has occurred. 
 
 This timeout also requires the system to incorporate a timer somewhere 
@@ -506,7 +530,8 @@ bounded context.
 This section describes some of the significant features of the 
 implementation of the Orders and Registrations bounded context. You may 
 find it useful to have a copy of the code so you can follow along. You 
-can download a copy of the code from the repository on github: 
+can download a copy of the code from the [Download center][downloadc], 
+or check the evolution of the code in the repository on github: 
 [mspnp/cqrs-journey-code][repourl]. 
 
 > **Note:** Do not expect the code samples to match exactly the code in
@@ -689,7 +714,10 @@ public ActionResult StartRegistration(string conferenceCode, OrderViewModel cont
 The team later replaced this mechanism for checking whether the system 
 saves the order with an implementation of the Post-Redirect-Get pattern. 
 The following code sample shows the new version of the 
-**StartRegistration** action method. 
+**StartRegistration** action method.
+
+> **Note:** For more information about the Post-Redirect-Get pattern see
+> the article [Post/Redirect/Get][prg] on Wikipedia.
 
 ```Cs
 [HttpPost]
@@ -1055,10 +1083,10 @@ The only event subscriber in the reservations bounded context is the
 handle specific events as shown in the following code sample from the 
 **RegistrationProcess** class. 
 
-> **Note:* We use the term handler to refer to the classes that handle 
-> commands and forward them to aggregate instances, and the term router 
-> to refer to the classes that handle events and commands and forward 
-> them to workflow instances. 
+> **Note:** We use the term handler to refer to the classes that handle 
+> commands and events and forward them to aggregate instances, and the
+> term router to refer to the classes that handle events and commands 
+> and forward them to workflow instances. 
 
 ```Cs
 public void Handle(ReservationAccepted @event)
@@ -1086,7 +1114,7 @@ instance to the command bus.
 ## Using the Windows Azure Service Bus
 
 To transport Command and Event messages, the team decided to use the 
-Windows Azure Service Bus to provide the basic, low-level messaging 
+Windows Azure Service Bus to provide the low-level messaging 
 infrastructure. This section describes how the system uses the Windows 
 Azure Service Bus and some of the alternatives and trade-offs the team 
 considered during the design phase. 
@@ -1095,7 +1123,12 @@ considered during the design phase.
 > Service Bus because it offers out-of-the-box support for the messaging
 > scenarios in the Conference Management System. This minimizes the
 > amount of code that the team needs to write, and provides for a
-> robust, scalable messaging infrastructure.
+> robust, scalable messaging infrastructure. The team plans to use
+> features such as duplicate message detection and guaranteed message
+> ordering. For a summary of the differences between Windows Azure
+> Service Bus and Windows Azure Queues, see [Windows Azure Queues and 
+> Windows Azure Service Bus Queues - Compared and Contrasted][sbq] on
+> MSDN.
 
 Figure 8 shows how messages, both commands and events, flow through the 
 system. MVC controllers in the UI and domain objects use **CommandBus** 
@@ -1172,7 +1205,9 @@ topic that is delivering commands.
 > retrieves commands from the topic and processes them only once. You
 > must ensure either that the command is idempotent, or that the system
 > guarantees to process the command only once. The team will address
-> this issue in a later stage of the journey.
+> this issue in a later stage of the journey. See the chapter
+> [Adding Resilience and Optimizing Performance][j_chapter7] for more
+> information.
 
 > **Note:** It is possible to have multiple **SubscriptionReceiver** 
 > instances running, perhaps in multiple worker role instances. If 
@@ -1386,7 +1421,7 @@ the Reference Guide.
   
 > Greg Young - Conversation with the PnP team.
 
-# Testing
+# Impact on Testing
 Because this was the first bounded context the team tackled, one of the 
 key concerns was how to approach testing given that the team wanted to 
 adopt a Test-Driven Development approach. The following conversation 
@@ -1440,7 +1475,9 @@ are implementing the CQRS pattern without ES.**
 > the ORM handles specific data types. 
 
 For more information about the two approaches to testing discussed here, 
-see Martin Fowler's article [Mocks Aren't Stubs][tddstyle]. 
+see Martin Fowler's article [Mocks Aren't Stubs][tddstyle] and
+[Point/Counterpoint][point] by Steve Freeman, Nat Pryce, and Joshua
+Kerievsky.
 
 > **Note:** The tests included in the solution are written using
 > xUnit.net.
@@ -1486,8 +1523,9 @@ It is difficult to test the behavior in any other way without the
 aggregate raising events. For example, if you tried to test the behavior 
 by checking that the correct call is made to persist the aggregate to 
 the data store, the test becomes coupled to the data store 
-implementation: if you want to change the data store implementation, you 
-will need to change the tests on the aggregates in the domain model. 
+implementation (which is a smell): if you want to change the data store
+implementation, you will need to change the tests on the aggregates in
+the domain model. 
 
 The following code sample shows an example of a test written using the 
 state of the objects under test. This style of test is the one used
@@ -1547,6 +1585,7 @@ reservation.
 [j_chapter4]:     Journey_04_ExtendingEnhancing.markdown
 [j_chapter5]:     Journey_05_PaymentsBC.markdown
 [j_chapter6]:     Journey_06_V2Release.markdown
+[j_chapter7]:     Journey_07_V3Release.markdown
 [r_chapter3]:     Reference_03_ESIntroduction.markdown
 [r_chapter4]:     Reference_04_DeepDive.markdown
 [r_chapter6]:     Reference_06_Sagas.markdown
@@ -1560,6 +1599,12 @@ reservation.
 [jsonnet]:        http://james.newtonking.com/pages/json-net.aspx
 [sagapaper]:      http://www.amundsen.com/downloads/sagas.pdf
 [tfab]:           http://msdn.microsoft.com/en-us/library/hh680934(PandP.50).aspx
+[cqrsjourneysite]: http://cqrsjourney.github.com/
+[memento]:        http://www.oodesign.com/memento-pattern.html
+[downloadc]:      http://NEEDFWLINK
+[prg]:            http://en.wikipedia.org/wiki/Post/Redirect/Get
+[sbq]:            http://msdn.microsoft.com/en-us/library/windowsazure/hh767287.aspx
+[point]:          http://doi.ieeecomputersociety.org/10.1109/MS.2007.84
 
 [fig1]:           images/OrderMockup.png?raw=true
 [fig2]:           images/Journey_03_Aggregates_01.png?raw=true

@@ -122,12 +122,12 @@ the domain model. One of the functions of the domain model is to foster
 a common understanding of the domain between the domain experts and the 
 developers. If both the domain experts and the developers use the same 
 terms for things and actions within the domain (for example, conference, 
-chair, attendee, reserve, waitlist), there is less possibility for 
+chair, Attendee, reserve, waitlist), there is less possibility for 
 confusion or misunderstanding. More specifically, if everyone uses the 
 same language there are less likely to be misunderstandings that result 
 from translations between languages. For example, if a developer has to 
 think, "if the domain expert talks about a delegate, he is really 
-talking about an attendee in the software," then eventually something 
+talking about an Attendee in the software," then eventually something 
 will go wrong as a result of a misunderstanding or mistranslation. 
 
 ## Entities, Value Objects, and Services 
@@ -148,7 +148,7 @@ only to be re-instantiated at some point in the future.
 Not all objects are defined by their identity: for some objects what is 
 important are the values of their attributes. For example, within our 
 conference management system we do not need to assign an identity to 
-every attendee's address (for a start all of the attendee's from a 
+every Attendee's address (for a start all of the Attendee's from a 
 particular organization may share the same address). All we are 
 concerned with are the values of the attributes of an address: street, 
 city, state, etc. Value objects are usually immutable. 
@@ -185,13 +185,13 @@ knowledge of the domain:
 
 - You need to know which set of entities and value objects each
   transaction can potentially affect. For example, are there
-  transactions in the system that can update attendee, conference, and
+  transactions in the system that can update Attendee, conference, and
   room objects? 
 - You need to know how far the relationships from one object extend
   through other entities and value objects within the domain, and where
   you must define the consistency boundaries. For example, if you delete
   a room object, should you also delete a projector object, or a set of
-  attendee objects? 
+  Attendee objects? 
 
 DDD uses the term aggregate to define a cluster of related entities and 
 value objects that form a consistency boundary within the system. That 
@@ -287,14 +287,14 @@ bounded context will include everything from the data store, right up to
 the UI. 
 
 The same domain concept can exist in multiple bounded contexts: for 
-example, the concept of an attendee in a conference management system 
+example, the concept of an Attendee in a conference management system 
 might exist in the bounded context that deals with bookings, in the 
 bounded context that deals with badge printing, and in the bounded 
 context that deals with hotel reservations. From the perspective of the 
-domain expert, these different versions of the attendee may require 
+domain expert, these different versions of the Attendee may require 
 different behaviors and attributes. For example, in the bookings bounded 
-context the attendee is associated with a registrant who makes the 
-bookings and payments. Information about the registrant is not relevant 
+context the Attendee is associated with a Registrant who makes the 
+bookings and payments. Information about the Registrant is not relevant 
 in the hotel reservations bounded context where information such as 
 dietary requirements or smoking preferences is important. 
 
@@ -335,7 +335,7 @@ to exchange data with each other, and this exchange of data will be
 complicated if you need to translate between the different definitions 
 of the same thing that exist in the different domain models. In our 
 conference management system, we may need to move information about 
-attendees between the bounded contexts that deal with conference 
+Attendees between the bounded contexts that deal with conference 
 bookings, badge printing, and hotel reservations. The DDD approach 
 offers a number of approaches for handling the interactions between 
 multiple models in multiple bounded contexts such as using 

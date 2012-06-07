@@ -37,8 +37,9 @@ Sending a command is an asynchronous operation with no return value.
 
 ### Event
 
-An event describes something that has happened in the system, typically 
-as a result of a command. Aggregates in the domain model raise events. 
+An event, such as **OrderConfirmed**, describes something that has 
+happened in the system, typically as a result of a command. Aggregates 
+in the domain model raise events. 
 
 Multiple subscribers can handle a specific event. Aggregates publish 
 events to an event bus; handlers register for specific types of event on 
@@ -53,7 +54,7 @@ project.
 ### Support for Discounts to Seat Prices
 
 Registrants should be able to obtain discounts through the use of 
-**Promotional Codes**. A registrant can enter a **Promotional Code** 
+**Promotional Codes**. A Registrant can enter a **Promotional Code** 
 during the ordering process and the system will adjust the total cost of 
 the order appropriately. 
 
@@ -204,21 +205,21 @@ process any further messages until the cause of the failure is resolved.
 
 ## Optimizing the Interactions Between the UI and the Domain
 
-When a registrant creates an order, she visits the following sequence of 
+When a Registrant creates an order, she visits the following sequence of 
 screens in the UI. 
 
 1. The Register screen. This screen displays the ticket types for the
-   conference, the number of seats currently available. The registrant
+   conference, the number of seats currently available. The Registrant
    selects the quantities of each seat type that she would like to
    purchase.
 2. The Registrant screen. This screen displays a summary of the order
    that includes a total price and a countdown timer that tells the
-   registrant how long the seats will remain reserved. The registrant
+   Registrant how long the seats will remain reserved. The Registrant
    enters her details and preferred payment method.
 3. The Payment screen. This simulates a third-party payment processor.
 4. The Registration success screen. This displays if the payment
-   succeeded. It displays to the registrant an order locator code and
-   link to a screen that enables the registrant to assign attendees to
+   succeeded. It displays to the Registrant an order locator code and
+   link to a screen that enables the Registrant to assign Attendees to
    seats.
    
 In the V2 release, the system must process the following commands and 
@@ -278,7 +279,7 @@ as far as the Payment screen in the UI.
 #### Optimization #1
 
 Most of the time, there are plenty of seats available for a conference 
-and registrants are not competing for the last few that are available. 
+and Registrants are not competing for the last few that are available. 
 It is only for a brief time that Registrants are competing for the last 
 few seats. 
 
@@ -317,28 +318,6 @@ The team determined that the **Order** aggregate could calculate the
 total when the order is placed instead of when the reservation is 
 complete. This will enable the UI flow to move more quickly to the 
 Registrant screen than in the V2 release.
-
-#### Optimization #3
-
-As part of the V3 release the team upgraded the Conference.Web.Public 
-site to MVC 4. This enabled them to update the 
-**RegistrationController** MVC controller to use the new task support 
-for asynchronous controllers. The following code sample shows an example 
-of this: 
-
-```Cs
-[HttpGet]
-[OutputCache(Duration = 0, NoStore = true)]
-public Task<ActionResult> SpecifyRegistrantAndPaymentDetails(Guid orderId, int orderVersion)
-{
-    return this.WaitUntilOrderIsPriced(orderId, orderVersion)
-    .ContinueWith<ActionResult>(
-
-    ...
-
-    );
-}
-```
 
 ## Optimizing Command Processing 
 
@@ -402,18 +381,14 @@ system. Every web-role that hosts a view model generator instance must
 handle the events published by the write-side by creating a subscription 
 the the Windows Azure Service Bus topics. 
 
-## Other Optimizations
-
-This section describes some of the other optimizations that the team included in the V3 release.
-
-
-
 # Implementation Details 
 
-This section describes some of the significant implementation details in 
-this stage of the journey. You may find it useful to have a copy of the 
-code so you can follow along. You can download a copy of the code from 
-the repository on github: [mspnp/cqrs-journey-code][repourl]. 
+This section describes some of the significant features of the 
+implementation of the Orders and Registrations bounded context. You may 
+find it useful to have a copy of the code so you can follow along. You 
+can download a copy of the code from the [Download center][downloadc], 
+or check the evolution of the code in the repository on github: 
+[mspnp/cqrs-journey-code][repourl]. 
 
 > **Note:** Do not expect the code samples to exactly match the code in
 > the reference implementation. This chapter describes a step in the
@@ -707,7 +682,7 @@ public ActionResult StartRegistration(RegisterToConference command, int orderVer
 }
 ```
 
-If there are not enough available seats, the controller redisplays the current screen, displaying the currently available seat quantities to enable the registrant to revise her order.
+If there are not enough available seats, the controller redisplays the current screen, displaying the currently available seat quantities to enable the Registrant to revise her order.
 
 This remaining part of the change is in the **SpecifyRegistrantAndPaymentDetails** method in the **RegistrationController** class. The following code sample from the V2 release shows how before the optimization the controller calls the **WaitUntilSeatsAreConfirmed** method before continuing to the Registrant screen:
 
@@ -809,7 +784,107 @@ public Order(Guid id, Guid conferenceId, IEnumerable<OrderItem> items, IPricingS
 
 Previously, in the V2 release the **Order** aggregate waited until it received a **MarkAsReserved** command before it called the **CalculateTotal** method.
 
-# Testing 
+## Other Optimizations
+
+This section describes some of the other optimizations that the team included in the V3 release.
+
+### Using Prefetch with Windows Azure Service Bus
+
+The team enabled the prefetch option whem the system retrieves messages from the Windows Azure Service Bus. This option enables the system to retrieve multiple messages in a single round-trip to the server and helpes to reduce the latency in retrieving existing messages from the Service Bus topics.
+
+The following code sample from the **SubscriptionReceiver** class ahows how to enable this option.
+
+```Cs
+protected SubscriptionReceiver(ServiceBusSettings settings, string topic, string subscription, RetryStrategy backgroundRetryStrategy)
+{
+    this.settings = settings;
+    this.topic = topic;
+    this.subscription = subscription;
+
+    this.tokenProvider = TokenProvider.CreateSharedSecretTokenProvider(settings.TokenIssuer, settings.TokenAccessKey);
+    this.serviceUri = ServiceBusEnvironment.CreateServiceUri(settings.ServiceUriScheme, settings.ServiceNamespace, settings.ServicePath);
+
+    var messagingFactory = MessagingFactory.Create(this.serviceUri, tokenProvider);
+    this.client = messagingFactory.CreateSubscriptionClient(topic, subscription);
+    this.client.PrefetchCount = 40;
+
+    ...
+}
+```
+
+### Accepting Multiple Sessions in Parallel
+
+In the V2 release, the **SessionSubscriptionReceiver** creates sessions to receive messages from the Windows Azure Service Bus in sequence. In the V3 release, the **SessionSubscriptionReceiver** creates multiple sessions in parallel. This helps to improve the throughput and reduce the latency when the system retrieves messages from the Service Bus. The follwing code sample shows the new version of the **ReceiveMessages** method in the **SessionSubscriptionReceiver** class.
+
+```Cs
+private void ReceiveMessages(CancellationToken cancellationToken)
+{
+    while (!cancellationToken.IsCancellationRequested)
+    {
+        ...
+
+        // starts a new task to process new sessions in parallel if enough threads are available
+        Task.Factory.StartNew(() => this.ReceiveMessages(this.cancellationSource.Token), this.cancellationSource.Token);
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            BrokeredMessage message = null;
+            try
+            {
+                try
+                {
+                    // Long polling is used when accepting session and not here. If there are no messages left in session we continue.
+                    message = this.receiveRetryPolicy.ExecuteAction(() => session.Receive(TimeSpan.Zero));
+                }
+                catch (Exception e)
+
+                ...
+
+                if (message == null)
+                {
+                    // If we have no more messages for this session, exit to close the session
+                    break;
+                }
+
+                this.MessageReceived(this, new BrokeredMessageEventArgs(message));
+            }
+            finally
+            {
+                ...
+            }
+        }
+
+        this.receiveRetryPolicy.ExecuteAction(() => session.Close());
+        // As we have no more messages for this session, end this task, as there will already at least
+        // 1 other tasks polling for new sessions to accept.
+        return;
+    }
+}
+```
+
+### Task Support in MVC 4
+
+As part of the V3 release the team upgraded the Conference.Web.Public 
+site to MVC 4. This enabled them to update the 
+**RegistrationController** MVC controller to use the new task support 
+for asynchronous controllers. The following code sample shows an example 
+of this: 
+
+```Cs
+[HttpGet]
+[OutputCache(Duration = 0, NoStore = true)]
+public Task<ActionResult> SpecifyRegistrantAndPaymentDetails(Guid orderId, int orderVersion)
+{
+    return this.WaitUntilOrderIsPriced(orderId, orderVersion)
+    .ContinueWith<ActionResult>(
+
+    ...
+
+    );
+}
+```
+
+# Impact on Testing 
 
 During this stage of the journey the team re-organized the 
 **Conference.Specflow** project in the **Conference.AcceptanceTests** 
@@ -851,3 +926,5 @@ use [WatiN][watin] to drive the system through its UI.
 [repourl]:           https://github.com/mspnp/cqrs-journey-code
 [watin]:             http://watin.org
 [codefirst]:         http://msdn.microsoft.com/en-us/library/gg197525(VS.103).aspx
+[downloadc]:         http://NEEDFWLINK
+

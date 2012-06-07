@@ -35,8 +35,9 @@ Sending a command is an asynchronous operation with no return value.
 
 ### Event
 
-An event describes something that has happened in the system, typically 
-as a result of a command. Aggregates in the domain model raise events. 
+An event, such as **OrderConfirmed**, describes something that has 
+happened in the system, typically as a result of a command. Aggregates 
+in the domain model raise events. 
 
 Multiple subscribers can handle a specific event. Aggregates publish 
 events to an event bus; handlers register for specific types of event on 
@@ -61,26 +62,27 @@ downtime upgrades in the future (starting with the V3 release).
 
 ### Display Remaining Seat Quantities
 
-Currently, when a registrant creates an order, there is no indication of 
+Currently, when a Registrant creates an order, there is no indication of 
 the number of seats remaining for each seat type. The UI should display 
-this information when the registrant is selecting seats for purchase. 
+this information when the Registrant is selecting seats for purchase. 
 
 ### Handle Zero-cost Seats
 
-Currently, when a registrant selects seats that have a zero-cost, the UI 
-flow still takes the registrant to the payments page even though there 
+Currently, when a Registrant selects seats that have a zero-cost, the UI 
+flow still takes the Registrant to the payments page even though there 
 is nothing to pay. The system should detect when there is nothing to pay 
-and adjust the flow to take the registrant directly to the conformation 
+and adjust the flow to take the Registrant directly to the conformation 
 page for the order. 
 
 ## Architecture 
 
 The application is designed to deploy to Windows Azure. At this stage in 
 the journey, the application consists of a web role that contains the 
-MVC web application and a worker role that contains the message handlers 
-and domain objects. The application uses SQL Azure databases for data 
-storage, both on the write-side and the read-side. The application uses 
-the Windows Azure Service Bus to provide its messaging infrastructure. 
+ASP.NET MVC web application and a worker role that contains the message 
+handlers and domain objects. The application uses SQL Azure databases 
+for data storage, both on the write-side and the read-side. The 
+application uses the Windows Azure Service Bus to provide its messaging 
+infrastructure. 
 
 While you are exploring and testing the solution, you can run it 
 locally, either using the Windows Azure compute emulator or by running 
@@ -356,10 +358,12 @@ significant effect on the performance of the system.
 
 # Implementation Details 
 
-This section describes some of the significant implementation details in 
-this stage of the journey. You may find it useful to have a copy of the 
-code so you can follow along. You can download a copy of the code from 
-the repository on github: [mspnp/cqrs-journey-code][repourl]. 
+This section describes some of the significant features of the 
+implementation of the Orders and Registrations bounded context. You may 
+find it useful to have a copy of the code so you can follow along. You 
+can download a copy of the code from the [Download center][downloadc], 
+or check the evolution of the code in the repository on github: 
+[mspnp/cqrs-journey-code][repourl]. 
 
 > **Note:** Do not expect the code samples to exactly match the code in
 > the reference implementation. This chapter describes a step in the
@@ -382,7 +386,7 @@ related:
 
 Previously, the **RegistrationProcess** workflow sent a 
 **ConfirmOrderPayment** command after it received notification from the 
-UI that the registrant had completed the payment. Now, if there is a 
+UI that the Registrant had completed the payment. Now, if there is a 
 zero-cost order, the UI sends a **ConfirmOrder** command directly to the 
 **Order** aggregate. If the order requires a payment, the 
 **RegistrationProcess** workflow sends a **ConfirmOrder** command to the 
@@ -582,7 +586,7 @@ of remaining seats comes from two places.
 * The **SeatsAvailability** aggregate in the Orders and Registrations
   bounded context raises the **SeatsReserved**,
   **SeatsReservationCancelled**, and **AvailableSeatsChanged** while a
-  registrant is creating an order.
+  Registrant is creating an order.
   
 > **Note:** The **ConferenceViewModelGenerator** class does not use the
 > **SeatCreated** and **SeatUpdated**
@@ -1158,7 +1162,7 @@ Priced-order read-model in the Orders and Registrations bounded context.
 For more information, see the section "Persisting Events from the 
 Conference Management Bounded Context" earlier in this chapter. 
 
-# Testing 
+# Impact on Testing 
 
 During this stage of the journey, the test team continuesd to expand the 
 set of acceptance tests. They also created a set of tests to verify the 
@@ -1309,3 +1313,5 @@ in the read-models in the Orders and Registrations bounded context.
 [repourl]:           https://github.com/mspnp/cqrs-journey-code
 [queues]:            http://msdn.microsoft.com/en-us/library/windowsazure/hh767287(v=vs.103).aspx
 [azurerdp]:          http://msdn.microsoft.com/en-us/library/windowsazure/gg443832.aspx
+[downloadc]:         http://NEEDFWLINK
+

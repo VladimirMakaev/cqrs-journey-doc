@@ -85,7 +85,7 @@ reservations. The following list of steps corresponds to the numbers in
 the diagram: 
 
 1. A command is issued, from the UI or from a saga, to reserve seats 
-   for two attendees on a conference with an ID of 157. The command is 
+   for two Attendees on a conference with an ID of 157. The command is 
    handled by the command handler for the **SeatsAvailability** 
    aggregate type. 
 2. If necessary, the ORM layer populates an aggregate instance with 
@@ -125,7 +125,7 @@ Note that steps one, two, and four are the same.
 
 
 1. A command is issued, from the UI or from a saga, to reserve seats 
-   for two attendees on a conference with an ID of 157. The command is 
+   for two Attendees on a conference with an ID of 157. The command is 
    handled by the command handler for the **SeatsAvailability** 
    aggregate type. 
 2. An aggregate instance is populated by querying for all of the
