@@ -123,8 +123,6 @@ Customer has an account with the third-party payment system (although
 not necessarily a merchant account), or that the Business Customer will 
 accept payment by invoice. 
 
-## The Conference Feedback Bounded Context
-
 ## The Context Map for the Contoso Conference Management System
 
 Figure 1 and the table that follows it provides a **Context Map** that 
@@ -148,7 +146,7 @@ the system is put together.
 > Registrations Bounded Contexts][j_chapter4] for an example of this
 > style of test.
 
-Figure 1 shows the six bounded contexts that make up the Contoso 
+Figure 1 shows the three bounded contexts that make up the Contoso 
 Conference Management System. The arrows on the diagram indicate the 
 flow of data as events between them. 
 
@@ -167,10 +165,6 @@ individual bounded contexts.
    that report when attendees have been assigned to seats.
 3. Requests for a payment to be made.
 4. Acknowledgement of the success or failure of the payment.
-5. Events that report when discounts have been created or modified.
-6. Events that report the calculation of totals based on discounts.
-7. Events that report when conferences have been created, updated, and
-   published.
 
 > **VikramPersona:** Some of the events that the Conference Management
 > bounded context raises are coarse-grained and contain multiple
