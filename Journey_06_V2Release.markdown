@@ -1114,7 +1114,9 @@ see [Using Remote Desktop with Windows Azure Roles][azurerdp].
 > allow you to use Windows Azure remote desktop in a production
 > evironment. However, you only need the worker role that hosts the
 > remote desktop session for the duration of the migration, you can
-> delete it after the migration is complete.
+> delete it after the migration is complete. You could also run your
+> migration code as a worker role instead of as a console application
+> and ensure that it logs the status of the migration for you to verify.
 
 ### Generating Past Log Messages for the Conference Management Bounded Context
 
