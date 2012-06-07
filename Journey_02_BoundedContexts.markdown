@@ -121,14 +121,40 @@ payment back to the Conference Management System.
 Initially, the Payments bounded context will assume that the Business 
 Customer has an account with the third-party payment system (although 
 not necessarily a merchant account), or that the Business Customer will 
-accept payment by invoice. 
+accept payment by invoice.
+
+## Additional Bounded Contexts
+
+Although they didn't make it into the final release of the Contoso 
+Conference Management System, some work was done on three additional 
+bounded contexts. Members of the community are working on these and 
+other features and any out-of-band releases and updates will be 
+announced on the [Project "a CQRS Journey"][cqrsjourneysite] website. If 
+you would like to contribute to these bounded contexts or any other 
+aspect of the system, visit the [Project "a CQRS 
+Journey"][cqrsjourneysite] website or let us know about it at 
+[cqrsjourney@microsoft.com][cqrsemail]. 
+
+The Discounts Bounded Context: This is a bounded context to handle the process of managing and applying discounts to the purchase of conference seats that woould integrate with all three existing bounded contexts.
+The Occasionally Disconnected Conference Management Client: This is a bounded context to handle management of conferences on-site with functionality to handle label printing, recording Attendee arrivals, and additional seat sales.
+The Submissions and Schedule Management Bounded Context: This is bounded context to handle paper submissions and conference event scheduling written using Node.js.
+
+> **Note:** Wait listing is not implemented in this release, but members
+> of the community are working on this and other features. Any
+> out-of-band releases and updates will be announced on the [Project "a
+> CQRS Journey"][cqrsjourneysite] website.
+
 
 ## The Context Map for the Contoso Conference Management System
 
 Figure 1 and the table that follows it provides a **Context Map** that 
 shows the relationships between the different bounded contexts that make 
 the complete system and as such it provides a high-level overview of how 
-the system is put together. 
+the system is put together. Even though this context map appears to be 
+quite simple, the implementation of these bounded contexts, and more 
+importantly the interactions between them is relatively sophisticated: 
+it enabled us to address a wide range of issues relating to the CQRS 
+pattern and Event Sourcing, and to capture many valuable lessons learnt. 
 
 > **GaryPersona:** A frequent comment about CQRS projects is the
 > difficulty in understanding how all of the pieces fit together,
@@ -209,5 +235,6 @@ well as integration with a legacy, CRUD-style bounded context.
 [j_chapter4]:     Journey_04_ExtendingEnhancing.markdown
 [j_chapter5]:     Journey_05_PaymentsBC.markdown
 [r_chapter1]:     Reference_01_CQRSInContext.markdown
+[cqrsemail]:      mailto:cqrsjourney@microsoft.com
 
 [fig1]:           images/Journey_02_BCs.png?raw=true
