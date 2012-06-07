@@ -70,7 +70,7 @@ why particular CQRS patterns and concepts apply to the design and
 development of particular bounded contexts, will describe the 
 implementation, and will highlight any implications for testing. 
 
-There are also chapters that look at the big picture. For example, there 
+Other chapters look at the big picture. For example, there 
 is a chapter that explains the rationale for splitting the RI into the 
 bounded contexts we chose, another chapter analyzes the implications of 
 our approach for versioning the system, and other chapters looks at how 
@@ -82,7 +82,8 @@ not prescriptive guidance and is not intended to illustrate the only way
 to apply the CQRS approach to our RI. We have tried wherever possible to 
 capture alternative viewpoints through consultation with our advisors 
 and to explain why we took particular decisions. You may disagree with 
-some of those decisions; please let us know. 
+some of those decisions; please let us know at 
+[cqrsjourney@microsoft.com][cqrsemail]. 
 
 This section of the written guidance makes frequent cross-references to 
 the material in the second section for readers who wish to explore any 
@@ -151,3 +152,4 @@ As a result, we chose to implement the conference management system that
 Chapter 1, The Contoso Conference Management System introduces. 
 
 [fig1]:           images/Map.png?raw=true
+[cqrsemail]:      mailto:cqrsjourney@microsoft.com
