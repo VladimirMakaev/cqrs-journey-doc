@@ -751,7 +751,8 @@ three guarantees simultaneously:
 
 For more information about the CAP theorem, see [CAP 
 theorem][captheorem] on Wikipedia and the article [CAP Twelve Years
-Later: How the "Rules" Have Changed][capinfoq] on the InfoQ website.
+Later: How the "Rules" Have Changed][capinfoq] by Eric Brewer on the
+InfoQ website.
 
 The concept of *eventual consistency* offers to way to make these three 
 guarantees simultaneously by relaxing the guarantee of consistency. In 

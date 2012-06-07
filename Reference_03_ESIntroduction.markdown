@@ -422,7 +422,11 @@ operation to the data-store and the publish operation to the messaging
 infrastructure together. In practice, you may find that support for 
 two-phase commit transactions is limited in many data stores and 
 messaging platforms. Using two-phase commit transactions may also limit 
-the performance and scalability of the system. 
+the performance and scalability of the system.
+
+> **Note:** For a discussion of two-phase commit transactions and the
+> impact on scalability, see the article [Your Coffee Shop Doesn’t Use
+> Two-Phase Commit][coffee] by Gregor Hohpe.
 
 One of the key problems you must solve if you choose to implement your 
 own event store is how to achieve this consistency. For example, an 
@@ -446,6 +450,7 @@ distributed systems, see the next chapter "[A CQRS/ES Deep
 Dive][r_chapter4]". 
 
 [jolivereventstore]: https://github.com/joliver/EventStore
+[coffee]:            http://eaipatterns.com/docs/IEEE_Software_Design_2PC.pdf
 
 [r_chapter1]:     Reference_01_CQRSContext.markdown
 [r_chapter4]:     Reference_04_DeepDive.markdown
