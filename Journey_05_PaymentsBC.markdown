@@ -247,8 +247,8 @@ access objects) shown on the diagram exchange with each other.
                        UnassignSeat</td>
     </tr>
     <tr>
-      <td align="left">RegistrationProcess</td>
-      <td align="left">Workflow</td>
+      <td align="left">RegistrationProcessManager</td>
+      <td align="left">Process manager</td>
       <td align="left">MakeSeatReservation<br/>
                        ExpireRegistrationProcess<br/>
                        MarkSeatsAsReserved<br/>
@@ -984,7 +984,7 @@ mechanism for communicating between bounded contexts. However in this
 case, the **RegistrationController** and **PaymentController** 
 controller classes send commands to the Payments bounded context. The 
 Payments bounded context does use events to communicate back with the 
-**RegistrationProcess** coordinating workflow in the Orders and 
+**RegistrationProcessManager** instance in the Orders and 
 Registrations bounded context. 
 
 The implementation of the Payments bounded context uses the CQRS pattern 
@@ -1119,7 +1119,7 @@ The core elements of this basic event sourcing solution are:
 * The system persists these events in an event store.
 * An aggregate can rebuild its state by replaying its past stream of
   events.
-* Other aggregates and workflows (possibly in different bounded
+* Other aggregates and process managers (possibly in different bounded
   contexts) can subscribe to these events.
   
 ### Raising Events when the State of an Aggregate Changes

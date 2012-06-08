@@ -358,7 +358,7 @@ a production quality, scalable event store is more of a challenge.
 
 Typically, when you implement the CQRS pattern, aggregates raise events 
 to publish information to other interested parties, such as other 
-aggregates, coordinating workflows, read-models, or other bounded 
+aggregates, process managers, read-models, or other bounded 
 contexts. When you use event sourcing, you persist these same events to 
 an event store. This enables you to use those events to load the state 
 of an aggregate by replaying the sequence of events associated with that 

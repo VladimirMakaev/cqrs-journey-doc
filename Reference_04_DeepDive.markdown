@@ -502,7 +502,7 @@ Events can play two different roles in a CQRS implementation.
   stream of events in order to record changes in the state of the
   aggregate.
 * **Communication and Integration.** You can also use events to
-  communicate between aggregates or workflows in the same or in
+  communicate between aggregates or process managers in the same or in
   different bounded contexts. Events publish to subscribers information
   about something that has happened.
 
@@ -642,11 +642,11 @@ was executed, which means that we need to save everything!
 
 ## Events
 
-Events report that something has happened. An aggregate or workflow publishes one-way, asynchronous messages that are published to multiple recipients. For example: **SeatsUpdated**, **PaymentCompleted**, and **EmailSent**.
+Events report that something has happened. An aggregate or process manager publishes one-way, asynchronous messages that are published to multiple recipients. For example: **SeatsUpdated**, **PaymentCompleted**, and **EmailSent**.
 
 ### Sample Code
 
-The following code sample shows a possible implementation of an event that is used to communicate between aggregates or workflows. It implements the **IEvent** interface.
+The following code sample shows a possible implementation of an event that is used to communicate between aggregates or process managers. It implements the **IEvent** interface.
 
 ```Cs
 public interface IEvent
@@ -689,17 +689,17 @@ public class AvailableSeatsChanged : VersionedEvent
 ## EventHandlers
 
 Events are published to multiple recipients, typically an aggregate 
-instances or workflows. The Event Handler performs the following
+instances or process managers. The Event Handler performs the following
 tasks: 
 
 1. It receives a Event instance from the messaging infrastructure.
 2. It validates that the Event is a valid Event.
-3. It locates the aggregate or workflow instance that is the
+3. It locates the aggregate or process manager instance that is the
    target of the Event. This may involve creating a new aggregate
    instance or locating an existing instance.
-4. It invokes the appropriate method on the aggregate or workflow
+4. It invokes the appropriate method on the aggregate or process manager
    instance passing in any parameters from the event.
-5. It persists the new state of the aggregate or workflow to storage.
+5. It persists the new state of the aggregate or process manager to storage.
 
 ### Sample Code
 
@@ -1041,7 +1041,7 @@ In some scenarios, the order that messages are recieved is not
 significant. If message ordering is important, some messaging 
 infrastructures can guarantee ordering. Otherwise, you can detect out of 
 order messages by assigning sequence numbers to messages as they are 
-sent. You could also implement a workflow process in the reciever that 
+sent. You could also implement a process manager process in the reciever that 
 can hold out of order messages until it can re-assemble messages into 
 the correct order. 
 

@@ -8,7 +8,7 @@
 The two primary goals for this last stage in our journey are to make the 
 system more resilient to failures and to improve the responsiveness of 
 the UI. The focus of the effort to harden the system is on the 
-**RegistrationProcess** workflow in the Orders and Registrations bounded 
+**RegistrationProcessManager** class in the Orders and Registrations bounded 
 context. The focus on performance is on the way the UI interacts with 
 the domain-model during the order creation process. 
 
@@ -26,7 +26,7 @@ A command is a request for the system to perform an action that changes
 the state of the system. Commands are imperatives, for example 
 **MakeSeatReservation**. In this bounded context, commands originate 
 either from the UI as a result of a user initiating a request, or from 
-a workflow when the workflow is directing an aggregate to perform an 
+a process manager when the process manager is directing an aggregate to perform an 
 action. 
 
 Commands are processed once by a single recipient. A command bus 
@@ -44,7 +44,7 @@ in the domain model raise events.
 Multiple subscribers can handle a specific event. Aggregates publish 
 events to an event bus; handlers register for specific types of event on 
 the event bus and then deliver the events to the subscriber. In this 
-bounded context, the only subscriber is a workflow. 
+bounded context, the only subscriber is a process manager. 
 
 ## User Stories 
 
@@ -88,11 +88,11 @@ What are the key architectural features? Server-side, UI, multi-tier, cloud, etc
 # Patterns and Concepts 
 
 During this stage of the journey the team looked at options for 
-hardening the **RegistrationProcess** workflow. This part of the Orders 
+hardening the **RegistrationProcessManager** class. This part of the Orders 
 and Registrations bounded context is responsible for managing the 
 interactions between the aggregates in the Orders and Registrations 
 bounded context and for ensuring that they are all consistent with each 
-other. It is important that this workflow is resilient to a wide range 
+other. It is important that this process manager is resilient to a wide range 
 of failure conditions if the bounded context as a whole is to maintain 
 its consistent state. 
 
@@ -109,24 +109,24 @@ the command handling process. They decided to address the interaction
 between the UI and the domain first and then to evaluate whether any 
 further optimization was necessary. 
 
-## Making the RegistrationProcess Workflow More Resilient to Failure
+## Making the RegistrationProcess class more resilient to failure
 
-Typically, a coordinating workflow receives incoming events, and then 
-based on the state of the workflow, sends out one or more commands to 
-aggregates within the bounded context. When a coordinating workflow 
+Typically, a process manager receives incoming events, and then 
+based on the state of the process manager, sends out one or more commands to 
+aggregates within the bounded context. When a process manager 
 sends out commands, it typically changes its own state. 
 
 The Orders and Registrations bounded context contains the 
-**RegistrationProcess** coordinating workflow. This workflow is 
+**RegistrationProcessManager** class. This process manager is 
 responsible for coordinating the activities of the aggregates in both 
 this bounded context and the Payments bounded context by routing events 
-and commands between them. The workflow is therefore responsible for 
+and commands between them. The process manager is therefore responsible for 
 ensuring that the aggregates in these bounded contexts are correctly 
 synchronized with each other. 
 
 > **GaryPersona:** An aggregate determines the consistency boundaries
 > within the write-model with respect to the consistency of the data
-> that the system persists to storage. The coordinating workflow manages
+> that the system persists to storage. The process manager manages
 > the relationship between different aggregates, possibly in different
 > bounded contexts, and ensures that the aggregates are eventually
 > consistent with each other.
@@ -136,50 +136,50 @@ for the system: the aggregates could get out of synchronization with
 each other which may cause unpredicatable behavior in the system; some 
 processes might end up as zombie processes continuing to run and use 
 resources but never completing. The team identified the following 
-specific failure scenarios related to the **RegistrationProcess** 
-workflow. The workflow could: 
+specific failure scenarios related to the **RegistrationProcessManager** 
+process manager. The process manager could: 
 
 * Crash or be unable to persist its state after it receives an event but
   before it sends any commands. The message processor may not be able to
   mark the event as complete, so after a timeout the event is placed
   back in the topic subscription and re-processed.
 * Crash after it persists its state but before it sends any commands.
-  This puts the system into an inconsistent state because the workflow
+  This puts the system into an inconsistent state because the process manager
   saved its new state without sending out the expected commands. The
   original event is put back in the topic subscription and 
   re-processed.
-* Fail to mark that an event has been processed. The workflow will
+* Fail to mark that an event has been processed. The process manager will
   process the event a second time because after a timeout, the system
   will put the event back onto the service bus topic subscription.
 * Timeout while it waits for a specific event that it is expecting. The
-  workflow cannot continue processing and reach an expected end-state.
-* Receive an event that it does not expect to receive while the workflow
+  process manager cannot continue processing and reach an expected end-state.
+* Receive an event that it does not expect to receive while the process manager
   is in a particular state. This may indicate a problem elsewhere that
-  implies that it is unsafe for the workflow to continue.
+  implies that it is unsafe for the process manager to continue.
   
 These scenarios can be summarized to identify two issues to address:
 
-1. The **RegistrationProcess** handles an event successfully but fails
-   to mark the message as complete. The **RegistrationProcess** will
+1. The **RegistrationProcessManager** handles an event successfully but fails
+   to mark the message as complete. The **RegistrationProcessManager** will
    then process the event again after it is automatically returned to
    the subscription to the Windows Azure Service Bus topic.
-2. The **RegistrationProcess** handles an event successfully, marks it
+2. The **RegistrationProcessManager** handles an event successfully, marks it
    as complete, but then fails to send out the commands.
 
 ### Making the System Resilient Whan an Event is Reprocessed
 
-If the behavior of the workflow itself is idempotent, then if it 
+If the behavior of the process manager itself is idempotent, then if it 
 receives and processes an event a second time then this does not result 
 in any inconsistencies within the system. This approach would handle the 
 first three failure conditions. After a crash, you can restart the 
-workflow and reprocess the incoming event a second time. 
+process manager and reprocess the incoming event a second time. 
 
-Instead of making the workflow idempotent, you could ensure that all the 
-commands that the workflow sends are idempotent. Restarting the workflow 
+Instead of making the process manager idempotent, you could ensure that all the 
+commands that the process manager sends are idempotent. Restarting the process manager 
 may result in sending commands a second time, but if those commands are 
 idempotent this will have no adverse affect on the process or the 
 system. For this approach to work, you will still need to modify the 
-workflow to guarantee that it sends all commands at least once. If the 
+process manager to guarantee that it sends all commands at least once. If the 
 commands are idempotent, it doesn't matter if they are sent multiple 
 times, but it does matter if a command is never sent at all. 
 
@@ -191,16 +191,16 @@ queue. The exceptions are the **OrderPlaced** event and the
 ### Ensuring That Commands are Always Sent
 
 To ensure that the system always sends commands when the 
-**RegistrationProcess** workflow saves its state requires transactional 
+**RegistrationProcessManager** class saves its state requires transactional 
 behavior. This requires the team to implement a psuedo-transaction 
 because it is not possible to enlist the Windows Azure Service Bus in a 
 distributed transcation. 
 
 The solution adopted by the team for the V3 release ensures that the 
-system persists any commands that the **RegistrationProcess** tries to 
+system persists any commands that the **RegistrationProcessManager** tries to 
 send but that fail. When the system next reloads the 
-**RegistrationProcess** workflow, it tries to re-send the failed 
-commands. If this fails, then the workflow cannot be loaded and cannot 
+**RegistrationProcessManager** class, it tries to re-send the failed 
+commands. If this fails, then the process manager cannot be loaded and cannot 
 process any further messages until the cause of the failure is resolved. 
 
 ## Optimizing the Interactions Between the UI and the Domain
@@ -395,26 +395,26 @@ or check the evolution of the code in the repository on github:
 > CQRS journey, the implementation may well change as we learn more and
 > refactor the code.
 
-## Hardening the RegistrationProcess Workflow
+## Hardening the RegistrationProcessManager class
 
-This section describes how the team hardened the **RegistrationProcess** 
-workflow by checking for duplicate instances of the **SeatsReserved** 
+This section describes how the team hardened the **RegistrationProcessManager** 
+process manager by checking for duplicate instances of the **SeatsReserved** 
 and **OrderPlaced** messages. 
 
 ### Detecting Duplicate SeatsReserved Events
 
-Typically, the **RegistrationProcess** workflow sends a 
+Typically, the **RegistrationProcessManager** class sends a 
 **MakeSeatReservation** command to the **SeatAvailability** aggregate, 
 the **SeatAvailability** aggregate publishes a **SeatsReserved** event 
-when it has made the reservation, and the **RegistrationProcess** 
+when it has made the reservation, and the **RegistrationProcessManager** 
 receives this notification. In the V2 release, the **SeatsReserved** 
-event is not idempotent and the **RegistrationProcess** could, 
+event is not idempotent and the **RegistrationProcessManager** could, 
 potentially, receive multiple copies of this event. The solution 
-described in this section enables the **RegistrationProcess** to 
+described in this section enables the **RegistrationProcessManager** to 
 identify any duplicate **SeatsReserved** messages and then ignore them 
 instead of re-processing them. 
 
-Before the **RegistrationProcess** workflow sends the 
+Before the **RegistrationProcessManager** class sends the 
 **MakeSeatReservation** command, it saves the **Id** of the command in 
 the **SeatReservationCommandId** variable as shown in the following code 
 sample: 
@@ -509,20 +509,20 @@ public void Handle(OrderPlaced @event)
 }
 ```
 
-### Creating a Psuedo Transaction when the Workflow Saves Its State and Sends a Command
+### Creating a Psuedo Transaction when the Process Manager Saves Its State and Sends a Command
 
 It is not possible to have a transaction in Windows Azure that spans 
-persisting the **RegistrationProcess** to storage and sending the 
+persisting the **RegistrationProcessManager** to storage and sending the 
 command. Therefore the team decided to save any failed commands that the 
-workflow sends, and to automatically retry those commands the next time 
-that the system loads the workflow from storage. 
+process manager sends, and to automatically retry those commands the next time 
+that the system loads the process manager from storage. 
 
 > **MarkusPersona:** The migration utility for moving to the V3 release
 > updates the database schema to accomodate the new storage requirement.
 
 The following code sample from the **SqlProcessDataContext** class shows 
 how the system persists the failed commands along with the state of the 
-workflow: 
+process manager: 
 
 ```Cs
 public void Save(T process)
@@ -562,7 +562,7 @@ public void Save(T process)
 
 The following code sample from the **SqlProcessDataContext** class shows 
 how the system retries the failed commands when the system next reloads 
-the workflow: 
+the process manager: 
 
 ```Cs
 public T Find(Expression<Func<T, bool>> predicate)
@@ -610,9 +610,9 @@ public T Find(Expression<Func<T, bool>> predicate)
 > re-tried. The **Find** method throws an exception and the system is
 > not able to load it.
 
-### Adding Optimistic Locking to the RegistrationProcess Workflow
+### Adding Optimistic Locking to the RegistrationProcessManager class
 
-The team also added an optimistic concurrency check when the system saves the **RegistrationProcess** workflow by adding a timestamp property to the **RegistrationProcess** class as shown in the following code sample:
+The team also added an optimistic concurrency check when the system saves the **RegistrationProcessManager** class by adding a timestamp property to the **RegistrationProcessManager** class as shown in the following code sample:
 
 ```Cs
 [ConcurrencyCheck]

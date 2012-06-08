@@ -13,7 +13,7 @@ CQRS journey.
 The specific topics described in this chapter include:
 
 * Improvements to the way that message correlation works with the 
-  **RegistrationProcess** workflow. This illustrates how aggregate
+  **RegistrationProcessManager** class. This illustrates how aggregate
   instances within the bounded context can interact in a complex manner.
 * Implementing a record locator to enable a Registrant to retrieve an 
   order that she saved during a previous session. This illustrates
@@ -49,7 +49,7 @@ A command is a request for the system to perform an action that changes
 the state of the system. Commands are imperatives, for example 
 **MakeSeatReservation**. In this bounded context, commands originate 
 from either the UI as a result of a user initiating a request, or from 
-a workflow when the workflow is directing an aggregate to perform an 
+a process manager when the process manager is directing an aggregate to perform an 
 action. 
 
 A single recipient processes a Command. A command bus 
@@ -65,20 +65,20 @@ in the domain model raise events.
 Multiple subscribers can handle a specific event. Aggregates publish 
 events to an event bus; handlers register for specific types of event on 
 the event bus and then deliver the events to the subscriber. In this 
-bounded context, the only subscriber is a workflow. 
+bounded context, the only subscriber is a process manager. 
 
-### Coordinating Workflow
+### Process manager
 
-In this bounded context, a coordinating workflow (or workflow) is a 
+In this bounded context, a process manager is a 
 class that coordinates the behavior of the aggregates in the domain. A 
-workflow subscribes to the events that the aggregates raise, and then 
+process manager subscribes to the events that the aggregates raise, and then 
 follow a simple set of rules to determine which command or commands to 
-send. The workflow does not contain any business logic, simply logic to 
-determine the next command to send. The workflow is implemented as a 
-state machine, so when the workflow responds to an event, it can change 
+send. The process manager does not contain any business logic, simply logic to 
+determine the next command to send. The process manager is implemented as a 
+state machine, so when the process manager responds to an event, it can change 
 its internal state in addition to sending a new command. 
 
-The workflow in this bounded context can receive commands as well as 
+The process manager in this bounded context can receive commands as well as 
 subscribe to events. 
 
 ## User Stories 
@@ -482,7 +482,7 @@ public IQueryable<T> Query<T>() where T : class
 
 When a Registrant creates an order and makes a seat reservation, those 
 seats are reserved for a fixed period of time. The 
-**RegistrationProcess** instance, which forwards the reservation from 
+**RegistrationProcessManager** instance, which forwards the reservation from 
 the **SeatsAvailability** aggregate, passes the time that the 
 reservation expires to the **Order** aggregate. The following code 
 sample shows how the **Order** aggregate receives and stores the 
@@ -504,20 +504,20 @@ public void MarkAsReserved(DateTime expirationDate, IEnumerable<SeatQuantity> se
 
 > **MarkusPersona:** The **ReservationExpirationDate** is intially set
 > in the **Order** constructor to a time 15 minutes after the **Order**
-> is instantiated. The **RegistrationProcess** workflow may revise this
+> is instantiated. The **RegistrationProcessManager** class may revise this
 > time based on when the reservations are actually made. It is this time
-> the workflow sends to the **Order** aggregate in the
+> the process manager sends to the **Order** aggregate in the
 > **MarkSeatsAsReserved** command.
 
-When the **RegistrationProcess** sends the **MarkSeatsAsReserved** 
+When the **RegistrationProcessManager** sends the **MarkSeatsAsReserved** 
 command to the **Order** aggregate with the expiry time that the UI will 
 display, it also sends a command to itself to initate the 
 process of releasing the reserved seats. This 
 **ExpireRegistrationProcess** command is held for the expiry duration 
 plus a buffer of five minutes. This buffer ensures that time differences 
-between the servers don't cause the **RegistrationProcess** workflow to 
+between the servers don't cause the **RegistrationProcessManager** class to 
 release the reserved seats before the timer in UI counts down to zero. 
-In the following code sample from the **RegistrationProcess** workflow, 
+In the following code sample from the **RegistrationProcessManager** class, 
 the UI uses the **Expiration** property in the **MarkSeatsAsReserved**
 to display the countdown timer, and the **Delay** 
 property in the **ExpireRegistrationProcess** command determines when 
@@ -1473,7 +1473,7 @@ completely useless.
 
 Let's take an example of this and work out some heuristics involved in 
 answering these questions. We'll use as an example the 
-**RegistrationProcess**. 
+**RegistrationProcessManager**. 
 
 1. Open the RegistrationProcess.cs file, noting that, like many
    processes (or Sagas, as they are known in the community) it has a 
@@ -1499,7 +1499,7 @@ answering these questions. We'll use as an example the
    method where the state change occurs, since we now need to figure out
    where that message originated. 
        - We also note that a new command, **MakeSeatReservation**, is
-         being issued by the **RegistrationProcess**. 
+         being issued by the **RegistrationProcessManager**. 
        - As mentioned above, this command isn't actually published by
          the Process issuing it; rather, publication occurs when the
          Process is saved to disk. 
@@ -1560,7 +1560,7 @@ of introducing a small DSL that would encapsulate the interactions being
 discussed. The tentatively-named SawMIL toolbox, located here 
 [http://jelster.github.com/CqrsMessagingTools/][mil] provides utilities, 
 scripts, and examples that enable you to use MIL as part of your 
-development and analysis workflows. 
+development and analysis process managers. 
 
 In MIL, messaging components and interactions are represented in a 
 specific manner: commands, since they are requests for the system to 

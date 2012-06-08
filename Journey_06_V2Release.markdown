@@ -26,7 +26,7 @@ A command is a request for the system to perform an action that changes
 the state of the system. Commands are imperatives, for example 
 **MakeSeatReservation**. In this bounded context, commands originate 
 from either the UI as a result of a user initiating a request, or from 
-a workflow when the workflow is directing an aggregate to perform an 
+a process manager when the process manager is directing an aggregate to perform an 
 action. 
 
 A single recipient processes a Command. A command bus 
@@ -42,7 +42,7 @@ in the domain model raise events.
 Multiple subscribers can handle a specific event. Aggregates publish 
 events to an event bus; handlers register for specific types of event on 
 the event bus and then deliver the events to the subscriber. In this 
-bounded context, the only subscriber is a workflow. 
+bounded context, the only subscriber is a process manager. 
 
 ## User Stories 
 
@@ -106,7 +106,7 @@ This section describes some of those challenges.
 When the team examined the requirements for the V2 release, it became 
 clear that we would need to change some of the events used in the 
 Orders and Registrations bounded context to accommodate some of the new 
-features: the **RegistrationProcess** would change and the system would 
+features: the **RegistrationProcessManager** would change and the system would 
 provide a better user experience when the order had a zero cost. 
 
 The Orders and Registrations bounded context uses event sourcing, so 
@@ -375,21 +375,21 @@ or check the evolution of the code in the repository on github:
 There were three specific goals in making this change, all of which are
 related:
 
-1. Modify the **RegistrationProcess** workflow and related aggregates to
+1. Modify the **RegistrationProcessManager** class and related aggregates to
    handle orders with a zero cost.
 2. Modify the navigation in the UI to skip the payment step when the
    total cost of the order is zero.
 3. Ensure that the system functions correctly after the upgrade to V2
    with the old events as well as the new.
 
-### Changes to the RegistrationProcess Workflow
+### Changes to the RegistrationProcessManager class
 
-Previously, the **RegistrationProcess** workflow sent a 
+Previously, the **RegistrationProcessManager** class sent a 
 **ConfirmOrderPayment** command after it received notification from the 
 UI that the Registrant had completed the payment. Now, if there is a 
 zero-cost order, the UI sends a **ConfirmOrder** command directly to the 
 **Order** aggregate. If the order requires a payment, the 
-**RegistrationProcess** workflow sends a **ConfirmOrder** command to the 
+**RegistrationProcessManager** class sends a **ConfirmOrder** command to the 
 **Order** aggregate after it receives notification of a successful 
 payment from the UI. 
 
@@ -408,7 +408,7 @@ event is also handled by the following objects:
   order in the read-model.
 * The **SeatAssignments** aggregate where it initializes a new
   **SeatAssignments** instance.
-* The **RegistrationProcess** workflow where it triggers a command to
+* The **RegistrationProcessManager** class where it triggers a command to
   commit the seat reservation.
 
 ### Changes to the UI
@@ -481,12 +481,12 @@ on the command bus.
 > **ConfirmOrderPayment** commands are processed by a worker role
 > instance running the V1 release
 
-The system persists the state of **RegistrationProcess** workflow 
+The system persists the state of **RegistrationProcessManager** class 
 instances to a SQL database table. There are no changes to the schema of 
 this table. The only change you will see after the migration is an 
 additional value in the **StateValue** column. This reflects the 
 additional **PaymentConfirmationReceived** vlaue in the **ProcessState** 
-enumeration in the **RegistrationProcess** class as shown in the 
+enumeration in the **RegistrationProcessManager** class as shown in the 
 following code sample: 
 
 ```Cs
@@ -1198,7 +1198,7 @@ The following code sample shows the
 > **GaryPersona:** Typically, you would expect the **When** clauses
 > to send commands and the **Then** clauses to see events or exceptions
 > if your domain-model uses just aggregates. However in this example,
-> the domain-model includes a coordinating workflow that responds to
+> the domain-model includes a process manager that responds to
 > events by sending commands. The test is checking that all of the
 > expected commands are sent and all of the expected events raised.
 
