@@ -316,7 +316,7 @@ The following list outlines the message naming conventions in the Contoso Confer
 The application is designed to deploy to Windows Azure. At this stage in 
 the journey, the application consists of two web roles that contain the 
 MVC web applications and a worker role that contains the message 
-handlers and domain objects. The application uses SQL Azure databases 
+handlers and domain objects. The application uses SQL Database databases 
 for data storage, both on the write-side and the read-side. The Orders 
 and Registrations bounded context now uses an event store to persist the 
 state from the write-side. This event store is implemented using Windows 
@@ -327,7 +327,7 @@ While you are exploring and testing the solution, you can run it
 locally, either using the Windows Azure compute emulator or by running 
 the MVC web application directly and running a console application that 
 hosts the handlers and domain objects. When you run the application 
-locally, you can use a local SQL Express database instead of SQL Azure, 
+locally, you can use a local SQL Express database instead of SQL Database, 
 use a simple messaging infrastructure implemented in a SQL Express 
 database, and a simple event store also implemented using a SQL Express 
 database. 
@@ -396,7 +396,7 @@ and the implementation of the Orders and Registrations becomes simpler.
 
 The team implemented the basic event store using Windows Azure table 
 storage. If you are hosting your application in Windows Azure, you could 
-also consider using Windows Azure blobs or SQL Azure to store your 
+also consider using Windows Azure blobs or SQL Database to store your 
 events.
 
 When choosing the underlying technology for your event store, you should 
@@ -404,7 +404,7 @@ ensure that your choice can deliver the required level of consistency,
 reliability, scale, and performance for your application. 
 
 > **JanaPersona:** One of the issues to consider when choosing between
-> storage mechanisms in Windows Azure is cost. If you use SQL Azure you
+> storage mechanisms in Windows Azure is cost. If you use SQL Database you
 > are billed based on the size of the database, if you use Windows Azure
 > table or blob storage you are billed based on the amount of storage
 > you use and the number of storage transactions. You need to carefully
@@ -417,7 +417,7 @@ reliability, scale, and performance for your application.
 
 
 > My rule of thumb is that if you’re doing greenfield development, you
-> need very good arguments in order to choose SQL Azure. Windows Azure
+> need very good arguments in order to choose SQL Database. Windows Azure
 > Storage Services should be the default choice. However, if you already
 > have an existing SQL Server database that you want to move to the
 > cloud, it’s a different case...  

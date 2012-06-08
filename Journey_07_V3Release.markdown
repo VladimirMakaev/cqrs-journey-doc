@@ -609,19 +609,6 @@ public T Find(Expression<Func<T, bool>> predicate)
 > re-tried. The **Find** method throws an exception and the system is
 > not able to load it.
 
-### Adding optimistic locking to the RegistrationProcessManager class
-
-The team also added an optimistic concurrency check when the system saves the **RegistrationProcessManager** class by adding a timestamp property to the **RegistrationProcessManager** class as shown in the following code sample:
-
-```Cs
-[ConcurrencyCheck]
-[Timestamp]
-public byte[] TimeStamp { get; private set; }
-```
-
-For more information, see [Code First Data Annotations][codefirst] on
-the MSDN website.
-
 ## Optimizing the UI
 
 The first optimization is to allow the UI to navigate directly to the 
@@ -860,6 +847,24 @@ private void ReceiveMessages(CancellationToken cancellationToken)
     }
 }
 ```
+
+Because of this change, the team also added an optimistic concurrency 
+check when the system saves the **RegistrationProcessManager** class by 
+adding a timestamp property to the **RegistrationProcessManager** class 
+as shown in the following code sample: 
+
+```Cs
+[ConcurrencyCheck]
+[Timestamp]
+public byte[] TimeStamp { get; private set; }
+```
+
+For more information, see [Code First Data Annotations][codefirst] on
+the MSDN website.
+
+With the optimistic concurrency check in place, we also removed the C# 
+lock in the **SessionSubscriptionReceiver** class that was apotential 
+bottleneck in the system. 
 
 ### Task support in MVC 4
 

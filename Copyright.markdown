@@ -13,7 +13,7 @@ Apache 2.0 license: [http://www.apache.org/licenses/LICENSE-2.0][apache]
 
 Microsoft, Windows, Windows Server, Windows Vista, Windows Azure, 
 Windows PowerShell, Silverlight, Expression, Expression Blend, MSDN, 
-IntelliSense, IntelliTrace, Internet Explorer, SQL Azure, SQL Server, 
+IntelliSense, IntelliTrace, Internet Explorer, SQL Database, SQL Server, 
 Visual C#, Visual C++, Visual Basic, and Visual Studio are trademarks of 
 the Microsoft group of companies. 
 

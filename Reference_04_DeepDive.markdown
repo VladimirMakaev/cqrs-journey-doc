@@ -898,7 +898,7 @@ enough resources, and by ensuring that the updates to your read-models
 happen efficiently. 
 
 You should also consider the comparative storage costs for different 
-storage models on the read-side such as SQL Azure, Windows Azure table 
+storage models on the read-side such as SQL Database, Windows Azure table 
 storage, and Windows Azure blob storage. This may involve a trade-off 
 between performance and costs. 
 
@@ -1016,7 +1016,11 @@ There are two potential approaches to handling this scenario.
 
 > **JanaPersona:** Some messaging infrastructures offer a guarantee of
 > at least once delivery. This implies that you should explicitly handle
-> the duplicate message delivery scenario in your application code. 
+> the duplicate message delivery scenario in your application code.
+
+For a detailed discussion idempotency in reliable systems see the 
+article [Idempotence Is Not a Medical Condition][idempotency] by Pat 
+Helland. 
 
 ### Lost messages
 
@@ -1127,7 +1131,7 @@ implementing the CQRS pattern: scalability, elasticity, and agility.
 This section describes in more detail how a CQRS implementation might 
 use some of specific features of the Windows Azure platform to provide 
 some of the infrastructure that you typically need when you implement 
-the CQRS pattern. 
+the CQRS pattern.
 
 ## Scaling out using multiple role instances 
 
@@ -1404,11 +1408,28 @@ following chapters in the Journey Guidance contain further information.
 You can find references to additional resources in [Technologies Used in 
 the Reference Implementation][r_chapter9]. 
 
+## A word of warning
 
+> Often times when writing software that will be cloud deployed you need
+> to take on a whole slew of non-functional requirements that you don't
+> really have...  
+> Greg Young (CQRS Advisors Mail List)
+
+For example, a process manager (described in chapter 6 [A Saga on 
+Sagas][r_chapter6]) may process a maximum of two messages per second 
+during its busiest periods. Because a process manager must maintain 
+consistency when it persists its state and sends messages, it requires 
+transactional behavior. In Windows Azure, adding this kind of 
+transactional behavior is non-trivial, and you may find yourself writing 
+code to support this behavior: using at-least-once messaging and 
+ensuring that all of the message recipients are idempotent. This is 
+likely to more complex to implement than a simple distributed 
+transaction. 
 
 [r_chapter1]:     Reference_01_CQRSContext.markdown
 [r_chapter2]:     Reference_02_CQRSIntroduction.markdown
 [r_chapter4]:     Reference_04_DeepDive.markdown
+[r_chapter6]:     Reference_06_Sagas.markdown
 [r_chapter9]:     Reference_09_Technologies.markdown
 [j_chapter3]:     Journey_03_OrdersBC.markdown
 [j_chapter4]:     Journey_04_ExtendingEnhancing.markdown
@@ -1421,6 +1442,7 @@ the Reference Implementation][r_chapter9].
 [topaz]:          http://msdn.microsoft.com/en-us/library/hh680934(PandP.50).aspx
 [azurestorage]:   https://www.windowsazure.com/en-us/develop/net/fundamentals/cloud-storage/
 [capinfoq]:       http://www.infoq.com/articles/cap-twelve-years-later-how-the-rules-have-changed
+[idempotency]:    http://queue.acm.org/detail.cfm?id=2187821
 
 [fig1]:           images/Reference_04_Consistency_01.png?raw=true
 [fig2]:           images/Reference_04_Consistency_02.png?raw=true

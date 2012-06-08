@@ -120,7 +120,7 @@ pre-conference workshop.
 The application is designed to deploy to Windows Azure. At this stage in 
 the journey, the application consists of a web role that contains the 
 ASP.NET MVC web application and a worker role that contains the message 
-handlers and domain objects. The application uses SQL Azure databases 
+handlers and domain objects. The application uses SQL Database databases 
 for data storage, both on the write-side and the read-side. The 
 application uses the Windows Azure Service Bus to provide its messaging 
 infrastructure. 
@@ -129,7 +129,7 @@ While you are exploring and testing the solution, you can run it
 locally, either using the Windows Azure compute emulator or by running 
 the MVC web application directly and running a console application that 
 hosts the handlers and domain objects. When you run the application 
-locally, you can use a local SQL Express database instead of SQL Azure, 
+locally, you can use a local SQL Express database instead of SQL Database, 
 and use a simple messaging infrastructure implemented in a SQL Express 
 database. 
 

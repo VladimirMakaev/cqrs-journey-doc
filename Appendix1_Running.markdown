@@ -36,7 +36,7 @@ These instructions describe five different scenarios for running the RI:
 > scenario.
 
 > **Note 2:** Scenarios 1, 2, 3 and 4 use SQL Express for other data
-> storage requirements. Scenario 5 requires you to use SQL Azure instead
+> storage requirements. Scenario 5 requires you to use SQL Database instead
 > of SQL Express.
 
 # Prerequisites
@@ -64,7 +64,7 @@ script **install-packages.ps1** included with the downloadable source.
 
 If you plan to deploy the RI to Windows Azure, you must have a Windows 
 Azure subscription. You will need to configure a Windows Azure storage 
-account, a Windows Azure Service Bus namespace, and a SQL Azure
+account, a Windows Azure Service Bus namespace, and a SQL Database
 database (they do not necessarily need to be in the same Windows Azure 
 subscription). You should be aware, that depending on your Windows Azure 
 subscription type, you may incur usage charges when you use the Windows 
@@ -101,16 +101,16 @@ the scripts folder.
 The projects in the solution use this database to store application 
 data. The SQL-based message bus and event store also use this database. 
 
-## SQL Azure Database
+## SQL Database Database
 
-For scenario 5, you must create a SQL Azure database called
+For scenario 5, you must create a SQL Database database called
 **Conference** by running the script **Install-Database.ps1** in 
 the scripts folder.
 
-The follow command will populate a SQL Azure database called 
+The follow command will populate a SQL Database database called 
 **Conference** with the tables and views required to support the RI
 (this script assumes that you have already created the **Conference**
-database in SQL Azure): 
+database in SQL Database): 
 
 ```
 .\Install-Database.ps1 -ServerName [your-sql-azure-server].database.windows.net -DoNotCreateDatabase -DoNotAddNetworkServiceUser -UseSqlServerAuthentication -UserName [your-sql-azure-username]
@@ -118,7 +118,7 @@ database in SQL Azure):
 
 You must then modify the **ServiceConfiguration.Cloud.cscfg** file in the Conference.Azure project to use the following connection strings.
 
-**SQL Azure Connection String**
+**SQL Database Connection String**
 
 ```
 Server=tcp:[your-sql-azure-server].database.windows.net;Database=myDataBase;User ID=[your-sql-azure-username]@[your-sql-azure-server];Password=[your-sql-azure-password];Trusted_Connection=False;Encrypt=True; MultipleActiveResultSets=True;
@@ -316,10 +316,10 @@ Deploy the **Conference.Azure** Windows Azure project to your Windows
 Azure account. 
 
 > **Note:** You must also ensure that you have created **Conference**
-> database in SQL Azure using the **Install-Database.ps1** in the
+> database in SQL Database using the **Install-Database.ps1** in the
 > scripts folder as described above. You must also ensure that you have 
 > modified the connection strings in the
-> configuration files in the solution to point to your SQL Azure
+> configuration files in the solution to point to your SQL Database
 > **Conference** database instead of your local SQL Express
 > **Conference** database as described above.
 
@@ -384,7 +384,7 @@ release in Windows Azure.
 ## Running the Migration Program to Migrate the Data
 
 _Before beginning the data migration process, ensure that you have a 
-backup of the data from your SQL Azure database._ 
+backup of the data from your SQL Database database._ 
 
 The **MigrationToV2** utility uses the same **Settings.xml** file as the 
 other projects in the **Conference** solution in addition to its own 
@@ -418,10 +418,10 @@ The name of the new table for V2 is in the **Settings.xml** file:
 
 The **App.config** file contains the **DbContext.ConferenceManagement** 
 connection string. The migration utility uses this connection string to 
-connect to the SQL Azure database that contains the SQL tables used by 
+connect to the SQL Database database that contains the SQL tables used by 
 the application. Ensure that this connection string points to the SQL 
 Azure database that contains your production data. You can verify which 
-SQL Azure database your production environment uses by looking in the 
+SQL Database database your production environment uses by looking in the 
 active **ServiceConfiguration.csfg** file. 
 
 > **Note:** If you are running the application locally using the
