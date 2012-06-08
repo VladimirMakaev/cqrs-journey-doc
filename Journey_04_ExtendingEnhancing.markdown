@@ -1,9 +1,8 @@
-## Chapter 4
-# Extending and Enhancing the Orders and Registrations Bounded Context
+# Chapter 4: Extending and Enhancing the Orders and Registrations Bounded Context
 
 *Exploring further in the Orders and Registrations bounded context*
 
-# A Description of the Orders and Registrations Bounded Context 
+# A description of the Orders and Registrations Bounded Context 
 
 The previous chapter describes the **Orders and Registrations** bounded context in some 
 detail. This chapter describes some changes that 
@@ -37,7 +36,7 @@ The specific topics described in this chapter include:
 > implementation details change in later steps in the journey. These
 > changes are described in subsequent chapters.
 
-## Working Definitions for this Chapter 
+## Working definitions for this chapter 
 
 The remainder of this chapter uses the following definitions. 
 For more detail, and possible alternative definitions, see [A CQRS/ES 
@@ -81,13 +80,13 @@ its internal state in addition to sending a new command.
 The process manager in this bounded context can receive commands as well as 
 subscribe to events. 
 
-## User Stories 
+## User stories 
 
 This chapter discusses the implementation of two user stories in 
 addition to describing some changes and enhancements to the **Orders and 
 Registrations** bounded context. 
 
-### Implement a Login using a Record Locator
+### Implement a login using a Record Locator
 
 When a Registrant creates an order for seats at a conference, the system 
 generates a five-character **order access code** and sends it to the 
@@ -97,7 +96,7 @@ from the system at a later date. The Registrant may wish to retrieve the
 order to review it, or to complete the registration process by assigning 
 Attendees to seats. 
 
-### Inform the Registrant How Much Time Remains to Complete an Order
+### Inform the registrant how much time remains to complete an order
 
 When a Registrant creates an order, the system reserves the seats 
 requested by the Registrant until the order is complete or the 
@@ -109,7 +108,7 @@ To help the Registrant, the system displays a countdown timer to inform
 the Registrant how much time remains to complete the order before the 
 seat reservations expire. 
 
-### Enabling a Registrant to Create an Order that Includes Multiple Seat Types
+### Enabling a registrant to create an order that includes multiple seat types
 
 When a Registrant creates an order, the Registrant may request different 
 numbers of different seat types. For example, a Registrant may request 
@@ -137,7 +136,7 @@ database.
 For more information about the options for running the application, see 
 [Appendix 1][appendix1]. 
 
-# Patterns and Concepts
+# Patterns and concepts
 
 This section describes some of the key areas of the application that the 
 team visited during this stage of the journey and introduces some of the 
@@ -156,7 +155,7 @@ level of security, the access codes that the system generates should not
 be predictable, and the order information that Registrants can retrieve 
 should not contain any sensitive information. 
 
-## Querying the Read-side
+## Querying the read-side
 
 The previous chapter focused on the write-side model and implementation; 
 in this chapter we'll explore the read-side implementation in more 
@@ -175,7 +174,7 @@ the same database as the normalized tables that the write model uses.
 > storing the read-side data, see the 
 > **SeatAssignmentsViewModelGenerator** class.
 
-### Storing Denormalized Views in a Database
+### Storing denormalized views in a database
 
 One common option for storing the read-side data is to use a set of 
 relational database tables to hold the de-normalized views. You should
@@ -205,7 +204,7 @@ data in the database.
 
 The team at Contoso evaluated two approaches to implementing the **ViewRepository** class: using the **IQueryable** interface and using non-generic data access objects (DAOs).
 
-#### Using the **IQueryable** Interface
+#### Using the **IQueryable** interface
 
 One approach to consider for the **ViewRepository** class is to have it 
 return an **IQueryable** instance that enables the client to use LINQ to 
@@ -253,7 +252,7 @@ Possible objections to this approach include:
 * It's hard to know if your integration tests cover all the different
   uses of the **Query** method.
 
-#### Using Non-generic DAOs
+#### Using non-generic DAOs
 
 An alternative approach is to have the **ViewRepository** expose custom 
 **Find** and **Get** methods as shown in the following code snippets. 
@@ -311,7 +310,7 @@ advantage in the flexibility of the approach that uses the
 **IQueryable** interface. For examples, see the **ConferenceDao** and 
 **OrderDao** classes in the **Registration** project. 
 
-## Making Information about Partially Fulfilled Orders Available to the Read-side
+## Making information about partially fulfilled orders available to the read-side
 
 The UI displays data about orders that it obtains by querying the model 
 on the read-side. Part of the data that the UI displays to the 
@@ -355,7 +354,7 @@ changes to the view tables.
 > use of events and migrated the **Orders and Registrations** bounded
 > context to use event sourcing. 
 
-## CQRS Command Validation
+## CQRS command validation
 
 When you implement the write-model, you should try to ensure that 
 commands very rarely fail. This gives the best user experience, and 
@@ -388,7 +387,7 @@ A business failure should have a predetermined business response. For
 > possible business failures and determine the way that you handle
 > them. 
 
-## The Countdown Timer and the Read-model
+## The countdown timer and the read-model
 
 The countdown timer that displays how much time remains to complete the 
 order to the Registrant is part of the business data in the system, and 
@@ -399,7 +398,7 @@ must be able to display the correct countdown value if the Registrant
 returns to the site, therefore the reservation expiry time is a part of 
 the data that is available from the read-model. 
 
-# Implementation Details 
+# Implementation details 
 
 This section describes some of the significant features of the 
 implementation of the Orders and Registrations bounded context. You may 
@@ -413,7 +412,7 @@ or check the evolution of the code in the repository on github:
 > CQRS journey, the implementation may well change as we learn more and
 > refactor the code.
 
-## The Order Access Code Record Locator 
+## The Order Access Code record locator 
 
 A Registrant may need to retrieve an Order, either to view it, or to 
 complete registering Attendees to seats. This may happen in a different 
@@ -478,7 +477,7 @@ public IQueryable<T> Query<T>() where T : class
 }
 ```
 
-## The Countdown Timer
+## The countdown timer
 
 When a Registrant creates an order and makes a seat reservation, those 
 seats are reserved for a fixed period of time. The 
@@ -587,7 +586,7 @@ public ActionResult SpecifyRegistrantDetails(string conferenceCode, Guid orderId
 The MVC view then uses Javascript to display an animated countdown 
 timer. 
 
-## Using ASP.NET MVC 3 Validation for Commands
+## Using ASP.NET MVC 3 validation for commands
 
 You should try to ensure that any commands that the MVC controllers in 
 your application send to the write-model will succeed. You can use the 
@@ -686,7 +685,7 @@ class.
 For more information, see [Models and Validation in ASP.NET 
 MVC][modelvalidation] on MSDN. 
 
-## Pushing Changes to the Read-side
+## Pushing changes to the read-side
 
 Some information about orders only needs to exist on the read-side. In 
 particular, the information about partially fulfilled orders is only 
@@ -817,7 +816,7 @@ public class ConferenceRegistrationDbContext : DbContext
 > sent from the write-side and handled by the
 > **OrderViewModelGenerator** handler class. 
 
-## Querying the Read-side
+## Querying the read-side
 
 The following code sample shows a non-generic DAO class that the MVC controllers use to query for conference information on the read-side. It wraps the **ConferenceRegistrationDbContext** class shown previously.
 
@@ -859,7 +858,7 @@ public class ConferenceDao : IConferenceDao
 > methods that return data. It is is used by the MVC controllers to
 > retrieve data to display in the UI.
 
-## Refactoring the SeatsAvailability Aggregate
+## Refactoring the SeatsAvailability aggregate
 
 In the first stage of our CQRS, the domain included a 
 **ConferenceSeatsAvailabilty** aggregate root class that modeled the 
@@ -891,7 +890,7 @@ the number of seats reserved may not match the number of seats
 requested; this information is passed back to the UI for the Registrant 
 to make a decision on how to proceed with the registration. 
 
-### The AddSeats Method
+### The AddSeats method
 
 You may have noticed in Figure 2 that the **SeatsAvailability** 
 aggregate includes an **AddSeats** method with no corresponding command. 
@@ -902,12 +901,12 @@ The Conference Management bounded context raises an event whenever the
 total number of available seats changes, the **SeatsAvailability** class 
 then handles the event when its handler invokes the **AddSeats** method. 
 
-# Impact on Testing
+# Impact on testing
 
 This section discusses some of the testing issues addressed during this 
 stage of the journey. 
 
-## Acceptance Tests and the Domain Expert
+## Acceptance tests and the domain expert
 
 In [Chapter 3, Orders and Registrations Bounded Context][j_chapter3], 
 you saw some of the UI mockups that the developers and the domain expert 
@@ -924,7 +923,7 @@ The team had the following goals for their acceptance testing approach:
 
 To achieve these goals the team used [SpecFlow][specflow].
 
-### Defining Acceptance Tests Using SpecFlow Features
+### Defining acceptance tests using SpecFlow features
 
 The first step is to define the acceptance tests in the language used by 
 SpecFlow. These tests are saved as feature files in a Visual Studio 
@@ -977,7 +976,7 @@ Then this information is show up in the Conference settings
 For additional examples, see the **Conference.AcceptanceTests** Visual
 Studio solution file included with the downloadable source. 
 
-### Making the Tests Executable
+### Making the tests executable
 
 An acceptance test in a feature file is not directly executable: you 
 must provide some plumbing code to bridge the gap between the SpecFlow 
@@ -1206,7 +1205,7 @@ TestDriven.NET.
 > comprehensive unit and integration tests, and the test team also
 > performed exploratory and performance testing on the application.
 
-## Using Tests to Help Developers Understand Message Flows
+## Using tests to help developers understand message flows
 
 A common comment about implementations that use the CQRS pattern or that 
 use messaging extensively is the difficulty in understanding how all of 
@@ -1302,7 +1301,7 @@ the **Order** instance. Now someone reading the test can see that when
 you send a **RegisterToConference** command you expect to see an 
 **OrderUpdated** event. 
 
-# A Journey into Code Comprehension
+# A journey into code comprehension
 
 *A tale of pain, relief, and learning*
 
@@ -1310,7 +1309,7 @@ This section describes the journey taken by Josh Elster, a member of the
 CQRS Advisory Board, as he explored the source code of the Contoso 
 Conference Management System. 
 
-##Testing is Important
+## Testing is important
 
 I've once believed that well-factored applications are easy to 
 comprehend, no matter how large or broad the code base. Any time I had a 
@@ -1343,7 +1342,8 @@ Implementing step bindings for these features would be an excellent way
 to both contribute to the project and to learn about how the system 
 worked. 
 
-##Domain Tests
+## Domain tests
+
 My goal then was to take a feature file looking something like this:
 
 ```
@@ -1440,7 +1440,7 @@ expected message traffic and payloads against the actual traffic/data.
 > minimally, limiting yourself to infrastructure concerns and you'll
 > make your life - and your tests - a lot less stressful.
 
-##The Other Side of the Coin
+## The other side of the coin
 
 With all of the pixels I just spent on talking how awesome and easy 
 things are, where's the pain? The pain is in comprehending what goes on 

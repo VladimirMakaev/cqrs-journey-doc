@@ -1,6 +1,4 @@
-## Chapter 4
-
-# A CQRS/ES Deep Dive (Chapter Title)
+# Chapter 4: A CQRS/ES Deep Dive (Chapter Title)
 
 # Introduction
 
@@ -8,7 +6,7 @@ This chapter begins with a brief recap of some of the key points from
 the previous chapters before exploring in more detail the key concepts 
 that relate to CQRS and Event Sourcing (ES). 
 
-## Read-models and Write-models
+## Read-models and write-models
 
 The CQRS pattern assigns the responsibility for modifying your 
 application data and querying your application data to different sets of 
@@ -44,7 +42,7 @@ users, and can capture the user's intent more effectively than DTOs.
 In a typical CQRS implementation, the read-model returns data to the UI
 as DTOs. The UI sends commands to the write-model.
 
-## Domain-driven Design (DDD) and Aggregates
+## Domain-driven design (DDD) and aggregates
 
 Using commands enables you build a UI that is more closely aligned with 
 the behaviors associated with your domain. Related to this are the DDD 
@@ -54,7 +52,7 @@ way to model consistency boundaries based on domain concepts.
 One of the advatages of using commands and aggregates instead of DTOs is 
 to simplify locking and concurrency management in your application. 
 
-## Data and Normalization
+## Data and normalization
 
 One of the changes that the CQRS pattern enables in your application is 
 to segregrate your data as well as your objects. The write-model can use 
@@ -87,7 +85,7 @@ read-side. You can use those events to build projections of the data
 that contain the data structured to support the queries on the
 read-side. 
 
-## Eventual Consistency
+## Eventual consistency
 
 If you use a single database in your application, your locking scheme 
 determines what version of a record is returned by a query. This can be 
@@ -110,7 +108,7 @@ helps you to simplify the design of the application and makes it easier
 to implement collaborative applications where multiple users may be 
 trying to modify the same data simultaneously on the write-side. 
 
-# Defining Aggregates in the Domain Model  
+# Defining aggregates in the domain model  
 
 In Domain-driven Design, an **Aggregate** defines a consistency 
 boundary. Typically, in when you implement the CQRS pattern, the classes 
@@ -329,7 +327,7 @@ perform some work for you.
 > able to handle that.  
 > Mark Seeman (CQRS Advisors Mail List)
 
-### Example Code
+### Example code
 
 The following code sample shows a command and the **ICommand** interface 
 that it implements. Notice that a command is a simple *Data Transfer 
@@ -358,7 +356,7 @@ public class MakeSeatReservation : ICommand
 }
 ```
 
-## Command Handlers
+## CommandHandlers
 
 Commands are sent to a specific recipient, typically an aggregate 
 instance. The Command Handler performs the following tasks: 
@@ -465,7 +463,7 @@ stream.
 > command, then these events are published when the repository saves the
 > aggregate instance.
 
-## Commands and Optimistic Concurrency
+## Commands and optimistic concurrency
 
 A common scenario for commands is that some of the information included 
 in the command is provided by the user of the system through the UI, and 
@@ -510,7 +508,7 @@ One event can play both roles: an aggregate may raise an event to record
 a state change and to notify an aggregate in another bounded context of 
 the change. 
 
-## Events and Intent
+## Events and intent
 
 As previously mentioned events in event sourcing should capture the 
 business intent, in addition to the change in state of the aggregate. 
@@ -582,7 +580,7 @@ conversation:
 
 > Thanks to Clemens Vasters and Adam Dymitruk
 
-### How to Model Intent
+### How to model intent
 
 This section examines two alternatives for modeling intent with 
 reference to SOAP and REST style interfaces to help highlight the 
@@ -701,7 +699,7 @@ tasks:
    instance passing in any parameters from the event.
 5. It persists the new state of the aggregate or process manager to storage.
 
-### Sample Code
+### Sample code
 
 ```Cs
 public void Handle(SeatsAdded @event)
@@ -724,7 +722,7 @@ will replay the aggregate's event stream to recreate the state, and the
 **Save** method will append the new events to the aggregate's event 
 stream.
 
-# Embracing Eventual Consistency 
+# Embracing eventual consistency 
 
 Maintaining the consistency of business data is a key requirement in all 
 enterprise systems. One of the first things that many developers learn 
@@ -786,7 +784,7 @@ rule.
 
 
 
-# Eventual Consistency and CQRS 
+# Eventual consistency and CQRS 
 
 How does the concept of eventual consistency relate to the CQRS pattern? 
 A typical implementation of the CQRS pattern is a distributed system 
@@ -860,7 +858,7 @@ sourcing. If the event store can send a copy of every event that it
 saves onto a message queue, then you can make the read-side eventually 
 consistent by using this infrastructure feature. 
 
-# Optimizing the Read Side 
+# Optimizing the read-side 
 
 There are four goals to keep in mind when optimizing the read-side.
 You typically want:
@@ -904,7 +902,7 @@ storage models on the read-side such as SQL Azure, Windows Azure table
 storage, and Windows Azure blob storage. This may involve a trade-off 
 between performance and costs. 
 
-# Optimizing the Write Side 
+# Optimizing the write-side 
 
 A key goal in optimizing the write-side is to maximize the throughput of 
 commands and events. Typically, the write-side performs work when it 
@@ -941,7 +939,7 @@ aggregate with a large number of events by caching it in memory. You
 only need to load the full event stream when it is accessed for the 
 first time after a system start. 
 
-## Concurrency and Aggregates
+## Concurrency and aggregates
 
 A simple implementation of aggregates and command handlers will load an 
 aggregate instance into memory for each command that the aggregate must 
@@ -996,13 +994,13 @@ about the Windows Azure Service Bus. Windows Azure Service Bus brokered
 messaging offers a distributed messaging infrastructure in the cloud
 that supports both queue and pub/sub topologies.
 
-## Messaging Considerations 
+## Messaging considerations 
 
 Whenever you use messaging, there are a number of issues to consider. 
 This section describes some of the most significant issues when you are
 working with commands and events in a CQRS implementation. 
 
-### Duplicate Messages
+### Duplicate messages
 
 An error in the messaging infrastructure or in the message receiving 
 code may cause a message to be delivered multiple times to its 
@@ -1020,7 +1018,7 @@ There are two potential approaches to handling this scenario.
 > at least once delivery. This implies that you should explicitly handle
 > the duplicate message delivery scenario in your application code. 
 
-### Lost Messages
+### Lost messages
 
 An error in the messaging infrastructure may cause a message not to be 
 delivered to its recipient. 
@@ -1032,7 +1030,7 @@ lost include a handshake process to acknowledge receipt of a message to
 the sender, or assigning sequence numbers to messages so that the 
 recipient can determine if it has not received a message. 
 
-### Out of Order Messages
+### Out of order messages
 
 The messaging infrastructure may deliver messages to a recipient in a 
 different order to the order that the sender sent the messages. 
@@ -1048,7 +1046,7 @@ the correct order.
 If messages need to be ordered within a group, you may be able to send 
 the related messages as a single batch. 
 
-### Unprocessed Messages
+### Unprocessed messages
 
 A client may retrieve a message from a queue and then fail while it is 
 processing the message. When the client restarts the message has been 
@@ -1120,7 +1118,7 @@ the costs of implementing the CQRS pattern and adding a task-based UI
 will outweigh any benefits. Task-based UIs are particularly useful in 
 complex domains. 
 
-# Taking Advantage of Windows Azure
+# Taking advantage of Windows Azure
 
 In the chapter "[Introducing the Command Query Responsibility 
 Segregation Pattern][r_chapter2]," we suggested that the motivations for 
@@ -1131,7 +1129,7 @@ use some of specific features of the Windows Azure platform to provide
 some of the infrastructure that you typically need when you implement 
 the CQRS pattern. 
 
-## Scaling Out Using Multiple Role Instances 
+## Scaling out using multiple role instances 
 
 When you deploy an application to Windows Azure, you deploy the 
 application to roles in your Windows Azure environment; a Windows Azure 
@@ -1151,7 +1149,7 @@ independently given their typically different usage patterns. For
 information about how to automatically scale roles in Windows Azure, see 
 "[The Autoscaling Application Block][aab]" on MSDN. 
 
-## Implementing an Event Store Using Windows Azure Table Storage 
+## Implementing an event store using Windows Azure table storage 
 
 This section shows an event store implementation using Windows Azure 
 table storage. It is not intended to show production quality code, but 
@@ -1175,7 +1173,7 @@ the same partition key.
 For more information about Windows Azure table storage see [Data Storage 
 Offerings in Windows Azure][azurestorage]. 
 
-### Persisting Events
+### Persisting events
 
 The following code sample shows how the implementation persists an event 
 to Windows Azure table storage. 
@@ -1229,7 +1227,7 @@ There are two things to note about this code sample:
    Fault Handling Application Block][topaz].
 
 
-### Retrieving Events
+### Retrieving events
 
 The following code sample shows how to retrieve the list of events 
 associated with an aggregate. 
@@ -1253,7 +1251,7 @@ public IEnumerable<EventData> Load(string partitionKey, int version)
 The events are returned in the correct order because the version number 
 is used as the row key. 
 
-### Publishing Events
+### Publishing events
 
 To guarantee that every event is published as well as persisted, you can 
 use the transactional behaviour of Windows Azure table partitions. When 
@@ -1383,7 +1381,7 @@ There are three points to note about this sample implementation:
 3. After a restart, you need code to scan all your partitions for
    unpublished events.
 
-## Implementing a Messaging Infrastructure Using the Windows Azure Service Bus 
+## Implementing a messaging infrastructure using the Windows Azure Service Bus 
 
 The Windows Azure Service Bus offers a robust, cloud-based messaging 
 infrastructure that you can use to transport your command and event 

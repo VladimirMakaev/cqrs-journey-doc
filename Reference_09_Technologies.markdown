@@ -1,6 +1,4 @@
-## Chapter 9
-
-# Technologies Used in the Reference Implementation (Chapter Title)
+# Chapter X: Technologies Used in the Reference Implementation (Chapter Title)
 
 # Windows Azure Service Bus  
 
@@ -72,12 +70,12 @@ The following list describes some of the key characteristics of topics.
 * Individual subscriptions support filters that limit the messages
   available through that subscription.
 
-## Useful API Features
+## Useful API features
 
 The following sections highlight some of the Windows Azure Service Bus 
 API features that are used in the project. 
 
-### Reading Messages
+### Reading messages
 
 A consumer can use one of two modes to retrieve messages from queues or 
 subscriptions: **ReceiveAndDelete** mode and **PeekLock** mode. 
@@ -111,7 +109,7 @@ when it recieves messages. You can maintain consistency between the
 messages you receive and a database without using a distributed 
 transaction. 
 
-### Sending Messages
+### Sending messages
 
 When you create a client to send messages, you can set the 
 **RequiresDuplicateDetection** and 
@@ -126,20 +124,20 @@ more robust when it recieves messages without using a distributed
 transaction. You can maintain consistency between the messages you send 
 and a database without using a distributed transaction. 
 
-### Expiring Messages
+### Expiring messages
 
 When you create a **BrokeredMessage** object, you can specify an expiry 
 time using the **ExpiresAtUtc** property or a time to live using the 
 **TimeToLive** property. When a message expires you can specify either 
 to send the message to a dead letter queue or discard it. 
 
-### Delayed Message Processing
+### Delayed message processing
 
 In some scenarios, you may want to send the message now, but to delay 
 delivery until some future time. You can do this by using the 
 **ScheduleEnqueueTimeUtc** property of the **BrokeredMessage** instance. 
 
-## Serializing Messages
+## Serializing messages
 
 You must serialize your Command and Event objects if you are sending 
 them over the Windows Azure Service Bus. 
@@ -181,7 +179,7 @@ public class JsonSerializerAdapter : ISerializer
 ```
 
 
-## Further Information
+## Further information
 
 For general information about the Windows Azure Service Bus, see 
 [Service Bus][sb] on MSDN. 
@@ -230,7 +228,7 @@ public RegistrationController(ICommandBus commandBus, [Dependency("registration"
     this.repositoryFactory = repositoryFactory;
 }
 ```
-## Further Information
+## Further information
 
 For more information about the Unity Application Block, see 
 [Unity Application Block][unity] on MSDN. 

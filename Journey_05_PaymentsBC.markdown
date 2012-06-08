@@ -1,9 +1,8 @@
-## Chapter 5
-# Preparing for the V1 Release  
+# Chapter 5: Preparing for the V1 Release  
 
 *Adding functionality and refactoring in preparation for the V1 release.*
 
-# A Description of the Contoso Conference Management V1 Release
+# A description of the Contoso Conference Management V1 release
 
 This chapter describes the changes made by the team to prepare for the 
 first production release of the Contoso Conference Management System. 
@@ -28,7 +27,7 @@ This chapter also describes the Metro-inspired UI that the team added to
 the public website during this phase and includes a discussion of 
 task-based UIs. 
 
-## Working Definitions for this Chapter 
+## Working definitions for this chapter 
 
 The remainder of this chapter uses the following definitions. 
 For more detail, and possible alternative definitions, see [A CQRS/ES 
@@ -58,12 +57,12 @@ In addition, you can use event sourcing as a source of audit data, as a
 way to query historic state, and to replay events for debugging and 
 problem analysis. 
 
-## User Stories 
+## User stories 
 
 The team implemented the user stories listed below during this phase of 
 the project. 
 
-### Ubiquitous Language Definitions
+### Ubiquitous language definitions
 
 The **Business Customer** represents the organization that is using the 
 conference management system to run its conference. 
@@ -76,7 +75,7 @@ A **Registrant** is a person who interacts with the system to make
 Orders and to make payments for those Orders. A Registrant also creates 
 the Registrations associated with an Order. 
 
-### Conference Management User Stories
+### Conference Management bounded context user stories
 
 A Business Customer can create new conferences and manage them. After a 
 Business Customer creates a new conference, he can access the details of 
@@ -99,7 +98,7 @@ the conference.
 The Business Customer can use the conference management website to view 
 a list of orders and Attendees. 
 
-### Ordering and Registration User Stories
+### Ordering and Registration bounded context user stories
 
 When a Registrant creates an order, it may not be possible to fulfill  
 the order completely. For example, a Registrant may request a Registrant 
@@ -341,7 +340,7 @@ database.
 For more information about the options for running the application, see 
 [Appendix 1][appendix1].
 
-### Conference Management Bounded Context
+### Conference Management bounded context
 
 The Conference Management bounded context is a simple two-tier, 
 CRUD-style web application. It is implemented using MVC 4 and Entity 
@@ -355,7 +354,7 @@ Framework.
 This bounded context must integrate with other bounded contexts that 
 implement the CQRS pattern. 
 
-# Patterns and Concepts 
+# Patterns and concepts 
 
 This section describes some of the key areas of the application that the 
 team visited during this stage of the journey and introduces some of the 
@@ -424,7 +423,7 @@ reliability, scale, and performance for your application.
 > cloud, it’s a different case...  
 > Mark Seeman - CQRS Advisors Mail List
 
-### Identifying Aggregates
+### Identifying aggregates
 
 In the Windows Azure table storage based implementation of the event 
 store that the team created for the V1 release, we used the aggregate 
@@ -536,7 +535,7 @@ relatively simple, stable, and low volume part of the overall system.
 Therefore, the team decided that we would implement this bounded 
 context using a traditional two-tier, CRUD-style architecture. 
 
-## Integration between Bounded Contexts
+## Integration between bounded contexts
 
 The Conference Management bounded context needs to integrate with the 
 Orders and Registrations bounded context. For example, if the business 
@@ -546,7 +545,7 @@ Registrations bounded context. Also, if a Registrant adds a new Attendee
 to a conference, the Business Customer must be able to view details of 
 the Attendee in the list in the Conference Management website. 
 
-### Pushing Changes from the Conference Management Bounded Context
+### Pushing changes from the Conference Management bounded context
 
 The following conversation between several developers and the domain 
 expert highlights some of the key issues that the team needed to address 
@@ -670,7 +669,7 @@ example:
 > context) could be responsible for persisting the integration events.  
 > Greg Young - Conversation with the PnP team.
 
-#### Some Comments on Windows Azure Service Bus
+#### Some comments on Windows Azure Service Bus
 
 The previous discussion suggested a way to avoid using a distributed 
 two-phase commit in the Conference Management bounded context. However, 
@@ -693,7 +692,7 @@ For more information about the Windows Azure Service Bus, see
 [Technologies Used in the Reference Implementation][r_chapter9] in the 
 Reference Guide. 
 
-### Pushing Changes to the Conference Management Bounded Context
+### Pushing changes to the Conference Management bounded context
 
 Pushing information about completed orders and registrations from the 
 Orders and Registrations bounded context to the Conference Management 
@@ -733,7 +732,7 @@ These alternative approaches will include:
 > **Note:** To see how the current approach works, look at the
 > **OrderEventHandler** class in the **Conference** project.
 
-### Choosing When to Update the Read-side Data
+### Choosing when to update the read-side data
 
 In the Conference Management bounded context, the Business Customer can 
 change the description of a seat type. This results in a **SeatUpdated** 
@@ -756,7 +755,7 @@ description.
 > **PricedOrderViewModelGenerator** class to handle the **SeatUpdated**
 > and adjust its view model.
 
-## Distributed Transactions and Event Sourcing
+## Distributed transactions and Event Sourcing
 
 The previous section that discussed the integration options for the 
 **Conference Management** bounded context raised the issue of using a 
@@ -780,7 +779,7 @@ events that the bounded context publishes to other bounded contexts.
 > environment such as Windows Azure, you must be very careful to ensure
 > that you meet this requirement. 
 
-## Autonomy versus Authority
+## Autonomy versus authority
 
 The **Orders and Registrations** bounded context is responsible for 
 creating and managing orders on behalf of Registrants. The **Payments** 
@@ -859,7 +858,7 @@ an order provides an example of choosing autonomy over authority.
 The section [Calculating Totals](#totals) below describes how the system
 performs this calculation.
 
-## Approaches to Implementing the Read-side
+## Approaches to implementing the read-side
 
 In the discussions of the read-side in the previous chapters, you saw 
 how the team used a SQL-based store for the denormalized projections of 
@@ -881,7 +880,7 @@ Azure blobs to store information about the seat assignments.
 > **SeatAssignmentsDao** class to understand how the UI retrieves the
 > data for display.
 
-## Eventual Consistency
+## Eventual consistency
 
 During testing, the team discovered a scenario where the Registrant 
 might see evidence of eventual consistency in action. If the Registrant 
@@ -901,7 +900,7 @@ locally.
 > have been persisted, and that what the UI displays could be a
 > few seconds out of date, they are not going to be concerned.
 
-# Implementation Details 
+# Implementation details 
 
 This section describes some of the significant features of the 
 implementation of the Orders and Registrations bounded context. You may 
@@ -915,7 +914,7 @@ or check the evolution of the code in the repository on github:
 > CQRS journey, the implementation may well change as we learn more and
 > refactor the code.
 
-## The Conference Management Bounded Context
+## The Conference Management bounded context
 
 The Conference Management Bounded Context that enables a Business 
 Customer to define and manage conferences is i a simple 
@@ -925,7 +924,7 @@ In the Visual Studio solution, the **Conference** project contains the
 model code, and the **Conference.Web** project contains the MVC views 
 and controllers. 
 
-### Integration with the Orders and Registration Bounded Context
+### Integration with the Orders and Registration bounded context
 
 The Conference Management bounded context pushes notifications of 
 changes to conferences by publishing the following events. 
@@ -949,7 +948,7 @@ these events to the event bus.
 > **MarkusPersona:** At the moment, there is no distributed transaction
 > to wrap the database update and the message publishing.
 
-## The Payments Bounded Context
+## The Payments bounded context
 
 The Payments bounded context is responsible for handling the interaction 
 with the external systems that validate and process payments. In the V1 
@@ -1011,7 +1010,7 @@ the write-side of the Payments bounded context.
 
 **The read-side and the write-side in the Payments bounded context**
 
-### Integration with Online Payment Services, Eventual Consistency, and Command Validation
+### Integration with online payment services, eventual consistency, and command validation
 
 Typically, online payment services offer two levels of integration with
 your site:
@@ -1122,7 +1121,7 @@ The core elements of this basic event sourcing solution are:
 * Other aggregates and process managers (possibly in different bounded
   contexts) can subscribe to these events.
   
-### Raising Events when the State of an Aggregate Changes
+### Raising events when the state of an aggregate changes
 
 The following two methods from the **Order** aggregate are examples of 
 methods that the **OrderCommandHandler** class invokes when it receives 
@@ -1235,7 +1234,7 @@ protected Order()
 }
 ```
 
-### Persisting Events to the Event Store
+### Persisting events to the event store
 
 When the aggregate processes an event in the **Update** method in the 
 **EventSourcedAggregateRoot** class, it adds the event to a private list 
@@ -1297,7 +1296,7 @@ public void Save(T eventSourced)
 }
 ```
 
-### Replaying Events to Re-build State
+### Replaying events to re-build state
 
 When a handler class loads an aggregate instance from storage, it loads 
 the state of the instance by replaying the stored event stream.
@@ -1383,7 +1382,7 @@ For each stored event in the history, it determines the appropriate
 handler method to invoke in the **Order** class and updates the version
 number of the aggregate instance.
 
-### Issues with the Simple Event Store Implementation
+### Issues with the simple event store implementation
 
 The simple implementation of event sourcing and an event store outlined 
 in the previous sections has a number of shortcomings. The following 
@@ -1401,7 +1400,7 @@ production quality implementation.
    a large number of events in their event stream. This could result in
    performance problems when replaying events.
    
-## Windows Azure Table Storage Based Event Store
+## Windows Azure Table Storage based event store
 
 The Windows Azure table storage based event store addresses some of the 
 shortcomings of the simple SQL-based event store. However, at this 
@@ -1512,7 +1511,7 @@ configured to detect duplicate messages and ignore them.
 > This process will take some time to run, but will only need to run
 > when the application restarts.
 
-## Calculating Totals
+## Calculating totals
 
 <a name="totals" />
 
@@ -1536,7 +1535,7 @@ the **Order** aggregate and the **PricingService** class for details.
 > this value using Javascript. When the Registrant makes a payment, the
 > system uses the total that the **Order** aggregate calculates.
 
-# Impact on Testing
+# Impact on testing
 
 > **MarkusPersona:** Don't let your passing unit tests lull you into a
 > false sense of security. There are lots of moving parts when you
@@ -1548,7 +1547,7 @@ the **Order** aggregate and the **PricingService** class for details.
 > just prior to the V1 release where the system removed order items when
 > it updated an order.
 
-## Timing Issues
+## Timing issues
 
 One of the acceptance tests verifies the behavior of the system when a 
 Business Customer creates new seat types. The key steps in the test 
@@ -1575,7 +1574,7 @@ messaging ordering and either modify the infrastructure to guarantee
 ordering or make the system more robust if messages do arrive out of 
 order. 
 
-## Involving the Domain Expert
+## Involving the domain expert
 
 In [Chapter 4, Extending and Enhancing the Orders and Registrations 
 Bounded Contexts][j_chapter4] you saw how the domain expert was involved 

@@ -1,5 +1,4 @@
-## Chapter 3
-# Introducing Event Sourcing (Chapter Title)
+# Chapter 3: Introducing Event Sourcing
 
 Event sourcing and Command Query Responsibility Segregation (CQRS) are 
 frequently mentioned together. Although neither one necessarily implies 
@@ -74,7 +73,7 @@ ways:
   replaying the events associated with the conference for which you
   wanted to check the current total number of bookings. 
   
-## Comparing Using an ORM and Event Sourcing
+## Comparing using an ORM and Event Sourcing
 
 ![Figure 1][fig1]
 
@@ -166,7 +165,7 @@ transactions from which it always possible to reconstruct the current
 state of the system. Event sourcing can bring a number of benefits to 
 other domains. 
 
-# Why Should I Use Event Sourcing? 
+# Why should I use Event Sourcing? 
 
 So far, the only justification we have offered for event sourcing is the 
 fact that it stores a complete history of the events associated with the 
@@ -242,7 +241,7 @@ these chapters in the section "A CQRS Journey."
 > and above all: make your own mistakes. 
 > Yves Reynhout (CQRS Advisors Mail List)
 
-# Event Sourcing Concerns 
+# Event Sourcing concerns 
 
 The previous section described some of the benefits that you might 
 obtain if you decide to use event sourcing in your system. However, 
@@ -270,6 +269,7 @@ to use event sourcing in your system:
   are specifically designed to answer such questions.
   
 # CQRS/ES
+
 The chapter "Introducing Command Query Responsibility Segregation" 
 suggested that events can form the basis of the push synchronization of 
 the applications state from the data store on the write-side to the data 
@@ -341,7 +341,7 @@ new business data, and to simplify the data storage part of the
 application are all valuable in some scenarios. However, this guide 
 focuses on using event sourcing in the context of the CQRS pattern. 
 
-# Event Stores 
+# Event stores 
 
 If you are using event sourcing, you will need a mechanism to store your 
 events and to return the stream of events associated with an aggregate 
@@ -354,7 +354,7 @@ event store such as Jonathan Oliver's [EventStore][jolivereventstore].
 Although you can implement a small-scale event store relatively easily, 
 a production quality, scalable event store is more of a challenge. 
 
-## Basic Requirements
+## Basic requirements
 
 Typically, when you implement the CQRS pattern, aggregates raise events 
 to publish information to other interested parties, such as other 
@@ -376,7 +376,7 @@ Whenever the system needs to load the current state of an aggregate, it
 must query the event store for the list of past events associated with 
 that aggregate instance. 
 
-## Underlying Storage
+## Underlying storage
 
 Events are not complex data structures; typically they have some 
 standard metadata that includes the Id of the aggregate instance they 
@@ -385,7 +385,7 @@ of the event itself. You do not need to use a relational database to
 store your events: you could use a NoSQL store, a document database, or 
 a file system. 
 
-## Performance, Scalability, and Consistency
+## Performance, scalability, and consistency
 
 Stored events should be immutable and are always read in the order that 
 they were saved; so saving an event should be a simple, fast append 

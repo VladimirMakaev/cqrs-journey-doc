@@ -1,9 +1,8 @@
-## Chapter 7
-# Adding Resilience and Optimizing Performance 
+# Chapter 7: Adding Resilience and Optimizing Performance 
 
 *Revisiting the infrastructure and applying some lessons learned*
 
-# Adding Resilience and Adding Features
+# Adding resilience and adding features
 
 The two primary goals for this last stage in our journey are to make the 
 system more resilient to failures and to improve the responsiveness of 
@@ -14,7 +13,7 @@ the domain-model during the order creation process.
 
 [Possibly describe incorporating two other bounded contexts.]
 
-## Working Definitions for this Chapter 
+## Working definitions for this chapter 
 
 The following definitions are used for the remainder of this chapter. 
 For more detail, and possible alternative definitions, see [A CQRS/ES 
@@ -46,12 +45,12 @@ events to an event bus; handlers register for specific types of event on
 the event bus and then deliver the events to the subscriber. In this 
 bounded context, the only subscriber is a process manager. 
 
-## User Stories 
+## User stories 
 
 The team implemented the following user stories during this phase of the 
 project.
 
-### Support for Discounts to Seat Prices
+### Support for discounts to seat prices
 
 Registrants should be able to obtain discounts through the use of 
 **Promotional Codes**. A Registrant can enter a **Promotional Code** 
@@ -85,7 +84,7 @@ one.
 
 What are the key architectural features? Server-side, UI, multi-tier, cloud, etc. 
 
-# Patterns and Concepts 
+# Patterns and concepts 
 
 During this stage of the journey the team looked at options for 
 hardening the **RegistrationProcessManager** class. This part of the Orders 
@@ -166,7 +165,7 @@ These scenarios can be summarized to identify two issues to address:
 2. The **RegistrationProcessManager** handles an event successfully, marks it
    as complete, but then fails to send out the commands.
 
-### Making the System Resilient Whan an Event is Reprocessed
+### Making the system resilient whan an event is reprocessed
 
 If the behavior of the process manager itself is idempotent, then if it 
 receives and processes an event a second time then this does not result 
@@ -188,7 +187,7 @@ or the system detects duplicate messages and sends them to a dead-letter
 queue. The exceptions are the **OrderPlaced** event and the 
 **SeatsReserved** event. 
 
-### Ensuring That Commands are Always Sent
+### Ensuring that commands are always sent
 
 To ensure that the system always sends commands when the 
 **RegistrationProcessManager** class saves its state requires transactional 
@@ -203,7 +202,7 @@ send but that fail. When the system next reloads the
 commands. If this fails, then the process manager cannot be loaded and cannot 
 process any further messages until the cause of the failure is resolved. 
 
-## Optimizing the Interactions Between the UI and the Domain
+## Optimizing the interactions between the ui and the domain
 
 When a Registrant creates an order, she visits the following sequence of 
 screens in the UI. 
@@ -244,7 +243,7 @@ the MVC controller waits until a priced order appears in the read-model
 (this indicates that all of the processing is complete) before 
 displaying the Registrant screen. 
 
-### Options to Reduce the Delay in the UI
+### Options to reduce the delay in the ui
 
 The team discussed with the domain expert whether or not is always 
 necessary to validate the seats availability before the UI sends the 
@@ -319,7 +318,7 @@ total when the order is placed instead of when the reservation is
 complete. This will enable the UI flow to move more quickly to the 
 Registrant screen than in the V2 release.
 
-## Optimizing Command Processing 
+## Optimizing command processing 
 
 The current implementation uses the same messaging infrastructure for 
 both commands and events. The Windows Azure Service Bus provides a 
@@ -373,7 +372,7 @@ Before implementing this optimization, the team plans to evaluate the
 impact of the optimizations to the interaction between the UI and the 
 domain. 
 
-## Scaling Out
+## Scaling out
 
 A further optimization that the team considered was to scale out the 
 view model generators that populate the various read-models in the 
@@ -381,7 +380,7 @@ system. Every web-role that hosts a view model generator instance must
 handle the events published by the write-side by creating a subscription 
 the the Windows Azure Service Bus topics. 
 
-# Implementation Details 
+# Implementation details 
 
 This section describes some of the significant features of the 
 implementation of the Orders and Registrations bounded context. You may 
@@ -401,7 +400,7 @@ This section describes how the team hardened the **RegistrationProcessManager**
 process manager by checking for duplicate instances of the **SeatsReserved** 
 and **OrderPlaced** messages. 
 
-### Detecting Duplicate SeatsReserved Events
+### Detecting duplicate SeatsReserved events
 
 Typically, the **RegistrationProcessManager** class sends a 
 **MakeSeatReservation** command to the **SeatAvailability** aggregate, 
@@ -481,7 +480,7 @@ events are wrapped in an **Envelope** instance that includes the
 > **EventDispatcher** class: this class uses reflection to identify the
 > correct handlers for a given message type.
 
-### Detecting Duplicate OrderPlaced Events
+### Detecting duplicate OrderPlaced events
 
 To achieve this, the **RegistrationProcessRouter** class now performs a 
 check to see of the event is has already been processed. The new V3 
@@ -509,7 +508,7 @@ public void Handle(OrderPlaced @event)
 }
 ```
 
-### Creating a Psuedo Transaction when the Process Manager Saves Its State and Sends a Command
+### Creating a psuedo transaction when the process manager saves its state and sends a command
 
 It is not possible to have a transaction in Windows Azure that spans 
 persisting the **RegistrationProcessManager** to storage and sending the 
@@ -610,7 +609,7 @@ public T Find(Expression<Func<T, bool>> predicate)
 > re-tried. The **Find** method throws an exception and the system is
 > not able to load it.
 
-### Adding Optimistic Locking to the RegistrationProcessManager class
+### Adding optimistic locking to the RegistrationProcessManager class
 
 The team also added an optimistic concurrency check when the system saves the **RegistrationProcessManager** class by adding a timestamp property to the **RegistrationProcessManager** class as shown in the following code sample:
 
@@ -784,7 +783,7 @@ public Order(Guid id, Guid conferenceId, IEnumerable<OrderItem> items, IPricingS
 
 Previously, in the V2 release the **Order** aggregate waited until it received a **MarkAsReserved** command before it called the **CalculateTotal** method.
 
-## Other Optimizations
+## Other optimizations
 
 This section describes some of the other optimizations that the team included in the V3 release.
 
@@ -812,7 +811,7 @@ protected SubscriptionReceiver(ServiceBusSettings settings, string topic, string
 }
 ```
 
-### Accepting Multiple Sessions in Parallel
+### Accepting multiple sessions in parallel
 
 In the V2 release, the **SessionSubscriptionReceiver** creates sessions to receive messages from the Windows Azure Service Bus in sequence. In the V3 release, the **SessionSubscriptionReceiver** creates multiple sessions in parallel. This helps to improve the throughput and reduce the latency when the system retrieves messages from the Service Bus. The follwing code sample shows the new version of the **ReceiveMessages** method in the **SessionSubscriptionReceiver** class.
 
@@ -862,7 +861,7 @@ private void ReceiveMessages(CancellationToken cancellationToken)
 }
 ```
 
-### Task Support in MVC 4
+### Task support in MVC 4
 
 As part of the V3 release the team upgraded the Conference.Web.Public 
 site to MVC 4. This enabled them to update the 
@@ -884,13 +883,13 @@ public Task<ActionResult> SpecifyRegistrantAndPaymentDetails(Guid orderId, int o
 }
 ```
 
-# Impact on Testing 
+# Impact on testing 
 
 During this stage of the journey the team re-organized the 
 **Conference.Specflow** project in the **Conference.AcceptanceTests** 
 Visual Studio solution to better reflect the purpose of the tests. 
 
-## Integration Tests
+## Integration tests
 
 The tests in the **Features\Integration** folder in the 
 **Conference.Specflow** project are designed to test the behavior of the 
@@ -912,7 +911,7 @@ tests for the Orders and Registrations bounded context.
 > command messages. This may not be appropriate for other systems that
 > you may be designing tests for.
 
-## User Interface Tests
+## User interface tests
 
 The **UserInterface** folder contains the acceptance tests. These tests 
 are described in more detail in [Chapter 4, Extending and Enhancing the 

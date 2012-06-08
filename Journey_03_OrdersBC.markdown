@@ -3,7 +3,7 @@
 
 _The first stopping point on our CQRS journey._
 
-# A Description of the Orders and Registrations Bounded Context
+# A description of the Orders and Registrations Bounded Context
 
 The **Orders and Registrations** bounded context is partially 
 responsible for the booking process for Attendees planning to come to a 
@@ -42,7 +42,7 @@ types.
 > out-of-band releases and updates will be announced on the [Project "a
 > CQRS Journey"][cqrsjourneysite] website.
 
-## Working Definitions for this Chapter
+## Working definitions for this chapter
 
 The remainder of this chapter uses the following definitions. 
 For more detail, and possible alternative definitions, see [A CQRS/ES 
@@ -76,7 +76,7 @@ events to an event bus; handlers register for specific types of event on
 the event bus and then deliver the event to the subscriber. In this 
 bounded context, the only subscriber is a process manager. 
 
-### Process manager
+### Process Manager
 
 In this bounded context, a process manager is a 
 class that coordinates the behavior of the aggregates in the domain. A 
@@ -104,7 +104,7 @@ subscribe to events.
 The Reference Guide contains additional definitions and explanations of 
 CQRS related terms.
 
-## User Stories
+## User stories
 
 The bounded context described in this chapter addresses the following 
 user story. 
@@ -135,7 +135,7 @@ These UI mockups helped the team in several ways:
   approaches.
 * Forming the basis for the system's suite of acceptance tests.
 
-### Domain Definitions (Ubiquitous Language)
+### Domain definitions (ubiquitous language)
 
 The following list defines the key domain related terms that the team 
 used during the development of these **Orders and Registrations** 
@@ -287,7 +287,7 @@ For more information about the options for running the application, see
 > write-side are deployed to the same Windows Azure worker role rather
 > than to two separate worker roles that could be scaled independently.
 
-# Patterns and Concepts <a name="patternsandconcepts"/>
+# Patterns and concepts <a name="patternsandconcepts"/>
 
 The team decided to implement the first bounded context without using 
 event sourcing in order to keep things simple. However, they did agree 
@@ -470,7 +470,7 @@ All three models require entities to communicate about the validation
 process, but the third model with the process manager appears more complex than the 
 other two. 
 
-## Transaction Boundaries
+## Transaction boundaries
 
 An aggregate, in the DDD approach, represents a consistency boundary. 
 Therefore, the first model with two aggregates, and the third model with 
@@ -511,7 +511,7 @@ to track when reservations expire.
 Modeling this complex behavior with sequences of messages and the 
 requirement for a timer is best done using a process manager. 
 
-## Aggregates and Aggregate Roots
+## Aggregates and aggregate roots
 
 In the two models where there are the **Order** aggregate and the 
 **SeatsAvailability** aggregate, the team easily identified 
@@ -525,7 +525,7 @@ The team decided on the model that incorporated a process manager because this
 offers the best way to handle the concurrency requirements in this 
 bounded context. 
 
-# Implementation Details
+# Implementation details
 
 This section describes some of the significant features of the 
 implementation of the Orders and Registrations bounded context. You may 
@@ -539,7 +539,7 @@ or check the evolution of the code in the repository on github:
 > CQRS journey, the implementation may well change as we learn more and
 > refactor the code.
 
-## High-level Architecture
+## High-level architecture
 
 As we described in the previous section, the team initially decided to 
 implement the reservations story in the Conference Management System 
@@ -558,7 +558,7 @@ some infrastructure components.
 The following sections relate to the numbers in figure 5 and provide 
 more detail about these elements of the architecture. 
 
-### 1. Querying the Read Model
+### 1. Querying the read model
 
 The **ConferenceController** class includes an action named **Display** 
 that creates a view that contains information about a particular 
@@ -655,7 +655,7 @@ public void Handle(RegisterToConference command)
 }
 ```
 
-### 4. Initiating Business Logic in the Domain
+### 4. Initiating business logic in the domain
 
 In the previous code sample, the **OrderCommandHandler** class 
 creates a new **Order** instance. The **Order** entity is an aggregate 
@@ -663,14 +663,14 @@ root, and its constructor contains code to initiate the domain logic.
 See the section "Inside the Write Model" below for more details of what 
 actions this aggregate root performs. 
 
-### 5. Persisting the Changes
+### 5. Persisting the changes
 
 In the previous code sample, the handler persists the new **Order** 
 aggregate by calling the **Save** method in the repository class. This 
 **Save** method also publishes any events raised by the **Order** 
 aggregate on the command bus. 
 
-### 6. Polling the Read Model
+### 6. Polling the read model
 
 To provide feedback to the user, the UI must have a way to check whether 
 the **RegisterToConference** command succeeded. Like all commands in the 
@@ -752,7 +752,7 @@ works better with the browser's forward and back navigation buttons, and
 that it gives the infrastructure more time to process the command before 
 the MVC controller starts polling. 
 
-## Inside the Write Model
+## Inside the write model
 
 ### Aggregates
 
@@ -1183,7 +1183,7 @@ This implementation gives rise to a number of questions:
 
 The following sections discuss these questions.
 
-### How Do You Limit Delivering a Command To a Single Recipient?
+### How do you limit delivering a command to a single recipient?
 
 This discussion assumes you that you have a basic understanding of the 
 differences between Windows Azure Service Bus queues and topics. For an 
@@ -1346,7 +1346,7 @@ private void OnMessageReceived(object sender, BrokeredMessageEventArgs args)
 > **Complete** and **Abandon** methods of the **BrokeredMessage**
 > reliably using the [Transient Fault Handling Application Block][tfab].
 
-### Why Have Separate **CommandBus** and **EventBus** Classes if They Are so Similar?
+### Why have separate **CommandBus** and **EventBus** classes if they are so similar?
 
 Although at this early stage in the development of the Conference 
 Management system the implementations of the **CommandBus** and 
@@ -1360,7 +1360,7 @@ will diverge in the future.
 > unify the implementations. I've been there before and ended up 
 > splitting them when further requirements came in. 
 
-### How Scalable Is This Approach?
+### How scalable is this approach?
 
 With this approach, you can run multiple instances of the 
 **SubscriptionReceiver** class and the various handlers in different 
@@ -1373,7 +1373,7 @@ For information about scaling the Windows Azure Service Bus
 infrastructure, see [Best Practices for Performance Improvements Using 
 Service Bus Brokered Messaging][sbperf] on MSDN. 
 
-### How Robust Is This Approach?
+### How robust is this approach?
 
 This approach uses the brokered messaging option of the Windows Azure 
 Service Bus to provided asynchronous messaging. The Service Bus reliably 
@@ -1385,7 +1385,7 @@ consumer fails while it is processing the message. If a consumer fails
 before it calls the **Complete** method, the message is still available 
 for processing when the consumer restarts. 
 
-### What Is the Granularity of a Topic and a Subscription?
+### What is the granularity of a topic and a subscription?
 
 The current implementation uses a single topic (**conference/commands**) 
 for all commands within the system, and a single topic 
@@ -1406,7 +1406,7 @@ application across multiple worker roles.
 > usage is billed based on the number of messages sent and the amount of 
 > data transferred out of Windows Azure sub-region. 
 
-### How Are Commands and Events Serialized?
+### How are commands and events serialized?
 
 The Contoso Conference Management System uses the [Json.NET][jsonnet] 
 serializer. For details of how the application uses this serializer,
@@ -1421,7 +1421,8 @@ the Reference Guide.
   
 > Greg Young - Conversation with the PnP team.
 
-# Impact on Testing
+# Impact on testing
+
 Because this was the first bounded context the team tackled, one of the 
 key concerns was how to approach testing given that the team wanted to 
 adopt a Test-Driven Development approach. The following conversation 

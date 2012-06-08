@@ -1,5 +1,4 @@
-## Chapter 5
-# Communicating Between Bounded Contexts (Chapter Title)
+# Chapter 5: Communicating Between Bounded Contexts (Chapter Title)
 
 # Introduction
 
@@ -25,7 +24,7 @@ valuable piece of documentation records which bounded contexts publish
 which integration events, and which bounded contexts subscribe to which 
 integration events. 
 
-# The Anti-corruption Layer
+# The anti-corruption layer
 
 Bounded contexts are independent of each other and may be modified or 
 updated independently of each other. Such modifications may result in 
@@ -52,7 +51,7 @@ operations:
   bounded context uses a different version to the receiving bounded
   context.
 
-# Integration With Legacy Systems
+# Integration With legacy systems
 
 Bounded contexts that implement the CQRS pattern will already have much 
 of the infrastructure necessary to publish and receive integration 
@@ -67,7 +66,7 @@ The following sections outline some common approaches to getting data
 from a legacy system to a bounded context that implements the CQRS 
 pattern: 
 
-## Reading the Database
+## Reading the database
 
 Many legacy systems use a relational database to store their data. A 
 simple way to get data from the legacy system to your bounded context 
@@ -78,7 +77,7 @@ cannot make any changes to the legacy system. However, it does mean that
 your bounded context is tightly coupled to the database schema in the 
 legacy system. 
 
-## Generating Events from the Database
+## Generating events from the database
 
 As an alternative, you can implement a mechanism that monitors the 
 database in the legacy system, and then publishes integration events 
@@ -88,7 +87,7 @@ because you are creating an additional process to monitor the database.
 However, you now have another program to maintain that is tightly 
 coupled to the legacy system. 
 
-## Modifying the Legacy Systems
+## Modifying the legacy systems
 
 If you are able to modify the legacy system, you could modify it to 
 publish integration events directly. With this approach, unless you are 

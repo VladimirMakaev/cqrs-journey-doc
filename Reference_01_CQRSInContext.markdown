@@ -1,5 +1,4 @@
-## Chapter 1
-# CQRS in Context (Chapter Title)
+# Chapter 1: CQRS in Context
 
 This chapter is intended to provide some context for the main subject of 
 this guide: a discussion of the Command Query Responsibility Segregation 
@@ -44,6 +43,7 @@ free book, "[Domain-Driven Design Quickly][dddquickly]" by Abel Avram
 and Floyd Marinescu. 
 
 # What is Domain-Driven Design? 
+
 As previously stated, DDD is an approach to developing software systems, 
 and in particular systems that are complex, that have ever-changing 
 business rules, and that you expect to last for the long-term within the 
@@ -83,7 +83,8 @@ projects.
   </span>
 </div>
 
-# Domain-Driven Design: Concepts and Terminology 
+# Domain-Driven Design: Concepts and terminology 
+
 As previously stated, this guide is not intended to provide guidance on 
 using the DDD approach. However, it is useful to understand some of 
 the concepts and terminology from DDD because they are useful when we 
@@ -91,7 +92,8 @@ describe some aspects of CQRS pattern implementations. These are not
 official or rigorous definitions; they are intended to be useful, 
 working definitions for the purposes of this guide. 
 
-## Domain Model 
+## Domain model 
+
 At the heart of DDD lies the concept of the domain model. This model is 
 built by the team responsible for developing the system in question, and 
 that team consists of both domain experts from the business and software 
@@ -116,7 +118,8 @@ these domain models. Domain models are typically composed of elements
 such as Entities, Value Objects, Aggregates, and described using terms 
 from a Ubiquitous Language. 
 
-## Ubiquitous Language 
+## Ubiquitous language 
+
 The concept of a ubiquitous language is very closely related to that of 
 the domain model. One of the functions of the domain model is to foster 
 a common understanding of the domain between the domain experts and the 
@@ -131,10 +134,12 @@ talking about an Attendee in the software," then eventually something
 will go wrong as a result of a misunderstanding or mistranslation. 
 
 ## Entities, Value Objects, and Services 
+
 DDD uses these terms to identify some of the internal artifacts that 
 will make up the domain model. 
 
 ### Entities 
+
 Entities are objects that are defined by their identity, and that 
 identity continues through time. For example, a conference in a 
 conference management system will be an entity; many of its attributes 
@@ -145,6 +150,7 @@ within the system's memory; at times it may be persisted to a database,
 only to be re-instantiated at some point in the future. 
 
 ### Value Objects 
+
 Not all objects are defined by their identity: for some objects what is 
 important are the values of their attributes. For example, within our 
 conference management system we do not need to assign an identity to 
@@ -154,6 +160,7 @@ concerned with are the values of the attributes of an address: street,
 city, state, etc. Value objects are usually immutable. 
 
 ### Services 
+
 You cannot always model everything as an object. For example, in the 
 conference management system it makes sense to model a third-party 
 payment processing system as a service: the system can pass the 
@@ -166,6 +173,7 @@ service is that it is stateless (unlike entities and value objects).
   domain model is not a Web service; these are two different concepts. 
 
 ##Aggregates and Aggregate Roots 
+
 Whereas entities, value objects, and services are terms for the elements 
 that DDD uses to describe things in the domain model, the terms 
 aggregate and aggregate root relate specifically to the life cycle and 
@@ -276,7 +284,8 @@ Customer entity moves from one bounded context to another you may need
 to translate it so that it exposes the relevant facets or properties for 
 its current context. 
 
-## Bounded Contexts and Multiple Architectures 
+## Bounded contexts and multiple architectures 
+
 A bounded context typically represents a slice of the overall system 
 with clearly defined boundaries separating it from other bounded 
 contexts within the system. If a bounded context is implemented by 
@@ -319,7 +328,8 @@ the specific characteristics of that part: is it a complex part of the
 system; does it contain core domain functionality; what is its expected 
 lifetime? 
 
-## Bounded Contexts and Multiple Development Teams 
+## Bounded contexts and multiple development teams 
+
 Clearly separating out the different bounded contexts, working with 
 separate domain models and ubiquitous languages also makes it possible 
 to parallelize the development work by using separate teams for each 
@@ -327,7 +337,8 @@ bounded context. This relates to the idea of using different technical
 architectures for different bounded contexts because the different 
 development teams might have different skill sets and skill levels. 
 
-## Maintaining Multiple Bounded Contexts 
+## Maintaining multiple bounded contexts 
+
 Although bounded contexts help to manage the complexity of large systems 
 by dividing them up into more manageable pieces, it is unlikely that 
 each bounded context will exist in isolation. Bounded contexts will need 
@@ -351,6 +362,7 @@ models, you should read "Part IV: Strategic Design" in the book
 Eric Evans. 
 
 # CQRS and DDD 
+
 As stated in the introduction to this chapter, it is useful to 
 understand a little of the terminology and concepts from DDD when you 
 are learning about the CQRS pattern. 

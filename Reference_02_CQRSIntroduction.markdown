@@ -1,5 +1,5 @@
-## Chapter 2
-# Introducing the Command Query Responsibility Segregation Pattern (Chapter Title)
+# Chapter 2: Introducing the Command Query Responsibility Segregation Pattern
+
 This chapter introduces the topic of Command Query Responsibility 
 Segregation (CQRS): it describes the CQRS pattern that lies at the heart 
 of almost everything discussed in this guidance and shows how applying 
@@ -18,6 +18,7 @@ Subsequent chapters provide a more in depth guidance on how to apply the
 CQRS pattern and other related patterns to your implementation. 
 
 # What is CQRS?
+
 In his book "[Object Oriented Software Construction][meyerbook]," 
 Betrand Meyer introduced the term "[command query separation][cqsterm]" 
 to describe the principle that an object's methods should be either 
@@ -57,7 +58,8 @@ managing changing business rules in some portions of your system.
 > up to.  
 > Clemens Vasters (CQRS Advisors Mail List)
 
-## Read and Write Sides
+## Read and write sides
+
 Figure 1 shows a typical application of the CQRS pattern to a portion of 
 an enterprise system. This approach shows how, when you apply the CQRS 
 pattern, you can separate the read and write sides in this portion of 
@@ -125,6 +127,7 @@ to explore the motivations for using the CQRS pattern in more detail.
 Later chapters will explore these issues in more depth.
 
 # CQRS and Domain-Driven Design
+
 The previous chapter "[CQRS in Context][r_chapter1]," introduced some 
 of the concepts and terminology from Domain-Driven Design (DDD) that 
 are relevant to the implementation of the CQRS pattern. Two areas are 
@@ -212,6 +215,7 @@ each other, and then only apply the CQRS pattern to those portions
 where there are clear business benefits in doing so.
 
 # Introducing Commands, Events, and Messages
+
 DDD is an analysis and design approach that encourages you to use models 
 and a ubiquitous language to bridge the gap between the business and the 
 development team by fostering a common understanding of the domain. Of 
@@ -263,7 +267,8 @@ we will explore this in more detail in later chapters.
 > **Note:** Events are not the only way to manage the push 
   synchronization of updates from the write-side to the read-side.
 
-# Why Should I Use CQRS?
+# Why should I use CQRS?
+
 Stepping back from CQRS for a moment, one of the benefits of dividing 
 the domain into bounded contexts in DDD is to enable you to identify and 
 focus on those portions (bounded contexts) of the system that are more 
@@ -279,6 +284,7 @@ CQRS pattern are scalability, simplifying a complex aspect of your
 domain, and adding flexibility to your solution. 
 
 ## Scalability
+
 In many enterprise systems, the number of reads vastly exceeds the 
 number of writes, so your scalability requirements will be different for
 each side. By separating the read-side and the write-side into separate 
@@ -297,7 +303,8 @@ role instances to each.
   Database servers can be cheap - if using MySQL/SQL Express/others."  
   Udi Dahan, When to avoid CQRS.
 
-## Managing Complexity
+## Managing complexity
+
 In complex areas of your domain, designing and implementing objects that
 are responsible for both reading and writing data can exacerbate the 
 complexity. In many cases, the complex business logic is only applied 
@@ -330,6 +337,7 @@ separating out the read logic and the business logic is that it can make
 testing easier.
 
 ## Flexibility
+
 The flexibility of a solution that uses the CQRS pattern largely derives 
 from the separation into the read-side and the write-side models. It 
 becomes much easier to make changes on the read-side, for example adding 
@@ -355,7 +363,8 @@ In some cases, it may be possible to have different development teams
 working on the write-side and the read-side, although in practice this 
 will probably depend on how large the particular bounded context is. 
 
-## Focus on the Business
+## Focus on the business
+
 If you use an approach like CRUD, then the technology tends to shape the 
 solution. Adopting the CQRS pattern helps you to focus on the business 
 and to build task-oriented UIs. A consequence of separating the 
@@ -364,7 +373,7 @@ that is more adaptable in the face of changing business requirements.
 This results in lower development and maintenance costs in the 
 longer-term. 
 
-## Facilitates Building Task-based UIs
+## Facilitates building task-based UIs
 
 When you implement the CQRS pattern, you use commands (often from the 
 UI), to initiate operations in the domain. These commands are typically 
@@ -373,7 +382,7 @@ example, "book two seats on conference X." You can design your UI to
 send these commands to the domain instead of intiating CRUD-style 
 operations. This makes it easier to design intuitive, task-based UIs.
 
-## Barriers to Adopting the CQRS Pattern
+## Barriers to adopting the CQRS pattern
 
 Although you can list a number of clear benefits to adopting the CQRS 
 pattern in specific scenarios, you may find it difficult in practice to 
@@ -384,7 +393,8 @@ Quote 3 goes here
 
 Quote 4 goes here
 
-# When Should I Use CQRS?
+# When should I use CQRS?
+
 Although we have outlined some of the reasons why you might decide to 
 apply the CQRS pattern to some of the bounded contexts in your system, 
 it is helpful to have some rules of thumb to help identify the bounded 
@@ -401,7 +411,8 @@ not worth making this investment if you don't expect to see returns such
 as increased adaptability and flexibility in the system, or reduced 
 maintenance costs. 
 
-## Collaborative Domains
+## Collaborative domains
+
 Both Udi Dahan and Greg Young identify collaboration as the 
 characteristic of a bounded context that provides the best indicator 
 that you may see benefits from applying the CQRS pattern. 
@@ -431,7 +442,8 @@ only a guide: not all collaborative domains benefit from the CQRS
 pattern, and some non-collaborative domains do benefit from the CQRS 
 pattern. 
 
-## Stale Data
+## Stale data
+
 In a collaborative environment where multiple users can operate on the 
 same data simultaneously, you also encounter the issue of stale data: if 
 one user is viewing a piece of data while another user changes it, then 
@@ -463,7 +475,8 @@ In the chapter "[A CQRS/ES Deep Dive][r_chapter4]," we will look at how
 the synchronization mechanism between write-side and the read-side 
 determines how you manage the issue of stale data in your application.
 
-## Moving to the Cloud
+## Moving to the cloud
+
 Moving an application to the cloud or developing an application for the 
 cloud is not a sufficient reason for choosing to implement to CQRS 
 pattern. However, many of the drivers for using the cloud such as 
@@ -474,7 +487,8 @@ suited for building the infrastructure for a CQRS implementation: for
 example, highly scalable data stores, messaging services, and caching 
 services. 
 
-#When Should I Avoid CQRS?
+#When should I avoid CQRS?
+
 Simple, static, non-core bounded contexts are less likely to warrant the 
 upfront investment in detailed analysis, modeling, and complex 
 implementation. Again, non-collaborative bounded contexts are less 
@@ -489,6 +503,7 @@ when you can identify clear business benefits from so doing.
 > Udi Dahan: [When to avoid CQRS][dahanavoid]
 
 # Summary
+
 The CQRS pattern is an enabler for building individual portions (bounded 
 contexts) in your system. Identifying where to use the CQRS pattern 
 requires you to analyze the trade-offs between the initial cost and 

@@ -1,6 +1,6 @@
 # Chapter 1: The Contoso Conference Management System 
 
-The starting point: Where have we come from, what are we taking, and who is coming with us?
+_The starting point: Where have we come from, what are we taking, and who is coming with us?_
 
 This chapter introduces a fictitious company named Contoso. It describes 
 Contoso's plans to launch the Contoso Conference Management System, a 

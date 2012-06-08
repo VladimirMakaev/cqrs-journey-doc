@@ -1,9 +1,8 @@
-## Chapter 0
 # Preface
 
 _Why are we embarking on this journey?_
 
-# What Are the Motivations for Creating This Guidance Now?
+# What are the motivations for creating this guidance now?
 
 The **Command Query Responsibility Segregation (CQRS)** pattern and 
 **Event Sourcing** are currently generating a great deal of interest 
@@ -33,7 +32,7 @@ you with both a working application and written guidance, we hope to get
 you launched well on the way up the learning curve and prepared to 
 embark on your own CQRS journey. 
 
-# How is This Guidance Structured?
+# How is this guidance structured?
 
 There are two, closely related, parts to this guidance: 
 

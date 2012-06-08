@@ -1,9 +1,8 @@
-## Chapter 6
-# A Saga on Sagas (Chapter Title)
+# Chapter 6: A Saga on Sagas (Chapter Title)
 
 **Process Managers, Coordinating Workflows, and Sagas**
 
-# Clarifying the Terminology
+# Clarifying the terminology
 
 The term **Saga** is commonly used in discussions of CQRS to refer to a 
 piece of code that coordinates and routes messages between bounded 
@@ -138,7 +137,7 @@ any business logic. It only routes messages, and in some cases
 translates between message types. For example, when it receives a 
 **SeatsNotReserved** event, it sends an **AddToWaitList** command. 
 
-## When Should I Use a Process Manager?
+## When should I use a Process Manager?
 
 Process Manager route commands and events between aggregate 
 instances, however they don't implement any business logic. There are 
@@ -151,7 +150,7 @@ two key reasons to use a Process Manager:
   bounded context. A Process Manager gives a single place where
   the routing is defined.
 
-## When Should I Not Use a Process Manager?
+## When should I not use a Process Manager?
 
 The following list identifies reasons not to use a Process Manager:
 

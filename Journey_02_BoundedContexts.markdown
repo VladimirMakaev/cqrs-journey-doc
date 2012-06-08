@@ -20,7 +20,7 @@ practice within the CQRS community. The chapter [CQRS in
 Context][r_chapter1] in the Reference Guide discusses the relationship 
 between the DDD approach and the CQRS pattern in more detail. 
 
-# Definitions Used in This Chapter 
+# Definitions used in this chapter 
 
 The remainder of this chapter uses the following definitions. 
 For more detail, and possible alternative definitions see [CQRS in 
@@ -61,7 +61,7 @@ This **Context Map** serves several purposes that include providing
 an overview of the whole system and helping people to understand the 
 details of how different bounded contexts interact with each other. 
 
-# Bounded Contexts in the Conference Management System 
+# Bounded contexts in the conference management system 
 
 ## The Orders and Registrations Bounded Context
 
@@ -122,7 +122,7 @@ Customer has an account with the third-party payment system (although
 not necessarily a merchant account), or that the Business Customer will 
 accept payment by invoice.
 
-## Additional Bounded Contexts
+## Additional bounded contexts
 
 Although they didn't make it into the final release of the Contoso 
 Conference Management System, some work was done on three additional 
@@ -177,7 +177,7 @@ flow of data as events between them.
 
 ![Figure 1][fig1]
 
-**Bounded Contexts in the Contoso Conference Management System**
+**Bounded contexts in the Contoso Conference Management System**
 
 The following list provides more information about the arrows in figure 
 1. You can find additional detail in the chapters that discuss the 
@@ -198,7 +198,7 @@ individual bounded contexts.
 > information, see
 > [Chapter 5, Preparing for the V1 Release][j_chapter5]
 
-# Why Did We Choose These Bounded Contexts?
+# Why did we choose these bounded contexts?
 
 During the planning stage of the journey, it became clear that these 
 were the natural divisions in the domain that could each contain their 

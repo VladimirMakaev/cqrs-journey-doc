@@ -1,9 +1,8 @@
-## Chapter 6
-# Versioning our System 
+# Chapter 6: Versioning our System 
 
 *"Variety is the very spice of life." William Cowper, Olney Hymns (1779)*
 
-# Upgrading the Code and Migrating the Data 
+# Upgrading the code and migrating the data 
 
 The top-level goal for this stage in the journey is to learn about how 
 to upgrade a system that includes bounded contexts that implement the 
@@ -14,7 +13,7 @@ data schemas were added. In addition to upgrading the system and
 migrating the data, the team planned to do the upgrade and migration 
 with no downtime for the live system running in Windows Azure. 
 
-## Working Definitions for this Chapter 
+## Working definitions for this chapter 
 
 The remainder of this chapter uses the following definitions. 
 For more detail, and possible alternative definitions, see [A CQRS/ES 
@@ -44,12 +43,12 @@ events to an event bus; handlers register for specific types of event on
 the event bus and then deliver the events to the subscriber. In this 
 bounded context, the only subscriber is a process manager. 
 
-## User Stories 
+## User stories 
 
 The team implemented the following user stories during this phase of the 
 project. 
 
-### No Downtime Upgrade
+### No downtime upgrade
 
 The goal for the V2 release is to perform the upgrade, including any 
 necessary data migration, without any downtime for the system. If this 
@@ -60,13 +59,13 @@ downtime upgrades in the future (starting with the V3 release).
 > **BethPersona:** Ensuring that we can perform no downtime upgrades is
 > crucial to our credibility in the marketplace.
 
-### Display Remaining Seat Quantities
+### Display remaining seat quantities
 
 Currently, when a Registrant creates an order, there is no indication of 
 the number of seats remaining for each seat type. The UI should display 
 this information when the Registrant is selecting seats for purchase. 
 
-### Handle Zero-cost Seats
+### Handle zero-cost seats
 
 Currently, when a Registrant selects seats that have a zero-cost, the UI 
 flow still takes the Registrant to the payments page even though there 
@@ -95,13 +94,13 @@ database.
 For more information about the options for running the application, see 
 [Appendix 1][appendix1]. 
 
-# Patterns and Concepts 
+# Patterns and concepts 
 
 During this stage of the journey, most of the key challenges addressed 
 by the team related to how best to perform the migration from V1 to V2. 
 This section describes some of those challenges. 
 
-## Handling Changes to Events Definitions
+## Handling changes to events definitions
 
 When the team examined the requirements for the V2 release, it became 
 clear that we would need to change some of the events used in the 
@@ -118,7 +117,7 @@ new sets of events.
 The team considered two approaches to handle this type of change in the 
 system. 
 
-### Mapping/Filtering Event Messages in the Infrastructure
+### Mapping/filtering event messages in the infrastructure
 
 This option handles old event messages and message formats by dealing 
 with them somewhere in the infrastructure before they reach the domain. 
@@ -128,7 +127,7 @@ is initially the more complex approach because it requires changes in
 the infrastructure, but has the advantage of keeping the domain _pure_ 
 because the domain only needs to understand the current set of events. 
 
-### Handling Multiple Message Versions in the Aggregates
+### Handling multiple message versions in the aggregates
 
 This alternative passes all the message types (both old and new) through 
 to the domain where each aggregate must be able to handle both the old 
@@ -143,7 +142,7 @@ involved the minimum amount of code changes.
 > aggregates now does not prevent you from later moving to the first
 > option and using a mapping/filtering mechanism in the infrastructure.
 
-## Honoring Message Idempotency
+## Honoring message idempotency
 
 One of the key issues to address in the V2 release is to make the system 
 more robust. In the V1 release, in some scenarios, it is possible that 
@@ -189,7 +188,7 @@ the message more than once.
 > stage of the journey. See the chapter [Adding Resilience, new Bounded
 > Contexts, and Features ][j_chapter7] for more information.
 
-### Avoiding Processing Events Multiple Times
+### Avoiding processing events multiple times
 
 In V1, in certain scenarios it was possible for the system to process an 
 event multiple times if an error occurred while the event was being 
@@ -230,7 +229,7 @@ subscription associated with that handler class. The retry logic now
 only causes the **EventProcessor** instance to retry the handler that 
 raised the exception, so no other handlers re-processe the message. 
 
-## Persisting Integration Events
+## Persisting integration events
 
 One of the concerns raised with the V1 release was about the way that 
 the system persists the integration events that are sent from the 
@@ -322,7 +321,7 @@ Conference Management bounded context creates an event, therefore the
 team decided to create the timestamp when the Conference Management 
 bounded context publishes the event. 
 
-## Message Ordering
+## Message ordering
 
 The acceptance tests that the team created and ran to verify the V1 
 release highlighted a potential issue with message ordering: the 
@@ -356,7 +355,7 @@ Both approaches would introduce some additional latency into the message
 delivery, but the team does not anticipate that this will have a 
 significant effect on the performance of the system. 
 
-# Implementation Details 
+# Implementation details 
 
 This section describes some of the significant features of the 
 implementation of the Orders and Registrations bounded context. You may 
@@ -370,7 +369,7 @@ or check the evolution of the code in the repository on github:
 > CQRS journey, the implementation may well change as we learn more and
 > refactor the code.
 
-## Adding Support for Zero-cost Orders
+## Adding support for zero-cost orders
 
 There were three specific goals in making this change, all of which are
 related:
@@ -456,7 +455,7 @@ user to the **ThirdPartyProcessorPayment** action and the
 **CompleteRegistrationWithoutPayment** method redirects the user 
 directly to the **ThankYou** action. 
 
-### Data Migration
+### Data migration
 
 The Conference Management bounded context stores order information from 
 the Orders and Registrations bounded context in the **PricedOrders** 
@@ -563,7 +562,7 @@ protected Order(Guid id)
 > the mapping in the infrastructure to avoid polluting the domain model
 > with legacy events.
 
-## Displaying Remaining Seats in the UI
+## Displaying remaining seats in the ui
 
 There were three specific goals in making this change, all of which are
 related:
@@ -575,7 +574,7 @@ related:
    type.
 3. Ensure that the system functions correctly after the upgrade to V2.
 
-### Adding Information about Remaining Seat Quantities to the Read-Model
+### Adding information about remaining seat quantities to the read-model
 
 The information that the system needs to be able to display the number 
 of remaining seats comes from two places. 
@@ -659,7 +658,7 @@ messages.
 > **MarkusPersona:** This check only detects duplicate messages, not out
 > of sequence messages.
 
-### Modifying the UI to Display Remaining Seat Quantities
+### Modifying the ui to display remaining seat quantities
 
 Now, when the UI queries the conference read-model for a list of seat 
 types, the list includes the currently available number of seats. The 
@@ -692,7 +691,7 @@ private OrderViewModel CreateViewModel()
 }
 ```
 
-### Data Migration
+### Data migration
 
 The SQL table that holds the conference read-model data now has a new 
 column to hold the version number that is used to check for duplicate 
@@ -703,7 +702,7 @@ As part of the data migration it is necessary to replay all of the
 events in the event store for each of the **SeatsAvailability** 
 aggregates in order to correctly calculate the available quantities. 
 
-## De-duplicating Command Messages
+## De-duplicating command messages
 
 The system currently uses the Windows Azure Service Bus to transport 
 messages. When the system initializes the Windows Azure Service Bus from 
@@ -776,7 +775,7 @@ private BrokeredMessage BuildMessage(Envelope<ICommand> command)
     return message;
 }
 ```
-## Guaranteeing Message Ordering
+## Guaranteeing message ordering
 
 The team decided to use Windows Azure Service Bus Message Sessions to 
 guarantee message ordering in the system.
@@ -908,7 +907,7 @@ For additional information about message ordering and Windows Azure
 Service Bus, see [Windows Azure Queues and Windows Azure Service Bus
 Queues - Compared and Contrasted][queues].
 
-## Persisting Events from the Conference Management Bounded Context
+## Persisting events from the Conference Management bounded context
 
 The team decided to create a message log of all the commands and events 
 that are sent. This will enable the Orders and Registrations bounded 
@@ -919,7 +918,7 @@ bounded context that it requires to build its read-models.
 > lost, so that in the future it will be possible to meet additional
 > requirements.
 
-### Adding Additional Metadata to the Messages
+### Adding additional metadata to the messages
 
 The system now persists all messages to the message log. To make it 
 easier to query the message log for specific commands or events, the 
@@ -929,7 +928,7 @@ type type, namespace, assembly, and path. The system adds the metadata
 to the events in the **EventBus** class and to the commands in the 
 **CommandBus** class. 
 
-### Capturing and Persisting Messages to the Message Log
+### Capturing and persisting messages to the message log
 
 The system uses an additional subscription to the 
 **conference/commands** and **conference/events** topics in Windows 
@@ -971,7 +970,7 @@ Notice how the rowkey preserves the order in which the messages were
 originally sent and adds on the message id to guarantee uniqueness just 
 in case two messages were enqueued at exactly the same time. 
 
-### Data Migration
+### Data migration
 
 When Contoso migrates the system from V1 to V2, it will use the message 
 log to rebuild the conference and priced-order read-models in the Orders 
@@ -1122,7 +1121,7 @@ see [Using Remote Desktop with Windows Azure Roles][azurerdp].
 > migration code as a worker role instead of as a console application
 > and ensure that it logs the status of the migration for you to verify.
 
-### Generating Past Log Messages for the Conference Management Bounded Context
+### Generating past log messages for the Conference Management bounded context
 
 Part of the migration process is to recreate, where possible, the 
 messages that the V1 release discarded after processing and then add 
@@ -1135,7 +1134,7 @@ represent the state of system at the time of the migration.
 For more information, see the section "Persisting Events from the 
 Conference Management Bounded Context" earlier in this chapter. 
 
-### Migrating the Event Sourcing Events
+### Migrating the event sourcing events
 
 In the V2 release, the event store now stores additional metadata for 
 each event in order to facilitate querying for for events. The migration 
@@ -1152,7 +1151,7 @@ For more information, see the
 **MigrateEventSourcedAndGeneratePastEventLogs** in the **Migrator** 
 class in the **MigrationToV2** project. 
 
-### Rebuilding the Read-Models
+### Rebuilding the read-models
 
 The V2 release includes several changes to the definitions of the 
 read-models in the Orders and Registrations bounded context. The 
@@ -1162,13 +1161,13 @@ Priced-order read-model in the Orders and Registrations bounded context.
 For more information, see the section "Persisting Events from the 
 Conference Management Bounded Context" earlier in this chapter. 
 
-# Impact on Testing 
+# Impact on testing 
 
 During this stage of the journey, the test team continuesd to expand the 
 set of acceptance tests. They also created a set of tests to verify the 
 data migration process. 
 
-## SpecFlow Revisited
+## SpecFlow revisited
 
 Previously, the set of SpecFlow tests were implemented in two ways: 
 either simulating user interaction by automating a web browser, or by 
@@ -1275,7 +1274,7 @@ public void ThenTheEventForOrderPlacedIsEmitted()
 }
 ```
 
-## Discovering a Bug During the Migration
+## Discovering a bug during the migration
 
 When the test team ran their tests on the system after the migration, 
 we discovered that the number of seat types in the Orders and 
