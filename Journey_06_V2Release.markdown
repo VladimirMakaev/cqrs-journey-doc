@@ -104,7 +104,7 @@ This section describes some of those challenges.
 ## Handling Changes to Events Definitions
 
 When the team examined the requirements for the V2 release, it became 
-clear that they would need to change some of the events used in the 
+clear that we would need to change some of the events used in the 
 Orders and Registrations bounded context to accommodate some of the new 
 features: the **RegistrationProcess** would change and the system would 
 provide a better user experience when the order had a zero cost. 
@@ -1278,7 +1278,7 @@ public void ThenTheEventForOrderPlacedIsEmitted()
 ## Discovering a Bug During the Migration
 
 When the test team ran their tests on the system after the migration, 
-they discovered that the number of seat types in the Orders and 
+we discovered that the number of seat types in the Orders and 
 Registrations bounded context was different from the number prior to the 
 migration. The investigation revealed the following cause. 
 

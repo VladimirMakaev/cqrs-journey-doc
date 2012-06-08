@@ -141,7 +141,7 @@ For more information about the options for running the application, see
 
 This section describes some of the key areas of the application that the 
 team visited during this stage of the journey and introduces some of the 
-challenges met by the team when they addressed these areas. 
+challenges met by the team when we addressed these areas. 
 
 ## Record Locators
 
@@ -306,7 +306,7 @@ Possible objections to this approach include:
   UI.
   
 The team decided to adopt the second approach because of the clarity it 
-brings to the code; in this context, they did not see any significant 
+brings to the code; in this context, we did not see any significant 
 advantage in the flexibility of the approach that uses the 
 **IQueryable** interface. For examples, see the **ConferenceDao** and 
 **OrderDao** classes in the **Registration** project. 

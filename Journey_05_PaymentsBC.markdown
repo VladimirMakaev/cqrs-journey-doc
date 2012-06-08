@@ -19,7 +19,7 @@ Registrations bounded context.
 One of the anticipated benefits from implementing the CQRS pattern is 
 that it will help to manage change in a complex system. Having a V1 
 release during the CQRS journey will help the team to evaluate how the 
-CQRS pattern and event sourcing deliver these benefits when they move 
+CQRS pattern and event sourcing deliver these benefits when we move 
 forward from the V1 release to the next production release of the 
 system. The following chapters will describe what happens after the V1 
 release. 
@@ -359,7 +359,7 @@ implement the CQRS pattern.
 
 This section describes some of the key areas of the application that the 
 team visited during this stage of the journey and introduces some of the 
-challenges met by the team when they addressed these areas. 
+challenges met by the team when we addressed these areas. 
 
 ## Event Sourcing
 
@@ -369,7 +369,7 @@ implementation it became clear that using event sourcing would help to
 simplify this bounded context. 
 
 In the previous chapter, [Extending and Enhancing the Orders and 
-Registrations Bounded Contexts][j_chapter4] the team found that they 
+Registrations Bounded Contexts][j_chapter4] the team found that we 
 needed to use events to push changes from the write-side to the 
 read-side. On the read-side the **OrderViewModelGenerator** class 
 subscribed to the events published by the **Order** aggregate, and used 
@@ -427,7 +427,7 @@ reliability, scale, and performance for your application.
 ### Identifying Aggregates
 
 In the Windows Azure table storage based implementation of the event 
-store that the team created for the V1 release, they used the aggregate 
+store that the team created for the V1 release, we used the aggregate 
 id as the partition key. This makes it efficient to locate the partition 
 that holds the events for any particular aggregate. 
 
@@ -533,7 +533,7 @@ architecture: you should implement the pattern only in those bounded
 contexts where it brings clear benefits. In the Contoso Conference 
 Management System, the conference management bounded context is a 
 relatively simple, stable, and low volume part of the overall system. 
-Therefore, the team decided that they would implement this bounded 
+Therefore, the team decided that we would implement this bounded 
 context using a traditional two-tier, CRUD-style architecture. 
 
 ## Integration between Bounded Contexts

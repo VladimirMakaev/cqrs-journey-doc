@@ -96,7 +96,7 @@ other. It is important that this workflow is resilient to a wide range
 of failure conditions if the bounded context as a whole is to maintain 
 its consistent state. 
 
-When the team tested the V2 release, they discovered that sometimes the 
+When the team tested the V2 release, we discovered that sometimes the 
 UI is waiting for the domain to to complete its processing, and for the 
 read-models to receive data from the write-model before it can display 
 the next screen to the Registrant. 
@@ -343,7 +343,7 @@ between these worker role instances.
 > transport the events that the system uses to construct the
 > denormalized read-model.
 
-There are a number of factors that the team will consider when they 
+There are a number of factors that the team will consider when we 
 determine whether to continue using the Windows Azure Service Bus for 
 transporting all command messages. 
 
