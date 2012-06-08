@@ -54,7 +54,7 @@ A command is a request for the system to perform an action that changes
 the state of the system. Commands are imperatives, for example 
 **MakeSeatReservation**. In this bounded context, commands originate 
 either from the UI as a result of a user initiating a request, or from 
-a workflow when the workflow is directing an aggregate to perform an 
+a process manager when the process manager is directing an aggregate to perform an 
 action. 
 
 A single recipient processes a Command. A command bus 
@@ -74,17 +74,17 @@ in the domain model raise events.
 Multiple subscribers can handle a specific event. Aggregates publish 
 events to an event bus; handlers register for specific types of event on 
 the event bus and then deliver the event to the subscriber. In this 
-bounded context, the only subscriber is a workflow. 
+bounded context, the only subscriber is a process manager. 
 
-### Coordinating Workflow
+### Process manager
 
-In this bounded context, a coordinating workflow (or workflow) is a 
+In this bounded context, a process manager is a 
 class that coordinates the behavior of the aggregates in the domain. A 
-workflow subscribes to the events that the aggregates raise, and then 
+process manager subscribes to the events that the aggregates raise, and then 
 follow a simple set of rules to determine which command or commands to 
-send. The workflow does not contain any business logic, simply logic to 
-determine the next command to send. The workflow is implemented as a 
-state machine, so when the workflow responds to an event, it can change 
+send. The process manager does not contain any business logic, simply logic to 
+determine the next command to send. The process manager is implemented as a 
+state machine, so when the process manager responds to an event, it can change 
 its internal state in addition to sending a new command.
 
 > **MarkusPersona:** It can be difficult for someone new to the code to
@@ -93,10 +93,10 @@ its internal state in addition to sending a new command.
 > [Extending and Enhancing the Orders and Registrations Bounded
 > Contexts][j_chapter4].
 
-The workflow in this bounded context can receive commands as well as 
+The process manager in this bounded context can receive commands as well as 
 subscribe to events.
 
-> **GaryPersona:** The team initially referred to the workflow class
+> **GaryPersona:** The team initially referred to the process manager class
 > in the **Orders** bounded context as a saga. To find out why we
 > decided to change the terminology, see the section [Patterns and
 > Concepts](#patternsandconcepts) later in this chapter.
@@ -381,11 +381,11 @@ The numbers in the diagram correspond to the following steps:
    the data store.
 
 The third approach considered by the team, shown in figure 4, uses a 
-workflow to coordinate the interaction between two aggregates. 
+process manager to coordinate the interaction between two aggregates. 
 
 ![Figure 4][fig4]
 
-**Approach #3, using a workflow**
+**Approach #3, using a process manager**
 
 The numbers in the diagram correspond to the following steps:
 
@@ -394,8 +394,8 @@ The numbers in the diagram correspond to the following steps:
 2. The new **Order** aggregate, with an ID of 4239,  is persisted to
    the data store.
 3. The **Order** aggregate raises an event that is handled by the
-   **RegistrationProcess** workflow.
-4. The **RegistrationProcess** workflow determines that a command should
+   **RegistrationProcessManager** class.
+4. The **RegistrationProcessManager** class determines that a command should
    be sent to the **SeatsAvailability** aggregate with an ID of
    157.
 5. The **SeatsAvailability** aggregate is re-hydrated from the
@@ -404,16 +404,16 @@ The numbers in the diagram correspond to the following steps:
    **SeatsAvailability** aggregate and it is persisted to the
    data store.
 
-> **GaryPersona:** Workflow or saga? Initially the team referred to
-> the **RegistrationProcess** workflow as a saga. However, after they
+> **GaryPersona:** Process manager or saga? Initially the team referred to
+> the **RegistrationProcessManager** class as a saga. However, after they
 > reviewed the original definition of a saga from the paper
 > [Sagas][sagapaper] by Hector Garcia-Molina and Kenneth Salem, they
 > revised their decision. The key reasons for this are that reservation
 > process does not include explicit compensation steps, and does not
 > need to be represented as a long-lived transaction.
 
-For more information about workflows and sagas, see the chapter
-[Coordinating Workflows and Sagas][r_chapter6] in the Reference Guide.
+For more information about process managers and sagas, see the chapter
+[A Saga on Sagas][r_chapter6] in the Reference Guide.
    
 The team identified these questions about these approaches:
 
@@ -462,19 +462,19 @@ The second model behaves similarly, except that it is **Order** and
 **SeatsAvailability** entities cooperating within a 
 **Conference** aggregate. 
 
-In the third model, with the workflow, the aggregates exchange messages
-through the workflow about whether the Registrant can make the reservation
+In the third model, with the process manager, the aggregates exchange messages
+through the process manager about whether the Registrant can make the reservation
 at the current time. 
 
 All three models require entities to communicate about the validation 
-process, but the third model with the workflow appears more complex than the 
+process, but the third model with the process manager appears more complex than the 
 other two. 
 
 ## Transaction Boundaries
 
 An aggregate, in the DDD approach, represents a consistency boundary. 
 Therefore, the first model with two aggregates, and the third model with 
-two aggregates and a workflow will involve two transactions: one when the 
+two aggregates and a process manager will involve two transactions: one when the 
 system persists the new **Order** aggregate and one when the system 
 persists the updated **SeatsAvailability** aggregate.
 
@@ -509,7 +509,7 @@ This timeout also requires the system to incorporate a timer somewhere
 to track when reservations expire. 
 
 Modeling this complex behavior with sequences of messages and the 
-requirement for a timer is best done using a workflow. 
+requirement for a timer is best done using a process manager. 
 
 ## Aggregates and Aggregate Roots
 
@@ -521,7 +521,7 @@ seem natural to access orders through a **SeatsAvailability**
 entity, or to access the seat availability through an **Order** entity. 
 Creating a new entity to act as an aggregate root seems unnecessary. 
 
-The team decided on the model that incorporated a workflow because this 
+The team decided on the model that incorporated a process manager because this 
 offers the best way to handle the concurrency requirements in this 
 bounded context. 
 
@@ -861,15 +861,15 @@ following conversation between two developers explores this decision.
 
 > *Thanks to J&eacute;r&eacute;mie Chassaing and Craig Wilson*
 
-### Aggregates and Workflows
+### Aggregates and process managers
 
 Figure 6 shows the entities that exist in the write-side model. There 
 are two aggregates, **Order** and **SeatsAvailability**, each 
 one containing multiple entity types. Also there is a 
-**RegistrationProcess** class to manage the interaction between the
+**RegistrationProcessManager** class to manage the interaction between the
 aggregates. 
 
-The table in the figure 6 shows how the workflow behaves given a current 
+The table in the figure 6 shows how the process manager behaves given a current 
 state and a particular type of incoming message. 
 
 ![Figure 6][fig6]
@@ -906,9 +906,9 @@ public Order(Guid id, Guid userId, Guid conferenceId, IEnumerable<OrderItem> lin
 > **Note:** To see how the infrastructure elements deliver commands and
   events, see figure 7.
 
-The system creates a new **RegistrationProcess** instance to manage the 
-new order. The following code sample from the **RegistrationProcess** 
-class shows how the workflow handles the event. 
+The system creates a new **RegistrationProcessManager** instance to manage the 
+new order. The following code sample from the **RegistrationProcessManager** 
+class shows how the process manager handles the event. 
 
 ```Cs
 public void Handle(OrderPlaced message)
@@ -934,15 +934,15 @@ public void Handle(OrderPlaced message)
 }
 ```
 
-The code sample shows how the workflow changes its state and sends a new 
+The code sample shows how the process manager changes its state and sends a new 
 **MakeSeatReservation** command that the 
 **SeatsAvailability** aggregate handles. The code sample also 
-illustrates how the workflow is implemented as a state machine that receives 
+illustrates how the process manager is implemented as a state machine that receives 
 messages, changes its state, and sends new messages. 
 
 > **DeveloperPersona:** Notice how we generate a new Guid to identify 
 > the new reservation. We use these Guids to correlate messages to the 
-> correct workflow and aggregate instances. 
+> correct process manager and aggregate instances. 
 
 When the **SeatsAvailability** aggregate receives a 
 **MakeReservation** command, it makes a reservation if there are enough 
@@ -966,12 +966,12 @@ public void MakeReservation(Guid reservationId, int numberOfSeats)
 }
 ```
 
-The **RegistrationProcess** class handles the the 
+The **RegistrationProcessManager** class handles the the 
 **ReservationAccepted** and **ReservationRejected** events. This 
 reservation is a temporary reservation for seats to give the user the 
-opportunity to make a payment. The workflow is responsible for releasing 
+opportunity to make a payment. The process manager is responsible for releasing 
 the reservation when either the purchase is complete, or the reservation 
-timeout period expires. The following code sample shows how the workflow 
+timeout period expires. The following code sample shows how the process manager 
 handles these two messages. 
 
 ```Cs
@@ -1008,17 +1008,17 @@ public void Handle(ReservationRejected message)
 }
 ```
 
-If the reservation is accepted, the workflow starts a timer running by 
+If the reservation is accepted, the process manager starts a timer running by 
 sending an **ExpireOrder** command to itself, and sends a 
 **MarkOrderAsBooked** command to the **Order** aggregate. Otherwise, it 
 sends a **ReservationRejected** message back to the **Order** aggregate. 
 
-The previous code sample shows how the workflow sends the 
+The previous code sample shows how the process manager sends the 
 **ExpireOrder** command. The infrastructure is responsible for 
 holding the message in a queue for the delay of fifteen minutes. 
 
 You can examine the code in the **Order**, 
-**SeatsAvailability**, and **RegistrationProcess** classes 
+**SeatsAvailability**, and **RegistrationProcessManager** classes 
 to see how the other message handlers are implemented. They all follow 
 the same pattern: receive a message, perform some logic, and send a 
 message. 
@@ -1079,14 +1079,14 @@ transactions with databases. For a discussion of this issue, see
 [Preparing for the V1 Release][j_chapter5] later in this guide. 
 
 The only event subscriber in the reservations bounded context is the 
-**RegistrationProcess** class. Its router subscribes to the event bus to 
+**RegistrationProcessManager** class. Its router subscribes to the event bus to 
 handle specific events as shown in the following code sample from the 
-**RegistrationProcess** class. 
+**RegistrationProcessManager** class. 
 
 > **Note:** We use the term handler to refer to the classes that handle 
 > commands and events and forward them to aggregate instances, and the
 > term router to refer to the classes that handle events and commands 
-> and forward them to workflow instances. 
+> and forward them to process manager instances. 
 
 ```Cs
 public void Handle(ReservationAccepted @event)
@@ -1105,10 +1105,10 @@ public void Handle(ReservationAccepted @event)
 }
 ```
 
-Typically, an event handler method loads a workflow instance, passes the 
-event to the workflow, and then persists the workflow instance. In this 
+Typically, an event handler method loads a process manager instance, passes the 
+event to the process manager, and then persists the process manager instance. In this 
 case, the **IRepository** instance is responsible for persisting the 
-workflow instance and for sending any commands from the workflow 
+process manager instance and for sending any commands from the process manager 
 instance to the command bus. 
 
 ## Using the Windows Azure Service Bus
@@ -1160,7 +1160,7 @@ delivery.
 
 Events can have multiple recipients. In the example shown 
 in figure 8, the **ReservationRejected** event is sent to the 
-**RegistrationProcess**, the **WaitListProcess**, and one other 
+**RegistrationProcessManager**, the **WaitListProcessManager**, and one other 
 destination. The **EventProcessor** class identifies the list of
 handlers to receive the event by examining its list of registered
 handlers.

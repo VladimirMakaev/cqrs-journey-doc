@@ -1,5 +1,4 @@
-## Chapter 2
-# Decomposing the Domain 
+# Chapter 2: Decomposing the Domain 
 
 *Planning the journey: What will be the main stopping places along the way?*
 

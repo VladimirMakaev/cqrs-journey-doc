@@ -30,14 +30,14 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.3056341"
-     inkscape:cx="416.82796"
-     inkscape:cy="596.43507"
+     inkscape:cx="748.53651"
+     inkscape:cy="535.16216"
      inkscape:current-layer="layer1"
      id="namedview4863"
      showgrid="false"
-     inkscape:window-width="1846"
+     inkscape:window-width="1600"
      inkscape:window-height="1178"
-     inkscape:window-x="1592"
+     inkscape:window-x="3512"
      inkscape:window-y="-8"
      inkscape:window-maximized="1">
     <inkscape:grid
@@ -191,7 +191,7 @@
          x="709.354"
          y="20.955776"
          id="tspan5398-3"
-         style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;text-anchor:middle;font-family:Segoe Print;-inkscape-font-specification:Segoe Print Bold">Workflow</tspan><tspan
+         style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;text-anchor:middle;font-family:Segoe Print;-inkscape-font-specification:Segoe Print Bold">ProcessManager</tspan><tspan
          sodipodi:role="line"
          x="709.354"
          y="38.455776"
@@ -208,7 +208,7 @@
          x="844.15442"
          y="27.848978"
          id="tspan5398-9"
-         style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;text-anchor:middle;fill:#000000;font-family:Segoe Print;-inkscape-font-specification:Segoe Print Bold">Workflow</tspan></text>
+         style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;text-anchor:middle;fill:#000000;font-family:Segoe Print;-inkscape-font-specification:Segoe Print Bold">ProcessManager</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:14px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-align:center;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print Bold"
@@ -380,7 +380,7 @@
          x="765.39447"
          y="383.25528"
          id="tspan5521-0-0-1"
-         style="fill:#008000">Workflow</tspan><tspan
+         style="fill:#008000">ProcessManager</tspan><tspan
          sodipodi:role="line"
          x="765.39447"
          y="398.25528"
@@ -404,7 +404,7 @@
          sodipodi:role="line"
          x="771.39868"
          y="485.95422"
-         id="tspan5521-0-5-6">(Workflow)</tspan></text>
+         id="tspan5521-0-5-6">(ProcessManager)</tspan></text>
     <path
        style="fill:#008000;fill-opacity:1;fill-rule:nonzero;stroke:none"
        d="M 1006.5312 470.59375 C 1006.3493 470.59384 1006.1641 470.60056 1005.9688 470.625 C 1004.4263 470.72475 1002.8921 470.88583 1001.375 471.1875 C 999.79534 471.40813 998.18502 471.2623 996.59375 471.3125 C 994.63833 471.3125 992.67417 471.3145 990.71875 471.3125 C 988.74689 471.3157 986.78314 471.2966 984.8125 471.375 C 982.6666 471.48613 980.53638 471.68069 978.40625 471.96875 L 975.96875 473.78125 C 978.09548 473.46781 980.22951 473.30328 982.375 473.1875 C 984.3421 473.1003 986.31259 473.0665 988.28125 473.0625 C 990.23522 473.0585 992.20228 473.09075 994.15625 473.09375 C 995.7539 473.06135 997.34576 473.15726 998.9375 473 C 1000.4565 472.72728 1001.9922 472.51874 1003.5312 472.40625 C 1004.9708 472.22272 1006.0703 472.58212 1006.8125 473.84375 C 1007.3299 475.3231 1007.6196 476.8875 1007.8438 478.4375 C 1008.058 480.09554 1008.104 481.76811 1008.125 483.4375 C 1008.137 485.18973 1008.125 486.93524 1008.125 488.6875 C 1008.2301 490.6476 1008.0049 492.58908 1007.7812 494.53125 C 1007.3153 496.35509 1006.951 498.19069 1006.75 500.0625 C 1006.6155 501.87967 1006.214 503.66455 1005.8125 505.4375 C 1005.3519 507.39513 1005.1857 509.4037 1005.0938 511.40625 C 1005.1399 513.31003 1004.923 515.17823 1004.6875 517.0625 C 1004.4528 518.85737 1004.3635 520.66068 1004.3125 522.46875 C 1004.2775 524.09524 1004.2812 525.717 1004.2812 527.34375 C 1004.2808 529.03915 1004.2811 530.7421 1004.2812 532.4375 C 1004.2968 533.47887 1004.3626 534.56895 1003.9375 535.5 C 1003.4348 535.57072 1002.9124 535.62907 1002.4062 535.65625 C 1000.8057 535.70225 999.19471 535.66325 997.59375 535.65625 C 995.62082 535.64481 993.66045 535.65825 991.6875 535.65625 C 989.9091 535.65425 988.12215 535.6569 986.34375 535.65625 C 984.79883 535.65581 983.26367 535.65625 981.71875 535.65625 L 977.125 535.65625 C 976.09952 535.65625 976.62401 535.61635 975.59375 535.71875 L 974.5 536.53125 C 974.54136 535.79551 974.87385 535.14461 975.53125 534.53125 C 976.58119 533.62101 977.54049 532.68049 978.375 531.5625 C 979.73274 529.98562 981.40071 528.71477 982.84375 527.21875 L 980.03125 528.375 C 978.59365 529.87874 976.90655 531.09861 975.59375 532.71875 C 974.79391 533.86976 973.74624 534.76002 972.71875 535.6875 C 971.68574 536.7582 971.57123 537.89483 972 539.25 C 972.69207 540.79358 974.32472 541.63852 975.75 542.40625 C 977.18803 542.96423 978.58979 543.52707 980 544.15625 C 981.42323 544.71739 982.80798 545.38959 984.25 545.90625 C 985.26619 546.19742 984.78225 546.0377 985.71875 546.375 L 988.21875 544.6875 C 987.27156 544.32897 987.76348 544.45978 986.75 544.1875 C 985.30668 543.6912 983.95094 543.0187 982.53125 542.46875 C 981.12214 541.84753 979.73553 541.2567 978.28125 540.75 C 976.92532 540.03954 975.31516 539.26992 974.65625 537.8125 C 974.61417 537.67298 974.5897 537.54019 974.5625 537.40625 C 974.62608 537.4066 974.60594 537.40625 974.6875 537.40625 C 976.21629 537.40626 977.75246 537.40628 979.28125 537.40625 C 980.82668 537.4062 982.36082 537.40683 983.90625 537.40625 C 985.68759 537.40625 987.46866 537.40645 989.25 537.40625 C 991.22084 537.40695 993.18542 537.4275 995.15625 537.4375 C 996.75826 537.44627 998.36687 537.4694 999.96875 537.4375 C 1002.357 537.34464 1004.4249 536.90282 1006.2812 535.03125 C 1007.073 533.84774 1007.036 532.44285 1007 531.0625 C 1006.99 529.36772 1006.9688 527.66354 1006.9688 525.96875 C 1006.9688 524.34412 1006.966 522.71809 1007 521.09375 C 1007.0529 519.29569 1007.1716 517.50354 1007.4062 515.71875 C 1007.6433 513.82776 1007.8495 511.94117 1007.8125 510.03125 C 1007.9065 508.04376 1008.0332 506.06574 1008.5 504.125 C 1008.9107 502.34315 1009.331 500.5458 1009.4688 498.71875 C 1009.6784 496.85048 1010.0539 495.01933 1010.4688 493.1875 C 1010.6943 491.23376 1010.9115 489.28404 1010.8125 487.3125 C 1010.8225 485.55852 1010.8225 483.81646 1010.8125 482.0625 C 1010.7869 480.38167 1010.7559 478.69957 1010.5312 477.03125 C 1010.2957 475.44526 1009.993 473.85065 1009.4375 472.34375 C 1008.7535 471.17996 1007.8052 470.59313 1006.5312 470.59375 z "
@@ -575,9 +575,9 @@
      inkscape:label="Version">
     <text
        xml:space="preserve"
-       style="-inkscape-font-specification:Courier New;font-family:Courier New;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;fill:#ff0000"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ff0000;font-family:Courier New;-inkscape-font-specification:Courier New"
        x="10"
        y="10"
-       id="versiontext">Journey_03_Sequence_01.svg (v1)</text>
+       id="versiontext">Journey_03_Sequence_01.svg (v2)</text>
   </g>
 </svg>

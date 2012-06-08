@@ -1,7 +1,6 @@
-## Chapter 1
-# The Contoso Conference Management System 
+# Chapter 1: The Contoso Conference Management System 
 
-*The starting point: Where have we come from, what are we taking, and who is coming with us?*
+The starting point: Where have we come from, what are we taking, and who is coming with us?
 
 This chapter introduces a fictitious company named Contoso. It describes 
 Contoso's plans to launch the Contoso Conference Management System, a 
@@ -41,7 +40,7 @@ impact on existing users of the system. Contoso has chosen to deploy the
 application on Windows Azure in order to take advantage of its ability 
 to scale applications as demand grows. 
 
-# Who Is Coming With Us On the Journey? 
+# Who is coming with us on the journey? 
 
 As mentioned earlier, this guide and the accompanying RI describe a CQRS 
 journey. A panel of experts comments on our development efforts as we go. 
@@ -49,72 +48,110 @@ This panel includes a CQRS expert, a software architect, a developer, a
 domain expert, an IT Pro, and a business manager. They will all comment 
 from their own perspectives. 
 
-![Gary][personagary]
+<table border="1">
+<tr>
+  <td>
+    <img src="images/PersonaGary.png?raw=true" />
+  </td>
+<td>
 Gary is a CQRS expert. He checks that a CQRS based solution will work 
 for a company and will provide tangible benefits. He is a cautious 
-person, for good reason. 
+person, for good reason.<br/>
 
-> "Defining the CQRS pattern is easy. Realizing the benefits that
-> implementing the CQRS pattern can offer is not always so
-> straightforward."
+<i>"Defining the CQRS pattern is easy. Realizing the benefits that
+implementing the CQRS pattern can offer is not always so
+straightforward."</i>
+</td>
+</tr>
 
-![Jana][personajana]
+<tr>
+  <td>
+    <img src="images/PersonaJana.png?raw=true" />
+  </td>
+<td>
 Jana is a software architect. She plans the overall structure of an 
 application. Her perspective is both practical and strategic. In other 
 words, she considers not only what technical approaches are needed 
 today, but also what direction a company needs to consider for the 
 future. Jana has worked on projects that used the Domain-Driven Design 
-approach.
+approach.<br/>
 
-> "It's not easy to balance the needs of the company, the users, the IT
-> organization, the developers, and the technical platforms we rely on."
-  
-![Markus][personamarkus]
+<i>"It's not easy to balance the needs of the company, the users, the IT
+organization, the developers, and the technical platforms we rely on."</i>
+</td>
+</tr>
+
+<tr>
+  <td>
+    <img src="images/PersonaMarkus.png?raw=true" />
+  </td>
+<td>
 Markus is a software developer who is new to the CQRS pattern. He is 
 analytical, detail-oriented, and methodical. He's focused on the task at 
 hand, which is building a great application. He knows that he's the 
-person who's ultimately responsible for the code. 
+person who's ultimately responsible for the code.<br/>
 
-> "I don't care what architecture you want to use for the application,
-> I'll make it work."
+<i>"I don't care what architecture you want to use for the application,
+I'll make it work."</i>
+</td>
+</tr>
 
-![Carlos][personacarlos]
+<tr>
+  <td>
+    <img src="images/PersonaCarlos.png?raw=true" />
+  </td>
+<td>
 Carlos is the domain expert. He understands all the ins and outs of 
 conference management. He has worked in a number of organizations that 
 help people to run conferences. He has also worked in a number of 
 different roles: sales and marketing, conference management, and 
-consultant. 
+consultant.<br/>
 
-> "I want to make sure that the team understands how this business
-> works so that we can deliver a world-class online conference 
-> management system."
+<i>"I want to make sure that the team understands how this business
+works so that we can deliver a world-class online conference 
+management system."</i>
+</td>
+</tr>
 
-![Poe][personapoe]
+<tr>
+  <td>
+    <img src="images/PersonaPoe.png?raw=true" />
+  </td>
+<td>
 Poe is an IT professional who's an expert in deploying and running 
 applications in the cloud. Poe has a keen interest in practical 
 solutions; after all, he's the one who gets paged at 3:00 AM when 
-there's a problem. 
+there's a problem.<br/>
 
-> "Running complex applications in the cloud involves different
-> challenges from managing on-premises applications. I want to make
-> sure our new Conference Management System meets our published SLAs."
+<i>"Running complex applications in the cloud involves different
+challenges from managing on-premises applications. I want to make
+sure our new Conference Management System meets our published SLAs."</i>
+</td>
+</tr>
 
-![Beth][personabeth]
+<tr>
+  <td>
+    <img src="images/PersonaBeth.png?raw=true" />
+  </td>
+<td>
 Beth is a business manager. She helps companies to plan how their 
 business will develop. She understands the market that the company 
 operates in, the resources that the company has available, and the goals 
 of the company. She has both a strategic view, and an interest in the 
-day-to-day operations of the company. 
+day-to-day operations of the company.<br/>
 
-> "Organizations face many conflicting demands on their resources. I 
-> want to make sure that our company balances those demands and adopts a 
-> business plan that will make us successful in the medium and long 
-> term."
+<i>"Organizations face many conflicting demands on their resources. I 
+want to make sure that our company balances those demands and adopts a 
+business plan that will make us successful in the medium and long 
+term."</i>
+</td>
+</tr>
+</table>
 
 If you have a particular area of interest, look for notes provided by 
 the specialists whose interests align with yours. 
 
-# The Conference Management System 
+# The Contoso Conference Management System 
 
 This section describes the Contoso Conference Management System as the  
 team envisaged it at the start of the journey. The team has not 
@@ -125,7 +162,7 @@ the end of our journey may not match this description exactly because:
 * It is more difficult to estimate what can be achieved in the available
   time.
 
-## Overview of the System
+## Overview of the system
 
 Contoso plans to build an online conference management system that will 
 enable Contoso's customers to plan and manage conferences that are held 
@@ -138,7 +175,7 @@ The Contoso Conference Management System will be a multi-tenant,
 cloud-hosted application. Business Customers will need to register with 
 the system before they can create and manage their conferences. 
 
-### Selling Seats for a Conference
+### Selling seats for a conference
 
 The Business Customer defines how many seats are available for the 
 conference. The Business Customer may also specify events at a 
@@ -155,7 +192,7 @@ The system will require that the names of the Attendees are associated
 with the purchased seats so that an on-site system can print badges for
 the Attendees when they arrive at the conference. 
 
-### Creating a Conference
+### Creating a conference
 
 A Business Customer can create new conferences and manage information 
 about the conference such as its name, description, and dates. The 
@@ -174,7 +211,7 @@ following characteristics of a conference:
 * Assigning key personnel such as the Program Chair and the Event
   Planner.
 
-## Non-functional Requirements
+## Non-functional requirements
 
 Contoso has two major non-functional requirements for its Conference 
 Management System and it hopes that the CQRS pattern will help it to 
@@ -238,7 +275,7 @@ flexibility breaks down into a number of related aspects:
 > about whether, in practice, you can use different development teams 
 > for different parts of the CQRS pattern implementation. 
 
-# Beginning the Journey
+# Beginning the journey
 
 The next chapter is the start of our CQRS journey. It provides more 
 information about the Contoso Conference Management System and describes 

@@ -33,11 +33,11 @@
      inkscape:cx="249.67954"
      inkscape:cy="527.87626"
      inkscape:document-units="px"
-     inkscape:current-layer="layer3"
+     inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1846"
+     inkscape:window-width="1600"
      inkscape:window-height="1178"
-     inkscape:window-x="1592"
+     inkscape:window-x="3512"
      inkscape:window-y="-8"
      inkscape:window-maximized="1" />
   <metadata
@@ -129,7 +129,7 @@
          sodipodi:role="line"
          x="286.91943"
          y="231.60387"
-         id="tspan3339">Workflow</tspan></text>
+         id="tspan3339">Manager</tspan></text>
     <path
        style="fill:#800000;fill-opacity:1;fill-rule:nonzero;stroke:none"
        id="path3102"
@@ -427,9 +427,9 @@
      inkscape:label="Version">
     <text
        xml:space="preserve"
-       style="-inkscape-font-specification:Courier New;font-family:Courier New;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;fill:#ff0000"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ff0000;font-family:Courier New;-inkscape-font-specification:Courier New"
        x="10"
        y="10"
-       id="versiontext">Journey_03_Aggregates_03.svg (v1)</text>
+       id="versiontext">Journey_03_Aggregates_03.svg (v2)</text>
   </g>
 </svg>
