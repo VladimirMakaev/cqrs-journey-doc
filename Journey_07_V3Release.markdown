@@ -770,6 +770,96 @@ public Order(Guid id, Guid conferenceId, IEnumerable<OrderItem> items, IPricingS
 
 Previously, in the V2 release the **Order** aggregate waited until it received a **MarkAsReserved** command before it called the **CalculateTotal** method.
 
+## Handling commands synchronously and inline
+
+In the V2 release, the system used the Windows Azure Service Bus to deliver all commands to their recipients. This meant that the system delivered the commands asynchronously. In the v3 release, the MVC controllers now send their commands synchronously and inline in order to improve the response times in the UI by bypassing the command bus and delivering commands directly to their handlers.
+
+The team implemeted this behavior by adding the **SynchronousCommandBusDecorator** and **CommandDispatcher** classes to the infrastructure and registering them during the start up of the web role as shown in the following code sample from the **OnCreateContainer** method in the Global.asax.Azure.cs file:
+
+```Cs
+var commandBus = new CommandBus(new TopicSender(settings.ServiceBus, "conference/commands"), metadata, serializer);
+var synchronousCommandBus = new SynchronousCommandBusDecorator(commandBus);
+
+container.RegisterInstance<ICommandBus>(synchronousCommandBus);
+container.RegisterInstance<ICommandHandlerRegistry>(synchronousCommandBus);
+
+
+container.RegisterType<ICommandHandler, OrderCommandHandler>("OrderCommandHandler");
+container.RegisterType<ICommandHandler, ThirdPartyProcessorPaymentCommandHandler>("ThirdPartyProcessorPaymentCommandHandler");
+container.RegisterType<ICommandHandler, SeatAssignmentsHandler>("SeatAssignmentsHandler");
+```
+
+The following code sample shows how the **SynchronousCommandBusDecorator** class implements sending a command message:
+
+```Cs
+public class SynchronousCommandBusDecorator : ICommandBus, ICommandHandlerRegistry
+{
+    private readonly ICommandBus commandBus;
+    private readonly CommandDispatcher commandDispatcher;
+
+    public SynchronousCommandBusDecorator(ICommandBus commandBus)
+    {
+        this.commandBus = commandBus;
+        this.commandDispatcher = new CommandDispatcher();
+    }
+
+    ...
+
+    public void Send(Envelope<ICommand> command)
+    {
+        if (!this.DoSend(command))
+        {
+            Trace.TraceInformation("Command with id {0} was not handled locally. Sending it through the bus.", command.Body.Id);
+            this.commandBus.Send(command);
+        }
+    }
+
+    ...
+
+    private bool DoSend(Envelope<ICommand> command)
+    {
+        bool handled = false;
+
+        try
+        {
+            var traceIdentifier = string.Format(CultureInfo.CurrentCulture, " (local handling of command with id {0})", command.Body.Id);
+            handled = this.commandDispatcher.ProcessMessage(traceIdentifier, command.Body, command.MessageId, command.CorrelationId);
+
+        }
+        catch (Exception e)
+        {
+            Trace.TraceWarning("Exception handling command with id {0} synchronously: {1}", command.Body.Id, e.Message);
+        }
+
+        return handled;
+    }
+}
+```
+
+Notice how this class tries to send the command synchronously without using the service bus, but if it cannot find a handler for the command, it reverts to using the service bus. The following code sample shows how the **CommandDispatcher** class tries to locate a handler and deliver a command message:
+
+```Cs
+public bool ProcessMessage(string traceIdentifier, ICommand payload, string messageId, string correlationId)
+{
+    var commandType = payload.GetType();
+    ICommandHandler handler = null;
+
+    if (this.handlers.TryGetValue(commandType, out handler))
+    {
+        Trace.WriteLine("-- Handled by " + handler.GetType().FullName + traceIdentifier);
+        ((dynamic)handler).Handle((dynamic)payload);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+```
+
+> **MarkusPersona:** Notice how we use the **dynamic** keyword when we
+> dispatch the command to its registered handler.
+
 ## Other optimizations
 
 This section describes some of the other optimizations that the team included in the V3 release.
@@ -863,7 +953,7 @@ For more information, see [Code First Data Annotations][codefirst] on
 the MSDN website.
 
 With the optimistic concurrency check in place, we also removed the C# 
-lock in the **SessionSubscriptionReceiver** class that was apotential 
+lock in the **SessionSubscriptionReceiver** class that was a potential 
 bottleneck in the system. 
 
 ### Task support in MVC 4
@@ -885,6 +975,18 @@ public Task<ActionResult> SpecifyRegistrantAndPaymentDetails(Guid orderId, int o
     ...
 
     );
+}
+
+...
+
+private Task<PricedOrder> WaitUntilOrderIsPriced(Guid orderId, int lastOrderVersion)
+{
+    return
+        TimerTaskFactory.StartNew<PricedOrder>(
+            () => this.orderDao.FindPricedOrder(orderId),
+            order => order != null && order.OrderVersion > lastOrderVersion,
+            PricedOrderPollPeriodInMilliseconds,
+            DateTime.Now.AddSeconds(PricedOrderWaitTimeoutInSeconds));
 }
 ```
 
