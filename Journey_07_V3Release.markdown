@@ -757,7 +757,7 @@ controller by saving it in the priced order view model on the read-side.
 
 The key change to implement this is in the **Order** aggregate. The 
 constructor in the **Order** class now invokes the **CalculateTotal** 
-method and raises an **OrderTotalsCalculated** method as shown in the 
+method and raises an **OrderTotalsCalculated** event as shown in the 
 following code sample: 
 
 ```Cs
@@ -928,7 +928,7 @@ to receive messages from the Windows Azure Service Bus in sequence. In
 the V3 release, the **SessionSubscriptionReceiver** creates multiple 
 sessions in parallel. This helps to improve the throughput and reduce 
 the latency when the system retrieves messages from the Service Bus. The 
-follwing code sample shows the new version of the **ReceiveMessages** 
+following code sample shows the new version of the **ReceiveMessages** 
 method in the **SessionSubscriptionReceiver** class. 
 
 ```Cs

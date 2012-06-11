@@ -1071,6 +1071,92 @@ it becomes available to read again.
 > of retries, it is typically sent to a dead-letter queue for further
 > investigation.
 
+## Event versioning
+
+As your system evolves, you may find that you need to make changes to 
+the events that you system uses. For example: 
+
+* Some events may become redundant in that they are no longer raised by
+  any class in your system.
+* You may need to define new events that relate to new features or
+  functionality within in your system.
+* You may need to modify existing event definitions.
+
+The following sections discuss each of these scenarios in turn.
+
+### Redundant events
+
+If your system no longer uses a particular event type, you may be able 
+to simply remove it from the system. However, if you are using event 
+sourcing, your event store may hold many instances of this event, and 
+these instances may be used to rebuild the state of your aggregates. 
+Typically, you treat the events in your event store as immutable. In 
+this case, your aggregates must continue to be able to handle these old 
+events when they are replayed from the event store even though the 
+system will no longer raise new instances of this event type. 
+
+### New event types
+
+If you introduce new event types into your system, this should have no 
+impact on existing behavior. Typically, it is only new features or 
+functionality that use the new event types. 
+
+### Changing existing event definitions
+
+Handling changes to event type defintions requires more complex changes 
+to your system. For example, your event store may hold many instances of 
+an old version of an event type while the system raises events that are 
+a later version, or different bounded contexts may raise different 
+versions of the same event. Your system must be capable of handling 
+multiple versions of the same event. 
+
+An event defintion can change in a number of different ways, for example:
+
+* An event gains a new property in the latest version.
+* An event loses a property in the latest version.
+* A property changes its type or supports a different range of values.
+
+> **Note:** If the semantic meaning of an event changes, then you should
+> treat that as new event type, and not as a new version of an existing
+> event.
+
+Where you have multiple versions of an event type, you have two basic 
+choices of how to handle the multiple versions: you can either continue 
+to support multiple versions of the event in your domain classes, or use 
+a mechansim to convert old versions of events to the latest version 
+whenever they are encountered by the system. 
+
+The first option may be the quickest and simplest approach to adopt 
+because it typically doesn't require any changes to your infrastructure. 
+However, this approach will eventually polute your domain classes as 
+they end up supporting more and more versions of your events, but if you 
+don't anticipate many changes to your event definitions this may be 
+acceptable. 
+
+The second approach is a cleaner solution: your domain classes only need 
+to support the latest version of each event type. However you do need to 
+make changes to your infrastructure to translate the old event types to 
+the latest type. The issue here is to decide whereabouts in your 
+infrastructure to perform this translation. 
+
+One option is to add filtering functionality into your messaging 
+infrastructure so that events are translated as they are delivered to 
+their recipients; you could also add the translation functionality into 
+your event handler classes. If you are using event sourcing, you must 
+also ensure that old versions of events are translated as they are read 
+from the event store when you are re-hydrating your aggragtes. 
+
+Whatever solution you adopt, it must perform the same translation 
+wherever the old version of the event originates from: another bounded 
+context, an event store, or even from the same bounded context if you 
+are in the middle of a system upgrade. 
+
+Your choice of serialization format may make it easier to handle 
+different versions of events: for example, JSON deserialization can 
+simply ignore deleted properties, or the class that the object is 
+deserialized to can provide a meaningful default value for any new 
+property. 
+
 # Task-based UIs
 
 In figure 3 above, you can see that in a typical implementation of the 
