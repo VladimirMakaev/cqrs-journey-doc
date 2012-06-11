@@ -337,7 +337,7 @@ bounded context that sometimes arrived out of order.
 The team considered two alternatives for ensuring messages are 
 guaranteed to arrive in the correct order. 
 
-* The first option is to use message sessions; a feature of the Windows
+* The first option is to use message sessions, a feature of the Windows
   Azure Service Bus. If you use message sessions, this offers guarantees
   that messages within a session are delivered in the same order that
   they were sent.
@@ -901,11 +901,51 @@ individual source will be received in the correct order.
 > didn't exist already. Now, the system creates them when the
 > application starts up using configuration data. This happens early in
 > the start-up process to avoid the risk of losing messages if one is
-> sent to a topic before a the system initializes the subscriptions. 
+> sent to a topic before a the system initializes the subscriptions.
+
+However, sessions can only guarantee to deliver messages in order if the messages are placed on the bus in the correct order. If the system sends messages asynchronously, then you must take special care to ensure that messages are placed on the bus in the correct order. In our system, it is important that the events from each individual aggregate instance arrive in order, but we don't care about the ordering of events from different aggregate instances. Therefore, although the system sends events asynchronously, each aggregate instance waits for an acknowledgement that the previous event was sent before sending the next one. The following sample from the **TopicSender** class illustrates this:
+
+```Cs
+public void Send(Func<BrokeredMessage> messageFactory)
+{
+    var resetEvent = new ManualResetEvent(false);
+    Exception exception = null;
+    this.retryPolicy.ExecuteAction(
+        ac =>
+        {
+            this.DoBeginSendMessage(messageFactory(), ac);
+        },
+        ar =>
+        {
+            this.DoEndSendMessage(ar);
+        },
+        () => resetEvent.Set(),
+        ex =>
+        {
+            Trace.TraceError("An unrecoverable error occurred while trying to send a message:\r\n{0}", ex);
+            exception = ex;
+            resetEvent.Set();
+        });
+
+    resetEvent.WaitOne();
+    if (exception != null)
+    {
+        throw exception;
+    }
+}
+```
+
+> **JanaPersona:** This code sample shows how the system uses the
+> [Transient Fault Handling Block][tfhab] to make the asynchronous call
+> reliably.
 
 For additional information about message ordering and Windows Azure
 Service Bus, see [Windows Azure Queues and Windows Azure Service Bus
 Queues - Compared and Contrasted][queues].
+
+For information about sending messages asynchronously and ordering, see 
+the blog post [Windows Azure Service Bus Splitter and 
+Aggregator][sessionseq]. 
 
 ## Persisting events from the Conference Management bounded context
 
@@ -1313,4 +1353,6 @@ in the read-models in the Orders and Registrations bounded context.
 [queues]:            http://msdn.microsoft.com/en-us/library/windowsazure/hh767287(v=vs.103).aspx
 [azurerdp]:          http://msdn.microsoft.com/en-us/library/windowsazure/gg443832.aspx
 [downloadc]:         http://NEEDFWLINK
+[tfhab]:             http://msdn.microsoft.com/en-us/library/hh680934(PandP.50).aspx
+[sessionseq]:        http://geekswithblogs.net/asmith/archive/2012/04/10/149275.aspx
 

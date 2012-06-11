@@ -2,16 +2,14 @@
 
 *Revisiting the infrastructure and applying some lessons learned*
 
-# Adding resilience and adding features
+# Introduction
 
 The two primary goals for this last stage in our journey are to make the 
 system more resilient to failures and to improve the responsiveness of 
 the UI. The focus of the effort to harden the system is on the 
-**RegistrationProcessManager** class in the Orders and Registrations bounded 
-context. The focus on performance is on the way the UI interacts with 
-the domain-model during the order creation process. 
-
-[Possibly describe incorporating two other bounded contexts.]
+**RegistrationProcessManager** class in the Orders and Registrations 
+bounded context. The focus on performance is on the way the UI interacts 
+with the domain-model during the order creation process. 
 
 ## Working definitions for this chapter 
 
@@ -25,14 +23,14 @@ A command is a request for the system to perform an action that changes
 the state of the system. Commands are imperatives, for example 
 **MakeSeatReservation**. In this bounded context, commands originate 
 either from the UI as a result of a user initiating a request, or from 
-a process manager when the process manager is directing an aggregate to perform an 
-action. 
+a process manager when the process manager is directing an aggregate to 
+perform an action. 
 
-Commands are processed once by a single recipient. A command bus 
-transports commands that command handlers then dispatch to aggregates. 
-Sending a command is an asynchronous operation with no return value. 
-
-[TODO: Verify whether they are still async]
+Commands are processed once by a single recipient. Commands are either 
+transported to their recipients by a command bus, or delivered directly 
+inline. If a command is delivered through a command bus, then then the 
+command is sent asynchronously. If the comand can be delivered directly 
+inline, then the command is sent synchronously. 
 
 ### Event
 
@@ -45,55 +43,37 @@ events to an event bus; handlers register for specific types of event on
 the event bus and then deliver the events to the subscriber. In this 
 bounded context, the only subscriber is a process manager. 
 
-## User stories 
-
-The team implemented the following user stories during this phase of the 
-project.
-
-### Support for discounts to seat prices
-
-Registrants should be able to obtain discounts through the use of 
-**Promotional Codes**. A Registrant can enter a **Promotional Code** 
-during the ordering process and the system will adjust the total cost of 
-the order appropriately. 
-
-The discount associated with an individual **Promotional Code** can be 
-from 1% to 100%. Each **Promotional Code** has an associated quota that 
-determines how many seats are available at the dicounted price (this may 
-be unlimited) and a scope that determines which seat type the code is 
-associated with; this can also apply to all seat types rather than just 
-one. 
-
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-    Updated to include details of single-use codes and cummulative codes.
-  </span>
-</div>
-
-### Story 1
-
-
-### Story 2
-
-
-### Story 3
-
-
 ## Architecture 
 
-What are the key architectural features? Server-side, UI, multi-tier, cloud, etc. 
+The application is designed to deploy to Windows Azure. At this stage in 
+the journey, the application consists of a web role that contains the 
+ASP.NET MVC web application and a worker role that contains the message 
+handlers and domain objects. The application uses SQL Database databases 
+for data storage, both on the write-side and the read-side. The 
+application uses the Windows Azure Service Bus to provide its messaging 
+infrastructure. 
+
+While you are exploring and testing the solution, you can run it 
+locally, either using the Windows Azure compute emulator or by running 
+the MVC web application directly and running a console application that 
+hosts the handlers and domain objects. When you run the application 
+locally, you can use a local SQL Express database instead of SQL Database, 
+and use a simple messaging infrastructure implemented in a SQL Express 
+database. 
+
+For more information about the options for running the application, see 
+[Appendix 1][appendix1]. 
 
 # Patterns and concepts 
 
 During this stage of the journey the team looked at options for 
-hardening the **RegistrationProcessManager** class. This part of the Orders 
-and Registrations bounded context is responsible for managing the 
+hardening the **RegistrationProcessManager** class. This part of the 
+Orders and Registrations bounded context is responsible for managing the 
 interactions between the aggregates in the Orders and Registrations 
 bounded context and for ensuring that they are all consistent with each 
-other. It is important that this process manager is resilient to a wide range 
-of failure conditions if the bounded context as a whole is to maintain 
-its consistent state. 
+other. It is important that this process manager is resilient to a wide 
+range of failure conditions if the bounded context as a whole is to 
+maintain its consistent state. 
 
 When the team tested the V2 release, we discovered that sometimes the 
 UI is waiting for the domain to to complete its processing, and for the 
@@ -110,17 +90,17 @@ further optimization was necessary.
 
 ## Making the RegistrationProcess class more resilient to failure
 
-Typically, a process manager receives incoming events, and then 
-based on the state of the process manager, sends out one or more commands to 
-aggregates within the bounded context. When a process manager 
-sends out commands, it typically changes its own state. 
+Typically, a process manager receives incoming events, and then based on 
+the state of the process manager, sends out one or more commands to 
+aggregates within the bounded context. When a process manager sends out 
+commands, it typically changes its own state. 
 
 The Orders and Registrations bounded context contains the 
 **RegistrationProcessManager** class. This process manager is 
 responsible for coordinating the activities of the aggregates in both 
 this bounded context and the Payments bounded context by routing events 
-and commands between them. The process manager is therefore responsible for 
-ensuring that the aggregates in these bounded contexts are correctly 
+and commands between them. The process manager is therefore responsible 
+for ensuring that the aggregates in these bounded contexts are correctly 
 synchronized with each other. 
 
 > **GaryPersona:** An aggregate determines the consistency boundaries
@@ -173,14 +153,15 @@ in any inconsistencies within the system. This approach would handle the
 first three failure conditions. After a crash, you can restart the 
 process manager and reprocess the incoming event a second time. 
 
-Instead of making the process manager idempotent, you could ensure that all the 
-commands that the process manager sends are idempotent. Restarting the process manager 
-may result in sending commands a second time, but if those commands are 
-idempotent this will have no adverse affect on the process or the 
-system. For this approach to work, you will still need to modify the 
-process manager to guarantee that it sends all commands at least once. If the 
-commands are idempotent, it doesn't matter if they are sent multiple 
-times, but it does matter if a command is never sent at all. 
+Instead of making the process manager idempotent, you could ensure that 
+all the commands that the process manager sends are idempotent. 
+Restarting the process manager may result in sending commands a second 
+time, but if those commands are idempotent this will have no adverse 
+affect on the process or the system. For this approach to work, you will 
+still need to modify the process manager to guarantee that it sends all 
+commands at least once. If the commands are idempotent, it doesn't 
+matter if they are sent multiple times, but it does matter if a command 
+is never sent at all. 
 
 In the V1 release, most message handling is already either idempotent, 
 or the system detects duplicate messages and sends them to a dead-letter 
@@ -190,17 +171,18 @@ queue. The exceptions are the **OrderPlaced** event and the
 ### Ensuring that commands are always sent
 
 To ensure that the system always sends commands when the 
-**RegistrationProcessManager** class saves its state requires transactional 
-behavior. This requires the team to implement a psuedo-transaction 
-because it is not possible to enlist the Windows Azure Service Bus in a 
-distributed transcation. 
+**RegistrationProcessManager** class saves its state requires 
+transactional behavior. This requires the team to implement a 
+psuedo-transaction because it is not possible to enlist the Windows 
+Azure Service Bus in a distributed transcation. 
 
 The solution adopted by the team for the V3 release ensures that the 
-system persists any commands that the **RegistrationProcessManager** tries to 
-send but that fail. When the system next reloads the 
+system persists any commands that the **RegistrationProcessManager** 
+tries to send but that fail. When the system next reloads the 
 **RegistrationProcessManager** class, it tries to re-send the failed 
-commands. If this fails, then the process manager cannot be loaded and cannot 
-process any further messages until the cause of the failure is resolved. 
+commands. If this fails, then the process manager cannot be loaded and 
+cannot process any further messages until the cause of the failure is 
+resolved. 
 
 ## Optimizing the interactions between the ui and the domain
 
@@ -378,7 +360,19 @@ A further optimization that the team considered was to scale out the
 view model generators that populate the various read-models in the 
 system. Every web-role that hosts a view model generator instance must 
 handle the events published by the write-side by creating a subscription 
-the the Windows Azure Service Bus topics. 
+the the Windows Azure Service Bus topics.
+
+## Using Snapshots with Event Sourcing
+
+When the system re-hydrates an aggregate instance from the event store, 
+it must load and replay all of the events associated with that aggregate 
+instance. A possible optimization here is to store a rolling snapshot of 
+the state of the aggregate at some recent point in time so that the 
+system only needs to load the snapshot and the subsequent events, 
+thereby reducing the number of events that it must reload and replay. 
+The team decided that this optimization would not provide significant 
+benefits because of the limited number of events stored per aggregate 
+instance in the system. 
 
 # Implementation details 
 
@@ -668,9 +662,16 @@ public ActionResult StartRegistration(RegisterToConference command, int orderVer
 }
 ```
 
-If there are not enough available seats, the controller redisplays the current screen, displaying the currently available seat quantities to enable the Registrant to revise her order.
+If there are not enough available seats, the controller redisplays the 
+current screen, displaying the currently available seat quantities to 
+enable the Registrant to revise her order. 
 
-This remaining part of the change is in the **SpecifyRegistrantAndPaymentDetails** method in the **RegistrationController** class. The following code sample from the V2 release shows how before the optimization the controller calls the **WaitUntilSeatsAreConfirmed** method before continuing to the Registrant screen:
+This remaining part of the change is in the 
+**SpecifyRegistrantAndPaymentDetails** method in the 
+**RegistrationController** class. The following code sample from the V2 
+release shows how before the optimization the controller calls the 
+**WaitUntilSeatsAreConfirmed** method before continuing to the 
+Registrant screen: 
 
 ```Cs
 [HttpGet]
@@ -715,7 +716,8 @@ public ActionResult SpecifyRegistrantAndPaymentDetails(Guid orderId, int orderVe
 }
 ```
 
-The following code sample shows the V3 version of this method that no longer waits for the reservation to be confirmed:
+The following code sample shows the V3 version of this method that no 
+longer waits for the reservation to be confirmed: 
 
 ```Cs
 [HttpGet]
@@ -746,9 +748,17 @@ public ActionResult SpecifyRegistrantAndPaymentDetails(Guid orderId, int orderVe
         });
 }
 ```
-The second optimization is to perform the calculation of the order total earlier in the process. In the previous code sample, the **SpecifyRegistrantAndPaymentDetails** method still calls the **WaitUntilOrderIsPriced** method which pauses the UI flow until the system calculates an order total and makes it available to the controller by saving it in the priced order view model on the read-side.
+The second optimization is to perform the calculation of the order total 
+earlier in the process. In the previous code sample, the 
+**SpecifyRegistrantAndPaymentDetails** method still calls the 
+**WaitUntilOrderIsPriced** method which pauses the UI flow until the 
+system calculates an order total and makes it available to the 
+controller by saving it in the priced order view model on the read-side. 
 
-The key change to implement this is in the **Order** aggregate. The constructor in the **Order** class now invokes the **CalculateTotal** method and raises an **OrderTotalsCalculated** method as shown in the following code sample:
+The key change to implement this is in the **Order** aggregate. The 
+constructor in the **Order** class now invokes the **CalculateTotal** 
+method and raises an **OrderTotalsCalculated** method as shown in the 
+following code sample: 
 
 ```Cs
 public Order(Guid id, Guid conferenceId, IEnumerable<OrderItem> items, IPricingService pricingService)
@@ -768,13 +778,24 @@ public Order(Guid id, Guid conferenceId, IEnumerable<OrderItem> items, IPricingS
 }
 ```
 
-Previously, in the V2 release the **Order** aggregate waited until it received a **MarkAsReserved** command before it called the **CalculateTotal** method.
+Previously, in the V2 release the **Order** aggregate waited until it 
+received a **MarkAsReserved** command before it called the 
+**CalculateTotal** method. 
 
 ## Handling commands synchronously and inline
 
-In the V2 release, the system used the Windows Azure Service Bus to deliver all commands to their recipients. This meant that the system delivered the commands asynchronously. In the v3 release, the MVC controllers now send their commands synchronously and inline in order to improve the response times in the UI by bypassing the command bus and delivering commands directly to their handlers.
+In the V2 release, the system used the Windows Azure Service Bus to 
+deliver all commands to their recipients. This meant that the system 
+delivered the commands asynchronously. In the v3 release, the MVC 
+controllers now send their commands synchronously and inline in order to 
+improve the response times in the UI by bypassing the command bus and 
+delivering commands directly to their handlers. 
 
-The team implemeted this behavior by adding the **SynchronousCommandBusDecorator** and **CommandDispatcher** classes to the infrastructure and registering them during the start up of the web role as shown in the following code sample from the **OnCreateContainer** method in the Global.asax.Azure.cs file:
+The team implemeted this behavior by adding the 
+**SynchronousCommandBusDecorator** and **CommandDispatcher** classes to 
+the infrastructure and registering them during the start up of the web 
+role as shown in the following code sample from the 
+**OnCreateContainer** method in the Global.asax.Azure.cs file: 
 
 ```Cs
 var commandBus = new CommandBus(new TopicSender(settings.ServiceBus, "conference/commands"), metadata, serializer);
@@ -789,7 +810,9 @@ container.RegisterType<ICommandHandler, ThirdPartyProcessorPaymentCommandHandler
 container.RegisterType<ICommandHandler, SeatAssignmentsHandler>("SeatAssignmentsHandler");
 ```
 
-The following code sample shows how the **SynchronousCommandBusDecorator** class implements sending a command message:
+The following code sample shows how the 
+**SynchronousCommandBusDecorator** class implements sending a command 
+message: 
 
 ```Cs
 public class SynchronousCommandBusDecorator : ICommandBus, ICommandHandlerRegistry
@@ -836,7 +859,11 @@ public class SynchronousCommandBusDecorator : ICommandBus, ICommandHandlerRegist
 }
 ```
 
-Notice how this class tries to send the command synchronously without using the service bus, but if it cannot find a handler for the command, it reverts to using the service bus. The following code sample shows how the **CommandDispatcher** class tries to locate a handler and deliver a command message:
+Notice how this class tries to send the command synchronously without 
+using the service bus, but if it cannot find a handler for the command, 
+it reverts to using the service bus. The following code sample shows how 
+the **CommandDispatcher** class tries to locate a handler and deliver a 
+command message: 
 
 ```Cs
 public bool ProcessMessage(string traceIdentifier, ICommand payload, string messageId, string correlationId)
@@ -862,13 +889,19 @@ public bool ProcessMessage(string traceIdentifier, ICommand payload, string mess
 
 ## Other optimizations
 
-This section describes some of the other optimizations that the team included in the V3 release.
+This section describes some of the other optimizations that the team 
+included in the V3 release. 
 
 ### Using Prefetch with Windows Azure Service Bus
 
-The team enabled the prefetch option whem the system retrieves messages from the Windows Azure Service Bus. This option enables the system to retrieve multiple messages in a single round-trip to the server and helpes to reduce the latency in retrieving existing messages from the Service Bus topics.
+The team enabled the prefetch option whem the system retrieves messages 
+from the Windows Azure Service Bus. This option enables the system to 
+retrieve multiple messages in a single round-trip to the server and 
+helpes to reduce the latency in retrieving existing messages from the 
+Service Bus topics. 
 
-The following code sample from the **SubscriptionReceiver** class ahows how to enable this option.
+The following code sample from the **SubscriptionReceiver** class ahows 
+how to enable this option. 
 
 ```Cs
 protected SubscriptionReceiver(ServiceBusSettings settings, string topic, string subscription, RetryStrategy backgroundRetryStrategy)
@@ -890,7 +923,13 @@ protected SubscriptionReceiver(ServiceBusSettings settings, string topic, string
 
 ### Accepting multiple sessions in parallel
 
-In the V2 release, the **SessionSubscriptionReceiver** creates sessions to receive messages from the Windows Azure Service Bus in sequence. In the V3 release, the **SessionSubscriptionReceiver** creates multiple sessions in parallel. This helps to improve the throughput and reduce the latency when the system retrieves messages from the Service Bus. The follwing code sample shows the new version of the **ReceiveMessages** method in the **SessionSubscriptionReceiver** class.
+In the V2 release, the **SessionSubscriptionReceiver** creates sessions 
+to receive messages from the Windows Azure Service Bus in sequence. In 
+the V3 release, the **SessionSubscriptionReceiver** creates multiple 
+sessions in parallel. This helps to improve the throughput and reduce 
+the latency when the system retrieves messages from the Service Bus. The 
+follwing code sample shows the new version of the **ReceiveMessages** 
+method in the **SessionSubscriptionReceiver** class. 
 
 ```Cs
 private void ReceiveMessages(CancellationToken cancellationToken)
@@ -955,6 +994,45 @@ the MSDN website.
 With the optimistic concurrency check in place, we also removed the C# 
 lock in the **SessionSubscriptionReceiver** class that was a potential 
 bottleneck in the system. 
+
+### Publishing Events in parallel
+
+In chapter 5, [Preparing for the V1 Release][j_chapter5], you saw how 
+the system publishes events whenever it saves them to the event store. 
+This optimization enables the system to publish some of these events in 
+parallel insteand of publishing them sequentially. It is important that 
+the events associated with a specific aggregate instance are sent in the 
+correct order, so the system only creates new tasks for different 
+partition keys. The following code sample from the **Start** method in 
+the **EventStoreBusPublisher** class shows how the parallel tasks are 
+defined: 
+
+```Cs
+Task.Factory.StartNew(
+    () =>
+    {
+        try
+        {
+            Parallel.ForEach(
+                new BlockingCollectionPartitioner<string>(this.enqueuedKeys),
+                new ParallelOptions
+                {
+                    MaxDegreeOfParallelism = MaxDegreeOfParallelism,
+                    CancellationToken = cancellationToken
+                },
+                this.ProcessPartition);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+    },
+    TaskCreationOptions.LongRunning);
+```
+
+For more information about the **BlockingCollectionPartitioner** class, 
+see the blog post [ParallelExtensionsExtras Tour - #4 - 
+BlockingCollectionExtensions][parallelext]. 
 
 ### Task support in MVC 4
 
@@ -1028,9 +1106,11 @@ as the point of entry, and the **Views** folder contains the tests that
 use [WatiN][watin] to drive the system through its UI. 
 
 [j_chapter4]:        Journey_04_ExtendingEnhancing.markdown
+[j_chapter5]:        Journey_05_PaymentsBC.markdown
 
 [repourl]:           https://github.com/mspnp/cqrs-journey-code
 [watin]:             http://watin.org
 [codefirst]:         http://msdn.microsoft.com/en-us/library/gg197525(VS.103).aspx
 [downloadc]:         http://NEEDFWLINK
+[parallelext]:       http://blogs.msdn.com/b/pfxteam/archive/2010/04/06/9990420.aspx
 
