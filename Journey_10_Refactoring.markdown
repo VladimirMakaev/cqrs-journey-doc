@@ -1,3 +1,5 @@
+This placeholder chapter is no longer needed.
+
 ## Chapter 10
 Refactoring Bounded Context XX 
 

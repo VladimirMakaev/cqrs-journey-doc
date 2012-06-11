@@ -1,3 +1,5 @@
+This placeholder chapter is no longer needed.
+
 ## Chapter 8
 # CQRS and Testing
 
