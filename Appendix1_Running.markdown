@@ -46,7 +46,7 @@ Before you begin, you should install the following pre-requisites:
 * Visual Studio 2010 or later
 * SQL Server 2008 Express or later
 * ASP.NET MVC 4 Installer (Visual Studio 2010)
-* Windows Azure SDK for .NET - November 2011 or later
+* Windows Azure SDK for .NET - June 2012 or later
 
 > **Note:** Currently the RI requires the Windows Azure runtime
 > libraries in order to compile. This is true even for scenario 1. The
