@@ -451,6 +451,11 @@ If the data migration process fails for any reason, then before you retry the mi
 
 # Known Issues
 
+## Localizability is not in scope
+
+The RI is not designed with localizability in mind. For example, it 
+currently contains hardcoded strings, fixed number formats, etc. 
+
 ## Runtime Activation Error in Debug Mode
 
 When you run the application in debug mode you will see an error in the
