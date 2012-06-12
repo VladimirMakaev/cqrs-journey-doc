@@ -30,8 +30,8 @@ task-based UIs.
 ## Working definitions for this chapter 
 
 The remainder of this chapter uses the following definitions. 
-For more detail, and possible alternative definitions, see [A CQRS/ES 
-Deep Dive][r_chapter4] in the Reference Guide. 
+For more detail, and possible alternative definitions, see the chapter 
+[A CQRS/ES Deep Dive][r_chapter4] in the Reference Guide. 
 
 ### Access Code
 
@@ -1593,6 +1593,7 @@ new conference or alternate page.
 
 [j_chapter3]:       Journey_03_OrdersBC.markdown
 [j_chapter4]:       Journey_04_ExtendingEnhancing.markdown
+[r_chapter4]:       Reference_04_DeepDive.markdown
 [r_chapter9]:       Reference_09_Technologies.markdown
 [appendix1]:        Appendix1_Running.markdown
 

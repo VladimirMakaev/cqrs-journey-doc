@@ -16,8 +16,8 @@ with no downtime for the live system running in Windows Azure.
 ## Working definitions for this chapter 
 
 The remainder of this chapter uses the following definitions. 
-For more detail, and possible alternative definitions, see [A CQRS/ES 
-Deep Dive][r_chapter4] in the Reference Guide. 
+For more detail, and possible alternative definitions, see the chapter 
+[A CQRS/ES Deep Dive][r_chapter4] in the Reference Guide. 
 
 ### Command
 
@@ -1347,11 +1347,12 @@ in the read-models in the Orders and Registrations bounded context.
 > the migration runs as expected, but potentially reveals bugs in the
 > application itself.
 
-[fig1]:              Journey_06_TopLevel.png?raw=true
-[fig2]:              Journey_06_Subscriptions.png?raw=true
+[fig1]:              images/Journey_06_TopLevel.png?raw=true
+[fig2]:              images/Journey_06_Subscriptions.png?raw=true
 
 [j_chapter4]:        Journey_04_ExtendingEnhancing.markdown
 [j_chapter7]:        Journey_07_V3Release.markdown
+[r_chapter4]:        Reference_04_DeepDive.markdown
 
 [messagesessions]:   http://msdn.microsoft.com/en-us/library/microsoft.servicebus.messaging.messagesession.aspx
 [repourl]:           https://github.com/mspnp/cqrs-journey-code

@@ -6,7 +6,7 @@
 
 The two primary goals for this last stage in our journey are to make the 
 system more resilient to failures and to improve the responsiveness of 
-the UI. The focus of the effort to harden the system is on the 
+the UI. The effort to harden the system focuses on the 
 **RegistrationProcessManager** class in the Orders and Registrations 
 bounded context. The focus on performance is on the way the UI interacts 
 with the domain-model during the order creation process. 
@@ -77,22 +77,9 @@ other. It is important that this process manager is resilient to a wide
 range of failure conditions if the bounded context as a whole is to 
 maintain its consistent state. 
 
-When the team tested the V2 release, we discovered that sometimes the 
-UI is waiting for the domain to to complete its processing, and for the 
-read-models to receive data from the write-model before it can display 
-the next screen to the Registrant. 
+## Making the RegistrationProcessManager class more resilient to failure
 
-[Add some stats from test here]
-
-To address this issue, the team identified two possible optimizations: 
-optimizing the interaction between the UI and the domain and optimizing 
-the command handling process. They decided to address the interaction 
-between the UI and the domain first and then to evaluate whether any 
-further optimization was necessary. 
-
-## Making the RegistrationProcess class more resilient to failure
-
-Typically, a process manager receives incoming events, and then based on 
+Typically, a process manager receives incoming events and then, based on 
 the state of the process manager, sends out one or more commands to 
 aggregates within the bounded context. When a process manager sends out 
 commands, it typically changes its own state. 
@@ -126,7 +113,7 @@ process manager. The process manager could:
   back in the topic subscription and re-processed.
 * Crash after it persists its state but before it sends any commands.
   This puts the system into an inconsistent state because the process manager
-  saved its new state without sending out the expected commands. The
+  saves its new state without sending out the expected commands. The
   original event is put back in the topic subscription and 
   re-processed.
 * Fail to mark that an event has been processed. The process manager will
@@ -138,7 +125,8 @@ process manager. The process manager could:
   is in a particular state. This may indicate a problem elsewhere that
   implies that it is unsafe for the process manager to continue.
   
-These scenarios can be summarized to identify two issues to address:
+These scenarios can be summarized to identify two specific issues to
+address:
 
 1. The **RegistrationProcessManager** handles an event successfully but fails
    to mark the message as complete. The **RegistrationProcessManager** will
@@ -159,7 +147,7 @@ Instead of making the process manager idempotent, you could ensure that
 all the commands that the process manager sends are idempotent. 
 Restarting the process manager may result in sending commands a second 
 time, but if those commands are idempotent this will have no adverse 
-affect on the process or the system. For this approach to work, you will 
+affect on the process or the system. For this approach to work, you 
 still need to modify the process manager to guarantee that it sends all 
 commands at least once. If the commands are idempotent, it doesn't 
 matter if they are sent multiple times, but it does matter if a command 
@@ -168,25 +156,28 @@ is never sent at all.
 In the V1 release, most message handling is already either idempotent, 
 or the system detects duplicate messages and sends them to a dead-letter 
 queue. The exceptions are the **OrderPlaced** event and the 
-**SeatsReserved** event. 
+**SeatsReserved** event, so the team modified the way that the V3
+release of the system processes these two commands in order to address
+this issue.
 
 ### Ensuring that commands are always sent
 
 To ensure that the system always sends commands when the 
 **RegistrationProcessManager** class saves its state requires 
 transactional behavior. This requires the team to implement a 
-psuedo-transaction because it is not possible to enlist the Windows 
-Azure Service Bus in a distributed transcation. 
+pseudo-transaction because it is not possible to enlist the Windows 
+Azure Service Bus and a SQL Database table together in a distributed
+transcation. 
 
 The solution adopted by the team for the V3 release ensures that the 
 system persists any commands that the **RegistrationProcessManager** 
-tries to send but that fail. When the system next reloads the 
+tries but fails to send. When the system next reloads the 
 **RegistrationProcessManager** class, it tries to re-send the failed 
 commands. If this fails, then the process manager cannot be loaded and 
 cannot process any further messages until the cause of the failure is 
 resolved. 
 
-## Optimizing the interactions between the ui and the domain
+## Optimizing the interactions between the UI and the domain
 
 When a Registrant creates an order, she visits the following sequence of 
 screens in the UI. 
@@ -205,6 +196,10 @@ screens in the UI.
    link to a screen that enables the Registrant to assign Attendees to
    seats.
    
+See the section Task-based UI in chapter 5, [Preparing for the V1
+Release][j_chapter5] for more information about the screens and flow in
+the UI.
+   
 In the V2 release, the system must process the following commands and 
 events between the Register screen and the Registrant screen: 
 
@@ -218,20 +213,38 @@ events between the Register screen and the Registrant screen:
 
 In addition, the MVC controller is also validating that there are 
 sufficient seats available to fulfill the order before it sends the 
-**RegisterToConference** command. 
+initial **RegisterToConference** command. 
 
-During testing, the team observed that sometimes the Registrant had to 
-wait for the Registrant screen to display while the system performed the 
-validation and processed all the commands and events. Behind the scenes, 
-the MVC controller waits until a priced order appears in the read-model 
-(this indicates that all of the processing is complete) before 
-displaying the Registrant screen. 
+When the team tested the V2 release, we discovered that sometimes the 
+UI is waiting, for the domain to to complete its processing and for the 
+read-models to receive data from the write-model, before it can display 
+the next screen to the Registrant. In particular, with the V2 release 
+deployed to medium-sized web and worker role instances we found that: 
 
-### Options to reduce the delay in the ui
+* With a single simulated user creating orders, all orders are processed
+  within a five second window.
+* With ten simulated users simultaneoulsy creating orders, many orders
+  are not processed within the five second window.
+* With ten simulated users simultaneoulsy creating orders, the role
+  instances are used sub-optimally (for example CPU usage is low).
+
+> **Note:** The five second window is the maximum duration that we want
+> to see between the time that the UI sends the initial command on the
+> service bus and the time when the priced order becomes visible in the
+> read-model enabling the UI to display the next screen to the user.
+
+To address this issue, the team identified two possible optimizations: 
+optimizing the interaction between the UI and the domain, and optimizing 
+the command handling process. We decided to address the interaction 
+between the UI and the domain first and then to evaluate whether any 
+further optimization was necessary. In the end, we implemented both of
+these optimizations.
+
+### Options to reduce the delay in the UI
 
 The team discussed with the domain expert whether or not is always 
 necessary to validate the seats availability before the UI sends the 
-**RegisterToConference** conference command to the domain. 
+**RegisterToConference** command to the domain. 
 
 > **GaryPersona:** This scenario illustrates some practical issues in
 > relation to eventual consistency. The read-side, in this case the
@@ -243,18 +256,19 @@ necessary to validate the seats availability before the UI sends the
 > a specific order to the read-side. This perhaps indicates a problem
 > with the original analysis and design of this part of the system.
 
-The domain expert was clear that the system should confirm that seats 
-are available before taking payment. Contoso does not want to sell seats 
-and then have to explain to a Registrant that those seats are not in 
-fact available. Therefore the team looked for ways to streamline getting 
-as far as the Payment screen in the UI. 
+The domain expert was clear that the system should confirm that seats are 
+available before taking payment. Contoso does not want to sell seats and 
+then have to explain to a Registrant that those seats are not in fact 
+available. Therefore, the team looked for ways to streamline getting as 
+far as the Payment screen in the UI. 
 
 > **BethPersona:** This cautious strategy is not appropriate in all
 > scenarios. In some cases the business may prefer to take the money
 > even if it cannot immediately fulfill the order: the business may know
-> that the stock will be replenished soon, or that the customer is happy
-> to wait. In this scenario, although Contoso could refund the money to
-> a Registrant, the Registrant may purchase flight tickets that are not
+> that the stock will be replenished soon, or that the customer will be
+> happy to wait. In our scenario, although Contoso could refund the
+> money to a Registrant if tickets turned out not to be available, a 
+> Registrant may decide to purchase flight tickets that are not
 > refundable in the belief that the conference registration is
 > confirmed. This type of decision is clearly one for the business and
 > the domain expert.
@@ -262,9 +276,10 @@ as far as the Payment screen in the UI.
 #### Optimization #1
 
 Most of the time, there are plenty of seats available for a conference 
-and Registrants are not competing for the last few that are available. 
-It is only for a brief time that Registrants are competing for the last 
-few seats. 
+and Registrants do not have to compete with each other to reserve seats. 
+It is only for a brief time, as the conference beomes close to selling 
+out, that Registrants do end up competing for the last few available 
+seats. 
 
 If there are plenty of available seats for the conference then there is 
 a minimal risk that a Registrant will get as far as the Payment screen 
@@ -304,12 +319,10 @@ Registrant screen than in the V2 release.
 
 ## Optimizing command processing 
 
-The current implementation uses the same messaging infrastructure for 
-both commands and events. The Windows Azure Service Bus provides a 
-reliable, performant, and scalable infrastructure for messaging in 
-Windows Azure. The team plans to evaluate whether the same 
-infrastructure is necesssary for all commands and events within the 
-Contoso Conference Management System. 
+The current implementation uses the same messaging infrastructure, the 
+Windows Azure Service Bus, for both commands and events. The team plans 
+to evaluate whether the same infrastructure is necesssary for all 
+commands and events within the Contoso Conference Management System. 
 
 The system uses events as its primary mechanism for integrating between 
 bounded contexts. One bounded context can raise an event that is then 
@@ -320,7 +333,7 @@ integrates with the Orders and Registrations bounded context. The
 Windows Azure Service Bus provides a mechanism to transport messages 
 between these worker role instances. 
 
-> **GaryPersona:** It's also possible in the future that for some
+> **GaryPersona:** It's also possible in the future that, for some
 > bounded contexts, the read-model will be hosted in a separate role
 > instance from the write-model. Windows Azure Service Bus will
 > transport the events that the system uses to construct the
@@ -330,19 +343,12 @@ There are a number of factors that the team will consider when we
 determine whether to continue using the Windows Azure Service Bus for 
 transporting all command messages. 
 
-* In a CQRS implementation, commands are typically used within a bounded
-  context, not between bounded contexts. This may mean that some
-  commands only exist within a process (or role instance in Windows
-  Azure) and could therefore be handled in memory without the need for
-  a messaging infrastructure to transport commands across process
-  boundaries.
-* How would handling commands in memory instead of using a messaging
-  infrastructure affect the resilience of the system in the face of
-  failures?
-* What performance benefits would actually be gained by handling]
-  commands in memory?
-* If you treat commands as a two-way, synchronous messaging pattern how
-  is this supported by the two alternatives?
+* Which commands, if any, can be processed in memory?
+* Will the system lose any resilience if it handles some commands in memory?
+* Will there be any significant performance gains if it handles some commands in memory?
+
+In addition, by processing commands in-process, it becomes easier to use
+commands as synchronous, two-way messages.
 
 > An asynchronous command doesn't exist, it's actually another event. If
 > I must accept what you send me and raise an event if I disagree, it's
@@ -356,7 +362,16 @@ Before implementing this optimization, the team plans to evaluate the
 impact of the optimizations to the interaction between the UI and the 
 domain. 
 
-## Scaling out
+## Other optimizations
+
+The primary goal of the team in this stage of the journey was to 
+optimize the system to ensure that the UI appears sufficiently 
+responsive to the user. There are additional optimizations that we could 
+perform that would help to further improve performance and to optimize 
+the way that the system uses resources. This section describes some of 
+these potential optimizations. 
+
+### Scaling out
 
 A further optimization that the team considered was to scale out the 
 view model generators that populate the various read-models in the 
@@ -364,7 +379,7 @@ system. Every web-role that hosts a view model generator instance must
 handle the events published by the write-side by creating a subscription 
 the the Windows Azure Service Bus topics.
 
-## Using Snapshots with Event Sourcing
+### Using Snapshots with Event Sourcing
 
 When the system re-hydrates an aggregate instance from the event store, 
 it must load and replay all of the events associated with that aggregate 
@@ -384,7 +399,7 @@ find it useful to have a copy of the code so you can follow along. You
 can download a copy of the code from the [Download center][downloadc], 
 or check the evolution of the code in the repository on github: 
 [mspnp/cqrs-journey-code][repourl]. You can download the code from the
-V2 release from the [Tags][tags] page on Github.
+V3 release from the [Tags][tags] page on Github.
 
 > **Note:** Do not expect the code samples to exactly match the code in
 > the reference implementation. This chapter describes a step in the
@@ -505,7 +520,7 @@ public void Handle(OrderPlaced @event)
 }
 ```
 
-### Creating a psuedo transaction when the process manager saves its state and sends a command
+### Creating a pseudo transaction when the RegistrationProcessManager class saves its state and sends a command
 
 It is not possible to have a transaction in Windows Azure that spans 
 persisting the **RegistrationProcessManager** to storage and sending the 
@@ -604,7 +619,7 @@ public T Find(Expression<Func<T, bool>> predicate)
 
 > **Note:** If it is still not possible to send a command when it is
 > re-tried. The **Find** method throws an exception and the system is
-> not able to load it.
+> not able to load the **RegistrationProcessManager** instance.
 
 ## Optimizing the UI
 
@@ -1037,10 +1052,10 @@ For more information about the **BlockingCollectionPartitioner** class,
 see the blog post [ParallelExtensionsExtras Tour - #4 - 
 BlockingCollectionExtensions][parallelext]. 
 
-### Task support in MVC 4
+### Task support in ASP.NET MVC4
 
 As part of the V3 release the team upgraded the Conference.Web.Public 
-site to MVC 4. This enabled them to update the 
+site to ASP.NET MVC4. This enabled them to update the 
 **RegistrationController** MVC controller to use the new task support 
 for asynchronous controllers. The following code sample shows an example 
 of this: 
@@ -1109,7 +1124,7 @@ as the point of entry, and the **Views** folder contains the tests that
 use [WatiN][watin] to drive the system through its UI. 
 
 
-[fig1]:              Journey_07_TopLevel.png?raw=true
+[fig1]:              images/Journey_07_TopLevel.png?raw=true
 
 [j_chapter4]:        Journey_04_ExtendingEnhancing.markdown
 [j_chapter5]:        Journey_05_PaymentsBC.markdown

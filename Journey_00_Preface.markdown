@@ -98,13 +98,45 @@ the core patterns, concepts, and language of CQRS.
 The following is a list of the chapters that comprise both sections of 
 the written guidance: 
 
+### A CQRS journey
 
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	To do
-  </span>
-</div> 
+* Chapter 1: The Contoso Conference Management System  
+  Introduces our sample application and our team of (fictional) experts.
+* Chapter 2: Decomposing the Domain  
+  Provides a high-level view of the sample application and describes the bounded contexts that make up the application.
+* Chapter 3: Orders and Registrations Bounded Context  
+  Introduces our first bounded context, explores some CQRS concepts, and describes some elements of our infrastructure.
+* Chapter 4: Extending and Enhancing the Orders and Registrations Bounded Context  
+  Adds features to the bounded context and describes our testing approach.
+* Chapter 5: Preparing for the V1 Release  
+  Describes adding two new bounded contexts and handling integration issues between them, and introduces our event sourcing implementation. This is our first pseudo-production release.
+* Chapter 6: Versioning our System  
+  Discusses how to version the system and handle upgrades with minimal down-time.
+* Chapter 7: Adding Resilience and Optimizing Performance  
+  Describes what we did to make the system more resilient to failure scenarios and how we optimized the performance of the system. This was the last release of the system in our journey.
+* Chapter 8: Conclusions and Next Steps  
+  Collects our key lessons learned from our journey and suggests how you might continue the journey.
+
+
+### CQRS Reference
+
+* Chapter 1: CQRS in Context  
+  Provides some context for CQRS, especially in relation to the domain-driven design approach.
+* Chapter 2: Introducing the Command Query Responsibility Segregation Pattern  
+  Provides a conceptual overview of the CQRS pattern.
+* Chapter 3: Introducing Event Sourcing  
+  Provides a conceptual overview of event sourcing.
+* Chapter 4: A CQRS/ES Deep Dive  
+  Describes the CQRS pattern and event sourcing in more depth.
+* Chapter 5: Communicating Between Bounded Contexts  
+  Describes some options for communicating between bounded contexts.
+* Chapter 6: A Saga on Sagas  
+  Explains our choice of terminology: process manager instead of saga. Describes the role of process managers.
+* Chapter 7: Technologies Used in the Reference Implementation  
+  Provides a brief overview of some of the other technologies we used, such as the Windows Azure Service Bus.
+* Appendix 1: Building and Running the Sample Code  
+  Detailed instructions for downloading, building, and running the sample application and the test suites.
+
 
 ## What Were the Criteria for Selecting the Domain for the Reference Implementation?
 
