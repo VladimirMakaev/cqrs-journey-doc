@@ -364,7 +364,8 @@ implementation of the Orders and Registrations bounded context. You may
 find it useful to have a copy of the code so you can follow along. You 
 can download a copy of the code from the [Download center][downloadc], 
 or check the evolution of the code in the repository on github: 
-[mspnp/cqrs-journey-code][repourl]. 
+[mspnp/cqrs-journey-code][repourl]. You can download the code from the
+V2 release from the [Tags][tags] page on Github.
 
 > **Note:** Do not expect the code samples to exactly match the code in
 > the reference implementation. This chapter describes a step in the
@@ -1359,4 +1360,4 @@ in the read-models in the Orders and Registrations bounded context.
 [downloadc]:         http://NEEDFWLINK
 [tfhab]:             http://msdn.microsoft.com/en-us/library/hh680934(PandP.50).aspx
 [sessionseq]:        http://geekswithblogs.net/asmith/archive/2012/04/10/149275.aspx
-
+[tags]:              https://github.com/mspnp/cqrs-journey-code/tags
