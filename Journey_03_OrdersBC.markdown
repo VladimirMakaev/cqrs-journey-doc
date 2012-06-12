@@ -78,14 +78,19 @@ bounded context, the only subscriber is a process manager.
 
 ### Process Manager
 
-In this bounded context, a process manager is a 
-class that coordinates the behavior of the aggregates in the domain. A 
-process manager subscribes to the events that the aggregates raise, and then 
-follow a simple set of rules to determine which command or commands to 
-send. The process manager does not contain any business logic, simply logic to 
-determine the next command to send. The process manager is implemented as a 
-state machine, so when the process manager responds to an event, it can change 
-its internal state in addition to sending a new command.
+In this bounded context, a process manager is a class that coordinates 
+the behavior of the aggregates in the domain. A process manager 
+subscribes to the events that the aggregates raise, and then follow a 
+simple set of rules to determine which command or commands to send. The 
+process manager does not contain any business logic, simply logic to 
+determine the next command to send. The process manager is implemented 
+as a state machine, so when the process manager responds to an event, it 
+can change its internal state in addition to sending a new command. 
+
+Our process manager is an implementation of the Process Manager pattern 
+defined on pages 312 to 321 in the book "Enterprise Integration 
+Patterns: Designing, Building, and Deploying Messaging Solutions" by 
+Gregor Hohpe and Bobby Woolf. 
 
 > **MarkusPersona:** It can be difficult for someone new to the code to
 > follow the flow of commands and events through the system. For a
@@ -93,11 +98,11 @@ its internal state in addition to sending a new command.
 > [Extending and Enhancing the Orders and Registrations Bounded
 > Contexts][j_chapter4].
 
-The process manager in this bounded context can receive commands as well as 
-subscribe to events.
+The process manager in this bounded context can receive commands as well 
+as subscribe to events. 
 
-> **GaryPersona:** The team initially referred to the process manager class
-> in the **Orders** bounded context as a saga. To find out why we
+> **GaryPersona:** The team initially referred to the process manager 
+> class in the **Orders** bounded context as a saga. To find out why we
 > decided to change the terminology, see the section [Patterns and
 > Concepts](#patternsandconcepts) later in this chapter.
 

@@ -68,17 +68,22 @@ bounded context, the only subscriber is a process manager.
 
 ### Process manager
 
-In this bounded context, a process manager is a 
-class that coordinates the behavior of the aggregates in the domain. A 
-process manager subscribes to the events that the aggregates raise, and then 
-follow a simple set of rules to determine which command or commands to 
-send. The process manager does not contain any business logic, simply logic to 
-determine the next command to send. The process manager is implemented as a 
-state machine, so when the process manager responds to an event, it can change 
-its internal state in addition to sending a new command. 
+In this bounded context, a process manager is a class that coordinates 
+the behavior of the aggregates in the domain. A process manager 
+subscribes to the events that the aggregates raise, and then follow a 
+simple set of rules to determine which command or commands to send. The 
+process manager does not contain any business logic, simply logic to 
+determine the next command to send. The process manager is implemented 
+as a state machine, so when the process manager responds to an event, it 
+can change its internal state in addition to sending a new command. 
 
-The process manager in this bounded context can receive commands as well as 
-subscribe to events. 
+The process manager in this bounded context can receive commands as well 
+as subscribe to events. 
+
+Our process manager is an implementation of the Process Manager pattern 
+defined on pages 312 to 321 in the book "Enterprise Integration 
+Patterns: Designing, Building, and Deploying Messaging Solutions" by 
+Gregor Hohpe and Bobby Woolf. 
 
 ## User stories 
 
@@ -95,6 +100,14 @@ Registrant by email. The Registrant can use her email address and the
 from the system at a later date. The Registrant may wish to retrieve the 
 order to review it, or to complete the registration process by assigning 
 Attendees to seats. 
+
+> **CarlosPersona:** From the business perspective it was important for
+> us to be as user-friendly as possible: we don't want to block or
+> unnecessarily burden anyone who is trying to register for a
+> conference. Therefore, we have no requirement for a user to create an
+> account in the system prior to registration, especially since users
+> must enter most of their information in a standard checkout process
+> anyway.
 
 ### Inform the registrant how much time remains to complete an order
 
@@ -123,7 +136,9 @@ ASP.NET MVC web application and a worker role that contains the message
 handlers and domain objects. The application uses SQL Database databases 
 for data storage, both on the write-side and the read-side. The 
 application uses the Windows Azure Service Bus to provide its messaging 
-infrastructure. 
+infrastructure. Figure 1 shows this high-level architecture.
+
+![Figure 1][fig1]
 
 While you are exploring and testing the solution, you can run it 
 locally, either using the Windows Azure compute emulator or by running 
@@ -190,19 +205,32 @@ be read quickly and efficiently.
 > Optimizing the read-side to provide fast responses with low
 > resource utilization to queries will help you to achieve these goals.
 
+> **JanaPersona:** A normalized database schema can fail to provide
+> adequate response times because of the excessive table JOIN
+> operations. Despite advances in relational database technology, a JOIN
+> operation is still very expensive compared to a single-table read.
+
 An important area for consideration is the interface whereby a client 
 such as an MVC controller action submits a query to the read-side model. 
 
-![Figure 1][fig1]
+![Figure 2][fig2]
 
 **The Read-side storing data in a relational database**
 
-In figure 1, a client such as an MVC controller action invokes a method 
+In figure 2, a client such as an MVC controller action invokes a method 
 on a **ViewRepository** class to request the data that it needs. The 
 **ViewRepository** class in turn runs a query against the de-normalized 
 data in the database. 
 
-The team at Contoso evaluated two approaches to implementing the **ViewRepository** class: using the **IQueryable** interface and using non-generic data access objects (DAOs).
+> **JanaPersona:** The Repository pattern mediates between the domain
+> and data mapping layers using a collection-like interface for
+> accessing domain objects. For more info see Martin Fowler, Catalog of
+> Patterns of Enterprise Application Architecture,
+> [Repository][repopattern]. 
+
+The team at Contoso evaluated two approaches to implementing the 
+**ViewRepository** class: using the **IQueryable** interface and using 
+non-generic data access objects (DAOs). 
 
 #### Using the **IQueryable** interface
 
@@ -302,7 +330,9 @@ Possible objections to this approach include:
 
 * Using the **IQueryable** interface makes it much easier to use grids 
   that support features such as paging, filtering, and sorting in the
-  UI.
+  UI. However, if the developers are aware of this downside and are
+  committed to delivering a task-based UI, then this should not be an
+  issue.
   
 The team decided to adopt the second approach because of the clarity it 
 brings to the code; in this context, we did not see any significant 
@@ -335,11 +365,11 @@ cannot be simple SQL views because it includes data that is not stored
 in the underlying table storage on the write-side. Therefore you must
 pass this information to the read-side using events. 
 
-Figure 2 shows all the commands and events that the **Order** and 
+Figure 3 shows all the commands and events that the **Order** and 
 **SeatsAvailability** aggregates use and how the **Order** aggregate 
 pushes changes to the read-side by raising events. 
 
-![Figure 2][fig2]
+![Figure 3][fig3]
 
 **The new architecture of the reservation process**
 
@@ -362,7 +392,7 @@ makes it much easier to implement the asynchronous behavior in your
 application. 
 
 One approach, adopted by the team, is to use the model validation 
-features in ASP.NET MVC 3. 
+features in ASP.NET MVC. 
 
 You should be careful to distinguish between errors and business
 failures. Examples of errors include: 
@@ -375,6 +405,16 @@ failures. Examples of errors include:
 In many cases, especially in the cloud, you can handle these errors by
 retrying the operation.
 
+> **MarkusPersona:** The Transient Fault Handling Application Block from
+> Microsoft patterns & practices is designed to make it easier to
+> implement consistent retry behavior for any transient faults. It comes
+> with a set of built-in detection strategies for SQL Database, Windows
+> Azure storage, Windows Azure Caching, and Windows Azure Service Bus,
+> and it also allows you to define your own strategies. Similarly, it
+> comes with a set of handy built-in retry policies and supports custom
+> ones. For more information, see [The Transient Fault Handling
+> Application Block][tfhab].
+
 A business failure should have a predetermined business response. For
  example:
 
@@ -385,7 +425,7 @@ A business failure should have a predetermined business response. For
 
 > **GaryPersona:** Your domain experts should help you to identify
 > possible business failures and determine the way that you handle
-> them. 
+> them: either using an automated process or manually.
 
 ## The countdown timer and the read-model
 
@@ -415,7 +455,7 @@ or check the evolution of the code in the repository on github:
 ## The Order Access Code record locator 
 
 A Registrant may need to retrieve an Order, either to view it, or to 
-complete registering Attendees to seats. This may happen in a different 
+complete assigning Attendees to seats. This may happen in a different 
 web session, so the Registrant must supply some information to locate 
 the previously saved order. 
 
@@ -586,7 +626,7 @@ public ActionResult SpecifyRegistrantDetails(string conferenceCode, Guid orderId
 The MVC view then uses Javascript to display an animated countdown 
 timer. 
 
-## Using ASP.NET MVC 3 validation for commands
+## Using ASP.NET MVC validation for commands
 
 You should try to ensure that any commands that the MVC controllers in 
 your application send to the write-model will succeed. You can use the 
@@ -725,7 +765,7 @@ contains data that only exists on the read-side.
 
 To populate these tables in the read-model, the read-side handles events 
 raised by the write-side and uses them to write to these tables. See
-Figure 2 above for more details.
+Figure 3 above for more details.
 
 The **OrderViewModelGenerator** class handles these events and updates
 the read-side repository.
@@ -867,10 +907,10 @@ journey, the team replaced the **ConferenceSeatsAvailabilty** aggregate
 with a **SeatsAvailability** aggregate to reflect the fact that there 
 may be multiple seat types available at a particular conference; for 
 example, full conference seats, pre-conference workshop seats, and 
-cocktail party seats. Figure 3 shows the new **SeatsAvailability** 
+cocktail party seats. Figure 4 shows the new **SeatsAvailability** 
 aggregate and its constituent classes. 
 
-![Figure 3][fig3]
+![Figure 4][fig4]
 
 **The SeatsAvailability aggregate and its associated commands and events.**
 
@@ -892,7 +932,7 @@ to make a decision on how to proceed with the registration.
 
 ### The AddSeats method
 
-You may have noticed in Figure 2 that the **SeatsAvailability** 
+You may have noticed in Figure 3 that the **SeatsAvailability** 
 aggregate includes an **AddSeats** method with no corresponding command. 
 The **AddSeats** method adjusts the total number of available seats of a 
 given type. The Business Customer is responsible for making any such 
@@ -921,18 +961,20 @@ The team had the following goals for their acceptance testing approach:
 * That it should be possible to execute the acceptance tests
   automatically.
 
-To achieve these goals the team used [SpecFlow][specflow].
+To achieve these goals the domain expert paired with a member of the 
+test team and used [SpecFlow][specflow] to specify the core acceptance 
+tests. 
 
 ### Defining acceptance tests using SpecFlow features
 
-The first step is to define the acceptance tests in the language used by 
-SpecFlow. These tests are saved as feature files in a Visual Studio 
+The first step is to define the acceptance tests using the SpecFlow 
+notation. These tests are saved as feature files in a Visual Studio 
 project. The following code sample from the 
 **ConferenceConfiguration.feature** file in the 
 Features\UserInterface\Views\Management folder shows an acceptance test 
 for the Conference Management bounded context. A typical SpecFlow test 
 scenario consists of a collection of **Given**, **When**, and **Then** 
-statements. Some of these statements include the data that the test is
+statements. Some of these statements include the data that the test is 
 uses. 
 
 ```
@@ -1390,7 +1432,11 @@ All at a level just below the UI, but above (and beyond) infrastructure
 concerns. Testing is tightly focused on the behavior of the overall 
 solution domain, which is why I'll call these types of tests Domain 
 Tests. Other terms such as BDD can be used to describe this style of 
-testing. 
+testing.
+
+> **JanaPersona:** These "below the UI" tests are also known as
+> _subcutaneous tests_, (see [Meszaros, G., Melnik, G., Acceptance Test
+> Engineering Guide][testingguide]).
 
 It may seem a little redundant to re-write application logic already 
 implemented in the web site, but there are a number of reasons why it is 
@@ -1450,11 +1496,11 @@ hinder code readability by their very nature, since one can never be
 sure what concrete class is being injected at a particular point without 
 examing the container's initialization closely. In the journey code, 
 **IProcess** marks classes representing long-running business processes 
-(also known as Sagas) responsible for coordinating business logic 
-between different Aggregates. In order to maintain the integrity, 
-idempotency, and transactionality of the system's data and state, 
-Processes leave the actual publishing of their issued commands to the 
-individual persistence repository's implementation. Since IoC and DI 
+(also known as Sagas or Process Managers) responsible for coordinating 
+business logic between different Aggregates. In order to maintain the 
+integrity, idempotency, and transactionality of the system's data and 
+state, Processes leave the actual publishing of their issued commands to 
+the individual persistence repository's implementation. Since IoC and DI 
 containers hide these types of details from consumers, it and other 
 properties of the system create a bit of difficulty when it comes to 
 answering seemingly trivial questions such as: 
@@ -1476,7 +1522,7 @@ answering these questions. We'll use as an example the
 **RegistrationProcessManager**. 
 
 1. Open the RegistrationProcess.cs file, noting that, like many
-   processes (or Sagas, as they are known in the community) it has a 
+   process managers it has a 
    **ProcessState** enumeration. We take note of the beginning state for
    the process, **NotStarted**. Next, we want to find code that does one
    of the following:
@@ -1488,8 +1534,8 @@ answering these questions. We'll use as an example the
 2. Locate the first location in source code where either or both of the
    above occur. In this case, it's the **Handle** method in the 
    **RegistrationProcessRouter** class. **Important:** this does NOT
-   necessarily mean that the Process is a Command Handler! Processes
-   (Sagas) are responsible for creating/retrieving Aggregate Roots (AR)
+   necessarily mean that the Process is a Command Handler! Process
+   managers are responsible for creating/retrieving Aggregate Roots (AR)
    from storage for the purpose of routing messages to the AR, so while
    they have methods similar in naming and signature to an
    **ICommandHandler<T>** implementation, they do not implement a
@@ -1555,9 +1601,10 @@ that these scripts accomplished was to reflect through one or more
 project assemblies and output the various types of messages and 
 handlers. In discussions with members of the team it became apparent 
 that others were experiencing the same types of problems I was. A few 
-skype chats and brainstorming sessions later, we came up with the idea 
-of introducing a small DSL that would encapsulate the interactions being 
-discussed. The tentatively-named SawMIL toolbox, located here 
+chats and brainstorming sessions with members of the patterns and 
+practices team later, we came up with the idea of introducing a small 
+DSL that would encapsulate the interactions being discussed. The 
+tentatively-named SawMIL toolbox, located here 
 [http://jelster.github.com/CqrsMessagingTools/][mil] provides utilities, 
 scripts, and examples that enable you to use MIL as part of your 
 development and analysis process managers. 
@@ -1669,7 +1716,7 @@ SendCustomerInvoice? -> CustomerInvoiceHandler
 We've just walked through the basic steps used when describing messaging 
 interactions in a loosely-coupled application. Although the interactions 
 described are only a subset of possible interactions, MIL is evolving 
-into a powerful way to compactly describe the interactions of a 
+into way to compactly describe the interactions of a 
 message-based system. Different nouns and verbs (elements and actions) 
 are represented by distinct, mnemonically significant symbols. This 
 provides a cross-substrate (squishy human brains < - > silicon CPU) 
@@ -1688,9 +1735,10 @@ the repos, and get started!
 [r_chapter4]:       Reference_04_DeepDive.markdown
 [appendix1]:        Appendix1_Running.markdown
 
-[fig1]:             images/Journey_04_ViewRepository.png?raw=true
-[fig2]:             images/Journey_04_Architecture.png?raw=true
-[fig3]:             images/Journey_04_SeatsAvailability.png?raw=true
+[fig1]:             images/Journey_04_TopLevel.png?raw=true
+[fig2]:             images/Journey_04_ViewRepository.png?raw=true
+[fig3]:             images/Journey_04_Architecture.png?raw=true
+[fig4]:             images/Journey_04_SeatsAvailability.png?raw=true
 
 [repourl]:          https://github.com/mspnp/cqrs-journey-code
 [modelvalidation]:  http://msdn.microsoft.com/en-us/library/dd410405(VS.98).aspx
@@ -1699,4 +1747,6 @@ the repos, and get started!
 [xUnit]:            http://xunit.codeplex.com/
 [mil]:              http://jelster.github.com/CqrsMessagingTools/
 [downloadc]:        http://NEEDFWLINK
-
+[repopattern]:      http://martinfowler.com/eaaCatalog/repository.html
+[tfhab]:            http://msdn.microsoft.com/en-us/library/hh680934(v=pandp.50)
+[testingguide]:     http://testingguidance.codeplex.com

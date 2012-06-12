@@ -76,12 +76,14 @@ page for the order.
 ## Architecture 
 
 The application is designed to deploy to Windows Azure. At this stage in 
-the journey, the application consists of a web role that contains the 
-ASP.NET MVC web application and a worker role that contains the message 
+the journey, the application consists of web roles that contains the 
+ASP.NET MVC web applications and a worker role that contains the message 
 handlers and domain objects. The application uses SQL Database databases 
 for data storage, both on the write-side and the read-side. The 
 application uses the Windows Azure Service Bus to provide its messaging 
-infrastructure. 
+infrastructure. Figure 1 shows this high-level architecture.
+
+![Figure 1][fig1]
 
 While you are exploring and testing the solution, you can run it 
 locally, either using the Windows Azure compute emulator or by running 
@@ -194,9 +196,9 @@ In V1, in certain scenarios it was possible for the system to process an
 event multiple times if an error occurred while the event was being 
 processed. To avoid this scenario, the team modified the architecture so 
 that every event handler has its own subscription to a Windows Azure 
-topic. Figure 1 shows the two different models. 
+topic. Figure 2 shows the two different models. 
 
-![Figure 1][fig1]
+![Figure 2][fig2]
 
 **Using one subscription per event handler**
 
@@ -1344,6 +1346,8 @@ in the read-models in the Orders and Registrations bounded context.
 > the migration runs as expected, but potentially reveals bugs in the
 > application itself.
 
+[fig1]:              Journey_06_TopLevel.png?raw=true
+[fig2]:              Journey_06_Subscriptions.png?raw=true
 
 [j_chapter4]:        Journey_04_ExtendingEnhancing.markdown
 [j_chapter7]:        Journey_07_V3Release.markdown

@@ -46,12 +46,14 @@ bounded context, the only subscriber is a process manager.
 ## Architecture 
 
 The application is designed to deploy to Windows Azure. At this stage in 
-the journey, the application consists of a web role that contains the 
-ASP.NET MVC web application and a worker role that contains the message 
+the journey, the application consists of web roles that contains the 
+ASP.NET MVC web applications and a worker role that contains the message 
 handlers and domain objects. The application uses SQL Database databases 
 for data storage, both on the write-side and the read-side. The 
 application uses the Windows Azure Service Bus to provide its messaging 
-infrastructure. 
+infrastructure. Figure 1 shows this high-level architecture.
+
+![Figure 1][fig1] 
 
 While you are exploring and testing the solution, you can run it 
 locally, either using the Windows Azure compute emulator or by running 
@@ -1104,6 +1106,9 @@ Orders and Registrations Bounded Context][j_chapter4]. The
 **Controllers** folder contains the tests that use the MVC controllers 
 as the point of entry, and the **Views** folder contains the tests that 
 use [WatiN][watin] to drive the system through its UI. 
+
+
+[fig1]:              Journey_07_TopLevel.png?raw=true
 
 [j_chapter4]:        Journey_04_ExtendingEnhancing.markdown
 [j_chapter5]:        Journey_05_PaymentsBC.markdown
