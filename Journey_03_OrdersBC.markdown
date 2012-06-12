@@ -1,5 +1,4 @@
-## Chapter 3
-# Orders and Registrations Bounded Context 
+# Chapter 3: Orders and Registrations Bounded Context 
 
 _The first stopping point on our CQRS journey._
 
