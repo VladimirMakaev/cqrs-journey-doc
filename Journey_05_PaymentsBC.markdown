@@ -9,7 +9,7 @@ first production release of the Contoso Conference Management System.
 This work includes some refactoring and additions to the **Orders and 
 Registrations** bounded context that the previous two chapters introduce
 as well as a new **Conference Management** bounded context and
-**Payments** bounded context. 
+a new **Payments** bounded context. 
 
 One of the key refactorings undertaken by the team during this phase of 
 the journey was to introduce event sourcing into the Orders and 
@@ -54,8 +54,8 @@ events associated with that aggregate instance. The event store becomes
 the book of record for the data stored by the system. 
 
 In addition, you can use event sourcing as a source of audit data, as a 
-way to query historic state, and to replay events for debugging and 
-problem analysis. 
+way to query historic state, gain new business insights from past data, 
+and to replay events for debugging and problem analysis. 
 
 ## User stories 
 
@@ -100,15 +100,15 @@ a list of orders and Attendees.
 
 ### Ordering and Registration bounded context user stories
 
-When a Registrant creates an order, it may not be possible to fulfill  
+When a Registrant creates an order, it may not be possible to fulfill 
 the order completely. For example, a Registrant may request a Registrant 
 may request five seats for the full conference, five seats for the 
-drinks reception, and three seats for the pre-conference workshop. There 
-may only be three seats available and one seat for the drinks reception, 
-but more than three seats available for the pre-conference workshop. The 
-system displays this information to the Registrant and gives the 
-Registrant the opportunity to adjust the number of each type of seat in 
-the order before continuing to the payment process.
+welcome reception, and three seats for the pre-conference workshop. 
+There may only be three seats available and one seat for the welcome 
+reception, but more than three seats available for the pre-conference 
+workshop. The system displays this information to the Registrant and 
+gives the Registrant the opportunity to adjust the number of each type 
+of seat in the order before continuing to the payment process. 
 
 After a Registrant has selected the quantity of each seat type, the 
 system calculates the total to pay for the order, and the Registrant can 
