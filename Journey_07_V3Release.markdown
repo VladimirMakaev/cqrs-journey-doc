@@ -41,7 +41,16 @@ in the domain model raise events.
 Multiple subscribers can handle a specific event. Aggregates publish 
 events to an event bus; handlers register for specific types of event on 
 the event bus and then deliver the events to the subscriber. In this 
-bounded context, the only subscriber is a process manager. 
+bounded context, the only subscriber is a process manager.
+
+### Snapshots
+
+Snapshots are an optimization that you can apply to event sourcing: 
+instead of replaying all of the persisted events associated with an 
+aggregate when it is re-hydrated, you load a recent copy of the state of 
+the aggregate and then replay only the events that were persisted after 
+saving the snapshot. In this way you can reduce the amount of data that 
+you must load from the event store. 
 
 ## Architecture 
 
@@ -366,6 +375,24 @@ Before implementing this optimization, the team plans to evaluate the
 impact of the optimizations to the interaction between the UI and the 
 domain. 
 
+## Using snapshots with event sourcing
+
+When the system re-hydrates an aggregate instance from the event store, 
+it must load and replay all of the events associated with that aggregate 
+instance. A possible optimization here is to store a rolling snapshot of 
+the state of the aggregate at some recent point in time so that the 
+system only needs to load the snapshot and the subsequent events, 
+thereby reducing the number of events that it must reload and replay. 
+The only aggregate in the Contoso Conference Management System that is 
+likely to accumulate a significant number of events over time is the 
+**SeatsAvailability** aggregate. We decided to use the 
+[Memento][memento] pattern as the basis of the snapshot solution to use 
+with the **SeatAvailability** aggregate. The solution we implmented uses 
+a memento to capture the state of the **SeatAvailability** aggregate, 
+and then keeps a copy of the memento in a cache. The system then tries 
+to work with the cached data instead of always reloading the aggregate 
+from the event store. 
+
 ## Other optimizations
 
 The primary goal of the team in this stage of the journey was to 
@@ -383,17 +410,7 @@ system. Every web-role that hosts a view model generator instance must
 handle the events published by the write-side by creating a subscription 
 the the Windows Azure Service Bus topics.
 
-### Using Snapshots with Event Sourcing
 
-When the system re-hydrates an aggregate instance from the event store, 
-it must load and replay all of the events associated with that aggregate 
-instance. A possible optimization here is to store a rolling snapshot of 
-the state of the aggregate at some recent point in time so that the 
-system only needs to load the snapshot and the subsequent events, 
-thereby reducing the number of events that it must reload and replay. 
-The team decided that this optimization would not provide significant 
-benefits because of the limited number of events stored per aggregate 
-instance in the system.
 
 ## No downtime migration
 
@@ -958,6 +975,87 @@ public bool ProcessMessage(string traceIdentifier, ICommand payload, string mess
 > **MarkusPersona:** Notice how we use the **dynamic** keyword when we
 > dispatch the command to its registered handler.
 
+## Implementing snapshots with the memento pattern
+
+In the Contoso Conference Management System, the only event-sources 
+aggregate that is likely to have a significant number of events and 
+benefit from snapshots is the **SeatAvailability** aggregate. 
+
+> **MarkusPersona:** Because we chose to use the memento pattern, the
+> snapshot of the aggregate state is stored in the memento.
+
+The following code sample from the **Save** method in the 
+**AzureEventSourcedRepository** class shows how the system creates a 
+cached memento object if there is a cache and the aggregate implements 
+the **IMementoOriginator** interface. 
+
+```Cs
+public void Save(T eventSourced, string correlationId)
+{
+    ...
+
+    this.cacheMementoIfApplicable.Invoke(eventSourced);
+}
+```
+
+Then, when the system loads an aggregate by invoking the **Find** method 
+in the **AzureEventSourcedRepository** class, it checks to see of there 
+is a cached memento containing A snapshot of the state of the object to 
+use: 
+
+```Cs
+public T Find(Guid id)
+{
+    var memento = this.getMementoFromCache(id);
+    if (memento != null)
+    {
+        // NOTE: if we had a guarantee that this is running in a single process, there is
+        // no need to check if there are new events after the cached version.
+        var deserialized = this.eventStore.Load(GetPartitionKey(id), memento.Version + 1)
+            .Select(this.Deserialize);
+
+        return this.originatorEntityFactory.Invoke(id, memento, deserialized);
+    }
+    else
+    {
+        var deserialized = this.eventStore.Load(GetPartitionKey(id), 0)
+            .Select(this.Deserialize)
+            .AsCachedAnyEnumerable();
+
+        if (deserialized.Any())
+        {
+            return this.entityFactory.Invoke(id, deserialized);
+        }
+    }
+
+    return null;
+}
+```
+
+In this solution, whenever the system updates the aggregate and invokes 
+the **Save** method, it also updates the existing memento. Therefore, if 
+there is only a single process, the **Find** method doesn't need to load 
+events from the event store. However, the Contoso Conference Management 
+System may use multiple processes, therefore the **Find** method checks 
+in the event store for recent events. If the cached memento expires, the 
+**Find** method loads all of the events associated with the aggregate 
+from the store. 
+
+The following code sample shows how the **SeatsAvailability** class adds 
+a snapshot of its state data to the memento object to be cached: 
+
+```Cs
+public IMemento SaveToMemento()
+{
+    return new Memento
+    {
+        Version = this.Version,
+        RemainingSeats = this.remainingSeats.ToArray(),
+        PendingReservations = this.pendingReservations.ToArray(),
+    };
+}
+```
+
 ## Other optimizations
 
 This section describes some of the other optimizations that the team 
@@ -1189,3 +1287,4 @@ use [WatiN][watin] to drive the system through its UI.
 [downloadc]:         http://NEEDFWLINK
 [parallelext]:       http://blogs.msdn.com/b/pfxteam/archive/2010/04/06/9990420.aspx
 [tags]:              https://github.com/mspnp/cqrs-journey-code/tags
+[memento]:           http://www.oodesign.com/memento-pattern.html
