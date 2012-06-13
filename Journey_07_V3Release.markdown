@@ -393,7 +393,50 @@ system only needs to load the snapshot and the subsequent events,
 thereby reducing the number of events that it must reload and replay. 
 The team decided that this optimization would not provide significant 
 benefits because of the limited number of events stored per aggregate 
-instance in the system. 
+instance in the system.
+
+## No downtime migration
+
+The team planned to have a no downtime migration from the V2 to the V3 
+release in Windows Azure. Although the web roles continue to run during 
+the migration, it is still necessary for this migration to pause the 
+worker role: this means that during the migration process, any 
+Registrants in the middle of creating an order will see the message 
+"Cannot determine the state of the registration" until the migration 
+completes. 
+
+The following list summarizes the steps of the migration:
+
+1. Deploy the V3 release to the staging slot in Windows Azure.
+2. Switch the V2 release worker role for the V3 release worker role.
+   While this is taking place, Registrants continue to use the V2 web
+   roles and see the "Cannot determine the state of the registration"
+   message because for a while, no worker role instance is available.
+3. Switch the V2 release web role for the V3 release worker role.
+
+For details of these steps, see Appendix 1,
+"[Building and Running the Sample Code][appendix]."
+
+The reason that the worker role is unavailable for a period of time is 
+that the V2 release worker role must have its **MaintenanceMode** 
+property set to **true** before it is safe to enable the V3 worker role, 
+and setting this property requires Windows Azure to recycle the worker 
+role. 
+
+> **JanaPersona:** A possible solution to make this a true no-downtime
+> migration is to use a message-based approach that uses a configuration
+> bus.
+
+### Data migration
+
+The V3 release uses one additional table called 
+**UndispatchedMessages**, and requires an additional column called 
+**ReservationExpirationDate** in the **PricedOrders** table. 
+
+The system creates these if they don't already exist when the V3 release 
+worker starts up by using Entity Framework database initializers. See 
+the **MigrationToV3** project in the **Conference** solution for more 
+details. 
 
 # Implementation details 
 
@@ -1132,6 +1175,7 @@ use [WatiN][watin] to drive the system through its UI.
 
 [j_chapter4]:        Journey_04_ExtendingEnhancing.markdown
 [j_chapter5]:        Journey_05_PaymentsBC.markdown
+[appendix]:          Appendix1_Running.markdown
 
 [repourl]:           https://github.com/mspnp/cqrs-journey-code
 [watin]:             http://watin.org

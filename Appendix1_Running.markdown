@@ -379,7 +379,7 @@ release in Windows Azure.
 6. The V2 release is now live in Windows Azure.
 
 > **Note:** You can change the value of the **MaintenanceMode** property
-> in the Windows Azure management console.
+> in the Windows Azure management portal.
 
 ## Running the Migration Program to Migrate the Data
 
@@ -448,6 +448,29 @@ If the data migration process fails for any reason, then before you retry the mi
 2. Delete the two new Windows Azure tables defined in **Settings.xml**
    in the **EventSourcing** and **MessageLog** sections.
 
+# Migrating from the V2 to the V3 Release
+
+If you have been running the V2 release and have data that you would 
+like to preserve as you migrate to the V3 release, the following steps 
+describe how you can perform this migration if you are hosting the V2
+release in Windows Azure. 
+
+1. Deploy the V3 release to your Windows Azure staging environment. In the
+   V3 release, the command processor worker role has a **MaintenanceMode** property that is
+   initially set to **true**. 
+2. Change the **MaintenanceMode** property of the command processor worker role in the V2 release (running in the production slot) to **true**.  
+At this point, the application is still running, but the registrations cannot progress. You should wait until the status of the worker role instance shows as **Ready** in the Windows Azure portal (this may take some time).
+2. Change the **MaintenanceMode** property of the command processor worker role in the V3 release (running in the staging slot) to **false**.  
+This change is faster than changing the value of the **MaintenanceMode** property in the V2 release. When this change is complete, the V2 release web roles are using the V3 release worker role. This configuration change also triggers the database migration.
+3. In the Windows Azure portal, perform a VIP swap to make the V3 web roles visible externally.
+4. Shutdown the V2 deployment that is now running in the staging slot.
+5. The V3 release is now live in Windows Azure.
+
+> **Note:** You can change the value of the **MaintenanceMode** property
+> in the Windows Azure management portal.
+
+> **Note:** You should create a backup of the Conference database before
+> you begin the migration.
 
 # Known Issues
 
