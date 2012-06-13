@@ -215,18 +215,22 @@ In addition, the MVC controller is also validating that there are
 sufficient seats available to fulfill the order before it sends the 
 initial **RegisterToConference** command. 
 
-When the team tested the V2 release, we discovered that sometimes the 
-UI is waiting, for the domain to to complete its processing and for the 
-read-models to receive data from the write-model, before it can display 
-the next screen to the Registrant. In particular, with the V2 release 
-deployed to medium-sized web and worker role instances we found that: 
+The team load tested the application using Visual Studio Load Test with 
+different user load patterns. We noticed that with a constant load 
+pattern of ten virtual users, the UI often has to wait for the domain to 
+to complete its processing and for the read-models to receive data from 
+the write-model, before it can display the next screen to the 
+Registrant. In particular, with the V2 release deployed to medium-sized 
+web and worker role instances we found that: 
 
-* With a single simulated user creating orders, all orders are processed
-  within a five second window.
-* With ten simulated users simultaneoulsy creating orders, many orders
-  are not processed within the five second window.
-* With ten simulated users simultaneoulsy creating orders, the role
-  instances are used sub-optimally (for example CPU usage is low).
+* With a constant load pattern of a single virtual user creating orders,
+  all orders are processed within a five second window.
+* With  a constant load pattern of ten virtual users simultaneoulsy
+  creating orders, many orders are not processed within the five second
+  window.
+* With a constant load pattern of ten virtual users simultaneoulsy
+  creating orders, the role instances are used sub-optimally (for
+  example CPU usage is low).
 
 > **Note:** The five second window is the maximum duration that we want
 > to see between the time that the UI sends the initial command on the
