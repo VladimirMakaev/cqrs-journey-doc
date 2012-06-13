@@ -854,7 +854,9 @@ deliver all commands to their recipients. This meant that the system
 delivered the commands asynchronously. In the v3 release, the MVC 
 controllers now send their commands synchronously and inline in order to 
 improve the response times in the UI by bypassing the command bus and 
-delivering commands directly to their handlers. 
+delivering commands directly to their handlers. In addition, in the 
+**ConferenceProcessor** worker role, commands sent to **Order** 
+aggregates are sent synchronously inline using the same mechanism. 
 
 The team implemeted this behavior by adding the 
 **SynchronousCommandBusDecorator** and **CommandDispatcher** classes to 
@@ -874,6 +876,10 @@ container.RegisterType<ICommandHandler, OrderCommandHandler>("OrderCommandHandle
 container.RegisterType<ICommandHandler, ThirdPartyProcessorPaymentCommandHandler>("ThirdPartyProcessorPaymentCommandHandler");
 container.RegisterType<ICommandHandler, SeatAssignmentsHandler>("SeatAssignmentsHandler");
 ```
+
+> **Note:** There is similar code in the Conference.Azure.cs file to
+> configure the worker role to send some commands inline.
+
 
 The following code sample shows how the 
 **SynchronousCommandBusDecorator** class implements sending a command 
