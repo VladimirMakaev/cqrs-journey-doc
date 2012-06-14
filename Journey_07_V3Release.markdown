@@ -86,6 +86,25 @@ other. It is important that this process manager is resilient to a wide
 range of failure conditions if the bounded context as a whole is to 
 maintain its consistent state. 
 
+We also ran performance tests using the [Visual Studio Load Test Feature 
+Pack][loadtest] to analyze response times and identify bottlenecks. The 
+team used Visual Studio Load Test to simulate different numbers of users 
+accessing the application, and added additonal tracing into the code to 
+record timing information for detailed analysis. As a result of this 
+exercise, the team made a number of changes to the system to optimize 
+its performance.
+
+> **GaryPersona:** Although in this journey the team did their
+> performance testing and optimization work at the end of the project,
+> it typically makes sense to do this work as you go, addressing
+> performance issues and adding hardening as soon as possible.
+
+> **MarkusPersona:** Because implementing the CQRS pattern leads to a
+> very clear separation of responsibities for the many different parts
+> that make up the system, we found it relatively easy to add
+> optimizations and hardening because many of the necessary changes were
+> very localized within the system.
+
 ## Making the RegistrationProcessManager class more resilient to failure
 
 Typically, a process manager receives incoming events and then, based on 
@@ -187,6 +206,12 @@ cannot process any further messages until the cause of the failure is
 resolved. 
 
 ## Optimizing the interactions between the UI and the domain
+
+The performance tests we ran using Visual Studio Load Test uncovered 
+unacceptable response times for Registrants creating orders when the 
+system was under load. The intitial optimization effort focused on how
+the UI interacts with the domain, and we identified ways to streamline
+this aspect of the system.
 
 When a Registrant creates an order, she visits the following sequence of 
 screens in the UI. 
@@ -332,6 +357,11 @@ Registrant screen than in the V2 release.
 
 ## Optimizing command processing 
 
+The analysis of the performance data collected from the load tests also 
+identified a potential bottleneck in the way that the system delivers 
+command messages. The team identified a number of optimizations to make 
+in this area. 
+
 The current implementation uses the same messaging infrastructure, the 
 Windows Azure Service Bus, for both commands and events. The team plans 
 to evaluate whether the same infrastructure is necesssary for all 
@@ -371,11 +401,23 @@ commands as synchronous, two-way messages.
 > Greg Young - Why lot's of developers use one-way command messaging 
 > (async handling) when it's not needed? - DDD/CQRS Google Groups
 
-Before implementing this optimization, the team plans to evaluate the 
-impact of the optimizations to the interaction between the UI and the 
-domain. 
+The team evaluated the impact of the optimizations to the interaction 
+between the UI and the domain first, and when those optimizations didn't 
+produce the necessary improvement we then implemented this 
+optimization. 
 
 ## Using snapshots with event sourcing
+
+The performance tests also uncovered a bottleneck in the use of the 
+**SeatsAvailability** aggregate. This proved to be the most effective 
+optimization when the team implemented it and re-ran the performance 
+tests. 
+
+> **JanaPersona:** Once the team identified this bottleneck, it was easy
+> to implement and test this solution. One of the advantages of the
+> approach we followed implementing the CQRS pattern is that we can make
+> small localized changes in the system. Updates don't require us to
+> make complex changes across multiple parts of the system.
 
 When the system re-hydrates an aggregate instance from the event store, 
 it must load and replay all of the events associated with that aggregate 
@@ -395,22 +437,17 @@ from the event store.
 
 ## Other optimizations
 
-The primary goal of the team in this stage of the journey was to 
-optimize the system to ensure that the UI appears sufficiently 
-responsive to the user. There are additional optimizations that we could 
-perform that would help to further improve performance and to optimize 
-the way that the system uses resources. This section describes some of 
-these potential optimizations. 
-
-### Scaling out
-
-A further optimization that the team considered was to scale out the 
-view model generators that populate the various read-models in the 
-system. Every web-role that hosts a view model generator instance must 
-handle the events published by the write-side by creating a subscription 
-the the Windows Azure Service Bus topics.
-
-
+The team performed some additional optimizations that are listed in the 
+"Implementation details" section below. The primary goal of the team 
+during this stage of the journey was to optimize the system to ensure 
+that the UI appears sufficiently responsive to the user. There are 
+additional optimizations that we could perform that would help to 
+further improve performance and to optimize the way that the system uses 
+resources. For example: a further optimization that the team considered 
+was to scale out the view model generators that populate the various 
+read-models in the system. Every web-role that hosts a view model 
+generator instance must handle the events published by the write-side by 
+creating a subscription the the Windows Azure Service Bus topics. 
 
 ## No downtime migration
 
@@ -555,6 +592,39 @@ events are wrapped in an **Envelope** instance that includes the
 > when it forwards events to handlers. Now in V3 it uses the new
 > **EventDispatcher** class: this class uses reflection to identify the
 > correct handlers for a given message type.
+
+During performance testing, the team identified a further issue with 
+this specific **SeatsReserved** event. Because of a delay elsewhere in 
+the system when it was under load, a second copy of the 
+**SeatsReserved** event was being published. This **Handle** method was 
+then throwing an exception that caused the system to retry processing 
+the message several times before sending it to a dead-letter queue. To 
+address this specific issue, the team modified this method by adding the 
+**else if** clause as shown in the following code sample: 
+
+```Cs
+public void Handle(Envelope<SeatsReserved> envelope)
+{
+    if (this.State == ProcessState.AwaitingReservationConfirmation)
+    {
+        ...
+    }
+    else if (string.CompareOrdinal(this.SeatReservationCommandId.ToString(), envelope.CorrelationId) == 0)
+    {
+        Trace.TraceInformation("Seat reservation response for request {1} for reservation id {0} was already handled. Skipping event.", envelope.Body.ReservationId, envelope.CorrelationId);
+    }
+    else
+    {
+        throw new InvalidOperationException("Cannot handle seat reservation at this stage.");
+    }
+}
+```
+
+> **MarkusPersona:** This optimization was only applied for this
+> specific message. Notice that it makes use of the value of
+> **SeatReservationCommandId** property that was previously saved in the
+> instance. If you want to perform this kind of check on other messages
+> you'll need to store more information in the process manager.
 
 ### Detecting duplicate OrderPlaced events
 
@@ -875,6 +945,12 @@ delivering commands directly to their handlers. In addition, in the
 **ConferenceProcessor** worker role, commands sent to **Order** 
 aggregates are sent synchronously inline using the same mechanism. 
 
+> **MarkusPersona:** We still continue to send commands to the
+> **SeatsAvailability** aggregate asynchronously because with multiple
+> instances of the **RegistrationProcessManager** running in parallel,
+> there will contention as multiple threads all try to access the same
+> instance of the **SeatsAvailability** aggregate.
+
 The team implemeted this behavior by adding the 
 **SynchronousCommandBusDecorator** and **CommandDispatcher** classes to 
 the infrastructure and registering them during the start up of the web 
@@ -1041,6 +1117,9 @@ in the event store for recent events. If the cached memento expires, the
 **Find** method loads all of the events associated with the aggregate 
 from the store. 
 
+**MarkusPersona:** If we were sure that we'd always be running this in a 
+single process we could optimize further by not querying for new events. 
+
 The following code sample shows how the **SeatsAvailability** class adds 
 a snapshot of its state data to the memento object to be cached: 
 
@@ -1201,7 +1280,25 @@ Task.Factory.StartNew(
 
 For more information about the **BlockingCollectionPartitioner** class, 
 see the blog post [ParallelExtensionsExtras Tour - #4 - 
-BlockingCollectionExtensions][parallelext]. 
+BlockingCollectionExtensions][parallelext].
+
+### Completing messages asynchronously
+
+The system uses the peek/lock mechanism to retrieve messages from the Service Bus topic subscriptions. The **BrokeredMessageExtensions** class now includes three new methods to support completing messages asynchronously:
+
+* **SafeCompleteAsync**
+* **SafeAbandonAsync**
+* **SafeDeadLetterAsync**
+
+The system uses these methods when the **ReleaseMessageLockAsynchronously** property is set to **true** in the **CommandProcessor** class as shown in the following code sample from the ConferenceProcessor.Azure.cs file:
+
+```Cs
+var commandProcessor =
+    new CommandProcessor(new SubscriptionReceiver(azureSettings.ServiceBus, Topics.Commands.Path, Topics.Commands.Subscriptions.All), serializer)
+    {
+        ReleaseMessageLockAsynchronously = true
+    };
+```
 
 ### Task support in ASP.NET MVC4
 
@@ -1288,3 +1385,4 @@ use [WatiN][watin] to drive the system through its UI.
 [parallelext]:       http://blogs.msdn.com/b/pfxteam/archive/2010/04/06/9990420.aspx
 [tags]:              https://github.com/mspnp/cqrs-journey-code/tags
 [memento]:           http://www.oodesign.com/memento-pattern.html
+[loadtest]:          http://www.microsoft.com/visualstudio/en-us/products/2010-editions/load-test-virtual-user-pack/overview
