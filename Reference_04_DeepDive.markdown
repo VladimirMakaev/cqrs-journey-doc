@@ -1208,6 +1208,10 @@ the costs of implementing the CQRS pattern and adding a task-based UI
 will outweigh any benefits. Task-based UIs are particularly useful in 
 complex domains. 
 
+There is no requirement to use a task-based UI when you implement the 
+CQRS pattern. In some scenarios a simple CRUD-style UI is all that's 
+needed. 
+
 # Taking advantage of Windows Azure
 
 In the chapter "[Introducing the Command Query Responsibility 

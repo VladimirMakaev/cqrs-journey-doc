@@ -55,7 +55,16 @@ the book of record for the data stored by the system.
 
 In addition, you can use event sourcing as a source of audit data, as a 
 way to query historic state, gain new business insights from past data, 
-and to replay events for debugging and problem analysis. 
+and to replay events for debugging and problem analysis.
+
+### Eventual consistency
+
+Eventual consistency is a consistency model whereby after an update to a 
+data object, the storage system does not guarantee that subsequent 
+accesses to that object will return the updated value. However, the 
+storage system does guarantee that if no new updates are made to the 
+object during a sufficiently long period of time, then eventually all 
+accesses can be expected to return the last updated value. 
 
 ## User stories 
 
@@ -101,14 +110,14 @@ a list of orders and Attendees.
 ### Ordering and Registration bounded context user stories
 
 When a Registrant creates an order, it may not be possible to fulfill 
-the order completely. For example, a Registrant may request a Registrant 
-may request five seats for the full conference, five seats for the 
-welcome reception, and three seats for the pre-conference workshop. 
-There may only be three seats available and one seat for the welcome 
-reception, but more than three seats available for the pre-conference 
-workshop. The system displays this information to the Registrant and 
-gives the Registrant the opportunity to adjust the number of each type 
-of seat in the order before continuing to the payment process. 
+the order completely. For example, a Registrant may request five seats 
+for the full conference, five seats for the welcome reception, and three 
+seats for the pre-conference workshop. There may only be three seats 
+available and one seat for the welcome reception, but more than three 
+seats available for the pre-conference workshop. The system displays 
+this information to the Registrant and gives the Registrant the 
+opportunity to adjust the number of each type of seat in the order 
+before continuing to the payment process. 
 
 After a Registrant has selected the quantity of each seat type, the 
 system calculates the total to pay for the order, and the Registrant can 
@@ -400,8 +409,8 @@ also consider using Windows Azure blobs or SQL Database to store your
 events.
 
 When choosing the underlying technology for your event store, you should 
-ensure that your choice can deliver the required level of consistency, 
-reliability, scale, and performance for your application. 
+ensure that your choice can deliver the required level of availability, 
+consistency, reliability, scale, and performance for your application. 
 
 > **JanaPersona:** One of the issues to consider when choosing between
 > storage mechanisms in Windows Azure is cost. If you use SQL Database you
@@ -416,11 +425,11 @@ reliability, scale, and performance for your application.
 > number of storage transactions.
 
 
-> My rule of thumb is that if you’re doing greenfield development, you
+> My rule of thumb is that if you're doing greenfield development, you
 > need very good arguments in order to choose SQL Database. Windows Azure
 > Storage Services should be the default choice. However, if you already
 > have an existing SQL Server database that you want to move to the
-> cloud, it’s a different case...  
+> cloud, it's a different case...  
 > Mark Seeman - CQRS Advisors Mail List
 
 ### Identifying aggregates
@@ -525,6 +534,16 @@ system displays if the payment fails.
 > bounded contexts that benefit from task-based UIs because of the 
 > more complex business logic and more complex user interactions. 
 
+> I would like to state once and for all that CQRS does not require a
+> task based UI. We could apply CQRS to a CRUD based interface (though
+> things like creating separated data models would be much harder).  
+> There is however one thing that does really require a task based UI…
+> That is Domain Driven Design.  
+> Greg Young, [CQRS, Task Based UIs, Event Sourcing agh!][gregtask].
+
+For more information, see the chapter 
+[A CQRS/ES Deep Dive][r_chapter4] in the Reference Guide. 
+
 ## CRUD
 
 You should not use the CQRS pattern as part of your top-level 
@@ -534,6 +553,10 @@ Management System, the conference management bounded context is a
 relatively simple, stable, and low volume part of the overall system. 
 Therefore, the team decided that we would implement this bounded 
 context using a traditional two-tier, CRUD-style architecture. 
+
+For a discussion about when CRUD-style architecture is, or is not, 
+appropriate see the blog post, [Why CRUD might be what they want, but 
+may not be what they need][crudpost]. 
 
 ## Integration between bounded contexts
 
@@ -617,7 +640,9 @@ in planning how to implement this integration.
 > *Developer #1*: We can wrap the database write and the add-to-queue
 > operations in a transaction.
 
-> *Developer #2*: That's going to be problematic for two reasons.
+> *Developer #2*: There are two reasons that's going to be problematic
+> in the long-run when the size of the network increases, response times
+> get longer, and the probablility of failure increases.
 > Firstly, our infrastructure uses the Windows Azure Service Bus for
 > messages. You can't use a transaction to combine sending a message on
 > the Service Bus and write to a database. Secondly, we're trying to 
@@ -845,6 +870,13 @@ specific business requirements of your scenario should determine which
 approach to take. Autonomy is often the preference for large, online 
 systems.
 
+> **JanaPersona:** This choice may change depending on the state of your
+> system. Consider an overbooking scenario. The autonomy strategy may
+> optimize for the normal case when lots of conference seats are still
+> available, but as a particular conference fills up, the system may
+> need to become more conservative and favour authority using the latest
+> information on seat availability.
+
 The way that the Conference Management System calculates the total for 
 an order provides an example of choosing autonomy over authority. 
 
@@ -918,8 +950,8 @@ V1 release from the [Tags][tags] page on Github.
 ## The Conference Management bounded context
 
 The Conference Management Bounded Context that enables a Business 
-Customer to define and manage conferences is i a simple 
-two-tier, CRUD-style application that uses MVC 4. 
+Customer to define and manage conferences is a simple two-tier, 
+CRUD-style application that uses MVC 4. 
 
 In the Visual Studio solution, the **Conference** project contains the 
 model code, and the **Conference.Web** project contains the MVC views 
@@ -1035,6 +1067,10 @@ the payment. If this happens, the system tries to re-acquire the
 seats after the customer makes the payment. In the event that the seats 
 cannot be re-acquired, the system notifies the Business Customer of the 
 problem and the Business Customer must resolve the situation manually.
+
+> **Note:** The system allows a little extra time over and above the
+> time shown in the countdown clock to allow payment processing to
+> complete.
 
 This specific scenario, where the system cannot make itself fully 
 consistent without a manual intervention by a user (in this case the 
@@ -1611,4 +1647,5 @@ new conference or alternate page.
 [repourl]:          https://github.com/mspnp/cqrs-journey-code
 [downloadc]:        http://NEEDFWLINK
 [tags]:             https://github.com/mspnp/cqrs-journey-code/tags
-
+[gregtask]:         http://codebetter.com/gregyoung/2010/02/16/cqrs-task-based-uis-event-sourcing-agh/
+[crudpost]:         http://codebetter.com/iancooper/2011/07/15/why-crud-might-be-what-they-want-but-may-not-be-what-they-need/
