@@ -43,6 +43,15 @@ events to an event bus; handlers register for specific types of event on
 the event bus and then deliver the events to the subscriber. In this 
 bounded context, the only subscriber is a process manager. 
 
+### Idempotent
+
+Idempotency is a characteristic of an operation that means the operation 
+can be applied multiple times without changing the result. For example, 
+the operation "set the value _x_ to ten" is idempotent, while the 
+operation "add one to the value of _x_" is not. In a messaging 
+environment, a message is idempotent if it can be delivered multiple 
+times without changing the result. 
+
 ## User stories 
 
 The team implemented the following user stories during this phase of the 
@@ -264,7 +273,7 @@ The team considered the following five options:
   context (the Orders and Registrations bounded context).
 * Let the command handler in the view model generator save the events,
   selecting only those that it needs.
-* Let the command handler in the view model generator save diferent
+* Let the command handler in the view model generator save different
   events, in effect using event sourcing for this view model.
 * Store all command and event messages from all bounded contexts in a 
   message log.
@@ -285,7 +294,9 @@ Although the fifth option stores all the commands and events, some of
 which you might never need to refer to again, it does provide a complete
 log of everything that happens in the system. This could be useful for
 troubleshooting, and also helps you to meet requirements that have not
-yet been identified.
+yet been identified. The team chose this option over option two because
+it offers a more general purpose mechanism that may have future
+benefits.
 
 The purpose of persisting the events is to enable them to be played back 
 when the the Orders and Registrations bounded context needs the 
@@ -305,7 +316,7 @@ Most of the time these orderings will be the same. There is no correct
 order, you just need to choose one to be consistent. Therefore, the 
 choice is determined by simplicity: in this case the simplest approach 
 is to persist the events in the order that the handler in the Orders and 
-Registrations bounded context receives them. 
+Registrations bounded context receives them (the second option). 
 
 > **MarkusPersona:** This choice does not typically arise with event
 > sourcing. Aggregates create events in a fixed order, and that is the
@@ -565,7 +576,7 @@ protected Order(Guid id)
 > the mapping in the infrastructure to avoid polluting the domain model
 > with legacy events.
 
-## Displaying remaining seats in the ui
+## Displaying remaining seats in the UI
 
 There were three specific goals in making this change, all of which are
 related:
@@ -661,7 +672,7 @@ messages.
 > **MarkusPersona:** This check only detects duplicate messages, not out
 > of sequence messages.
 
-### Modifying the ui to display remaining seat quantities
+### Modifying the UI to display remaining seat quantities
 
 Now, when the UI queries the conference read-model for a list of seat 
 types, the list includes the currently available number of seats. The 
