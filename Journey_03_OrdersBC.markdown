@@ -2,6 +2,8 @@
 
 _The first stopping point on our CQRS journey._
 
+_"Following the light of the sun, we left the Old World,"_ Christopher Columbus.
+
 # A description of the Orders and Registrations Bounded Context
 
 The **Orders and Registrations** bounded context is partially 
