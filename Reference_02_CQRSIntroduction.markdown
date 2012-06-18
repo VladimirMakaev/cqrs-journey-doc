@@ -273,7 +273,7 @@ Stepping back from CQRS for a moment, one of the benefits of dividing
 the domain into bounded contexts in DDD is to enable you to identify and 
 focus on those portions (bounded contexts) of the system that are more 
 complex, subject to ever-changing business rules, or offer functionality 
-that is key business differentiator. 
+that is a key business differentiator. 
 
 You should consider applying the CQRS pattern within a specific bounded 
 context only when it provides identifiable business benefits, not 

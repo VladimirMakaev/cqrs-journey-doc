@@ -61,7 +61,8 @@ infrastructure that our application required: we spent at least twice as
 much time as we originally planned on many development tasks because we 
 continued to uncover additional infrastructure related requirements. In 
 particular we learnt that having a robust event store from the begining 
-is essential. 
+is essential. Another key learning is that all IO on the message bus 
+should be asynchronous. 
 
 Although our application is large, it illustrated clearly to us the 
 importance of having end-to-end tracing available, and the value of 
@@ -217,7 +218,27 @@ different areas of the system.
 > just not worth the effort.
 
 ## When to use CQRS
-[To Do]
+
+A the end of our journey, we can suggest some of the criteria you should 
+evaluate to determine whether or not you should consisder implementing 
+the CQRS pattern in one or more bounded contexts in your application. 
+The more of these questions you can answer positively, the more likely 
+it is that the CQRS pattern will bring net benefits to your solution: 
+
+* Is it core bounded context in your domain that implements an area of
+  business functionality that is a key differentiator in your market?
+* Is the bounded context collaborative in nature with elements that are
+  likely to have high-levels of contention at run time? By collaborative
+  we mean multiple users competing for access to the same resources.
+* Is the bounded context likely to see experience ever-changing business
+  rules?
+* Do you have a robust, scalable messaging and persistence
+  infrastructure already in place?
+* Is scalability one of the challenges facing this bounded context?
+* Is the business logic in the bounded context complex?
+* Are you clear about the benefits that the CQRS pattern will bring to
+  this bounded context?
+
 
 # What would we do differently if we started over? 
 
@@ -250,8 +271,11 @@ received from our advisors: "Don't worry about the infrastructure."
 ## Leverage the capabilities of the infrastructure more
 
 Starting with a solid infrastructure would also allow us to make more 
-use of the capabilities of the infrastructure.
-[To Do] 
+use of the capabilities of the infrastructure. For example, we use the 
+identity of the message originator as the value of the session id in 
+Windows Azure Service Bus when we publish an event: this is not always 
+the best use of the session id from the perspective of the parts of the 
+system that process the event. 
 
 As part of this, we'd also investigate how the infrastructure could 
 support other special cases of eventual consistency such as; timing 
@@ -318,6 +342,13 @@ necessary, perhaps using browser push techniques. The UI in the current
 system still needs to wait, in some places, for asynchronous updates to 
 take place against the read-model. 
 
+## Explore some of additional benefits of event sourcing
+
+In the current journey, we didn't explore the promise of flexibility and 
+the ability to mine past events for new business insights. However, we 
+did ensure that the system persists copies of all events and commands to 
+enable this scenario. 
+
 ## Explore the issues associated with integrating bounded contexts 
 
 In our V3 release, all of the bounded contexts are implemented by same 
@@ -328,7 +359,7 @@ development team with the existing system.
 This is a great opportunity for you to contribute to the learning 
 experience: go ahead and implement another bounded context, integrate it 
 into the Contoso Conference Management System, and write another chapter 
-of our journey describing your experiences. 
+of the journey describing your experiences. 
 
 [j_chapter2]:        Journey_02_BoundedContexts.markdown
 [j_chapter3]:        Journey_03_OrdersBC.markdown
