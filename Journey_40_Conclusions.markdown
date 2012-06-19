@@ -357,7 +357,8 @@ practice, to integrate a bounded context implemented by a different
 development team with the existing system. 
 
 This is a great opportunity for you to contribute to the learning 
-experience: go ahead and implement another bounded context, integrate it 
+experience: go ahead and implement another bounded context (see the 
+outstanding stories in the [product backlog][backlog]), integrate it 
 into the Contoso Conference Management System, and write another chapter 
 of the journey describing your experiences. 
 
@@ -369,4 +370,5 @@ of the journey describing your experiences.
 [j_chapter7]:        Journey_07_V3Release.markdown
 [r_chapter4]:        Reference_04_DeepDive.markdown
 [jolivereventstore]: https://github.com/joliver/EventStore
+[backlog]:           https://github.com/mspnp/cqrs-journey-code/issues?labels=Type.Story%2CStat.Pending&page=1&state=open
 

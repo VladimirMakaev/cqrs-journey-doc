@@ -1,6 +1,6 @@
 # Chapter 7: Adding Resilience and Optimizing Performance 
 
-*Revisiting the infrastructure and applying some lessons learned*
+"You cannot fly like an eagle with the wings of a wren." Henry Hudson
 
 # Introduction
 
