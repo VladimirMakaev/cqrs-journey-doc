@@ -94,6 +94,12 @@ record timing information for detailed analysis. As a result of this
 exercise, the team made a number of changes to the system to optimize 
 its performance.
 
+The team created the performance test environment in Windows Azure, 
+running the test controller and test agents in Windows Azure VM role 
+instances. This enabled us to test how the Contoso Conference Management 
+System performed under different loads by using the test agents to 
+simulate different numbers of virtual users. 
+
 > **GaryPersona:** Although in this journey the team did their
 > performance testing and optimization work at the end of the project,
 > it typically makes sense to do this work as you go, addressing
@@ -1385,4 +1391,4 @@ use [WatiN][watin] to drive the system through its UI.
 [parallelext]:       http://blogs.msdn.com/b/pfxteam/archive/2010/04/06/9990420.aspx
 [tags]:              https://github.com/mspnp/cqrs-journey-code/tags
 [memento]:           http://www.oodesign.com/memento-pattern.html
-[loadtest]:          http://www.microsoft.com/visualstudio/en-us/products/2010-editions/load-test-virtual-user-pack/overview
+[loadtest]:          http://msdn.microsoft.com/en-gb/library/gg701769.aspx
