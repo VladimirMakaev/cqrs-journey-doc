@@ -361,6 +361,16 @@ total when the order is placed instead of when the reservation is
 complete. This will enable the UI flow to move more quickly to the 
 Registrant screen than in the V2 release.
 
+## Sending and receiving commands and event asynchronously
+
+As part of the optimization process, the team updated the system to 
+ensure that all messages sent on the Service Bus are sent 
+asynchronously. This optimization is intended to improve the overall 
+responsiveness of the application and improve the throughput of 
+messages. As part of this change, the team also used the [Transient 
+Fault Handling Application Block][tfhab] to handle an transient errors 
+encountered when using the Service Bus. 
+
 ## Optimizing command processing 
 
 The analysis of the performance data collected from the load tests also 
@@ -1143,8 +1153,73 @@ public IMemento SaveToMemento()
 
 ## Other optimizations
 
-This section describes some of the other optimizations that the team 
-included in the V3 release. 
+This section describes some of optimizations to the way that the 
+application uses the Windows Azure Service Bus in the V3 release. These 
+optimizations include: 
+
+* Receiving, completing, and sending messages asynchronously.
+* Using prefetch to retrieve multiple messages from the Service Bus.
+* Accepting multiple Windows Azure Service Bus sessions in parallel.
+* Publishing events to the Service Bus in parallel.
+* Filtering messages by subscription.
+* Using time-to-live for some messages.
+
+These optimizations are described in more detail in the following 
+sections. 
+
+### Receiving messages asynchronously
+
+The **SubscriptionReceiver** and **SessionSubscriptionReceiver** classes 
+now receive messages asynchronously instead of synchronously in the loop 
+in the **ReceiveMessages** method. 
+
+For details see either the **ReceiveMessages** method in the 
+**SubscriptionReceiver** class or the **ReceiveMessagesAndCloseSession** 
+method in the **SessionSubscriptionReceiver** class. 
+
+> **MarkusPersona:** This code sample also shows how to use the
+> [Transient Fault Handling Application Block][tfhab] to reliably
+> receive messages asynchronously from the Service Bus topic.
+
+### Completing messages asynchronously
+
+The system uses the peek/lock mechanism to retrieve messages from the 
+Service Bus topic subscriptions. The **BrokeredMessageExtensions** class 
+now includes three new methods to support completing messages 
+asynchronously: 
+
+* **SafeCompleteAsync**
+* **SafeAbandonAsync**
+* **SafeDeadLetterAsync**
+
+The **SubscriptionReceiver** and **SessionSubscriptionReceiver** invoke 
+one of these methods based on the result of processing a message as 
+shown in the following code sample from the **ReceiveMessages** method 
+in the **SubscriptionReceiver** class: 
+
+```Cs
+var releaseAction = MessageReleaseAction.AbandonMessage;
+
+try
+{
+    // Make sure we are not told to stop receiving while we were waiting for a new message.
+    if (!cancellationToken.IsCancellationRequested)
+    {
+        // Process the received message.
+        releaseAction = this.InvokeMessageHandler(msg);
+    }
+}
+finally
+{
+    // Ensure that any resources allocated by a BrokeredMessage instance are released.
+    this.ReleaseMessage(msg, releaseAction);
+}
+```
+
+### Sending messages asynchronously
+
+The application now sends all messages on the Service Bus 
+asynchronously. For more details see the **TopicSender** class. 
 
 ### Using Prefetch with Windows Azure Service Bus
 
@@ -1169,7 +1244,7 @@ protected SubscriptionReceiver(ServiceBusSettings settings, string topic, string
 
     var messagingFactory = MessagingFactory.Create(this.serviceUri, tokenProvider);
     this.client = messagingFactory.CreateSubscriptionClient(topic, subscription);
-    this.client.PrefetchCount = 40;
+    this.client.PrefetchCount = 50;
 
     ...
 }
@@ -1181,55 +1256,13 @@ In the V2 release, the **SessionSubscriptionReceiver** creates sessions
 to receive messages from the Windows Azure Service Bus in sequence. In 
 the V3 release, the **SessionSubscriptionReceiver** creates multiple 
 sessions in parallel. This helps to improve the throughput and reduce 
-the latency when the system retrieves messages from the Service Bus. The 
-following code sample shows the new version of the **ReceiveMessages** 
-method in the **SessionSubscriptionReceiver** class. 
+the latency when the system retrieves messages from the Service Bus.
 
-```Cs
-private void ReceiveMessages(CancellationToken cancellationToken)
-{
-    while (!cancellationToken.IsCancellationRequested)
-    {
-        ...
+For details, see the **AcceptSession** method in the 
+**SessionSubscriptionReceiver** class. 
 
-        // starts a new task to process new sessions in parallel if enough threads are available
-        Task.Factory.StartNew(() => this.ReceiveMessages(this.cancellationSource.Token), this.cancellationSource.Token);
-
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            BrokeredMessage message = null;
-            try
-            {
-                try
-                {
-                    // Long polling is used when accepting session and not here. If there are no messages left in session we continue.
-                    message = this.receiveRetryPolicy.ExecuteAction(() => session.Receive(TimeSpan.Zero));
-                }
-                catch (Exception e)
-
-                ...
-
-                if (message == null)
-                {
-                    // If we have no more messages for this session, exit to close the session
-                    break;
-                }
-
-                this.MessageReceived(this, new BrokeredMessageEventArgs(message));
-            }
-            finally
-            {
-                ...
-            }
-        }
-
-        this.receiveRetryPolicy.ExecuteAction(() => session.Close());
-        // As we have no more messages for this session, end this task, as there will already at least
-        // 1 other tasks polling for new sessions to accept.
-        return;
-    }
-}
-```
+> **MarkusPersona:** The **AcceptSession** method uses the Transient
+> Fault Handling Application Block to reliably accept sessions.
 
 Because of this change, the team also added an optimistic concurrency 
 check when the system saves the **RegistrationProcessManager** class by 
@@ -1288,57 +1321,37 @@ For more information about the **BlockingCollectionPartitioner** class,
 see the blog post [ParallelExtensionsExtras Tour - #4 - 
 BlockingCollectionExtensions][parallelext].
 
-### Completing messages asynchronously
+### Filtering messages by subscription
 
-The system uses the peek/lock mechanism to retrieve messages from the Service Bus topic subscriptions. The **BrokeredMessageExtensions** class now includes three new methods to support completing messages asynchronously:
+The team added filters to the Windows Azure Service Bus subscriptions to restrict the messages that each each subscription receives to those messages that the subscription is intended to handle. You can see the definitions of these filters in the Settings.Template.xml file as shown in the following snippet:
 
-* **SafeCompleteAsync**
-* **SafeAbandonAsync**
-* **SafeDeadLetterAsync**
-
-The system uses these methods when the **ReleaseMessageLockAsynchronously** property is set to **true** in the **CommandProcessor** class as shown in the following code sample from the ConferenceProcessor.Azure.cs file:
-
-```Cs
-var commandProcessor =
-    new CommandProcessor(new SubscriptionReceiver(azureSettings.ServiceBus, Topics.Commands.Path, Topics.Commands.Subscriptions.All), serializer)
-    {
-        ReleaseMessageLockAsynchronously = true
-    };
+```Xml
+<Topic Path="conference/events" IsEventBus="true">
+    <Subscription Name="log" RequiresSession="false"/>
+    <Subscription Name="Registration.RegistrationProcessRouter" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderUpdated','SeatsReserved','PaymentCompleted','OrderConfirmed')"/>
+    <Subscription Name="Registration.OrderViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderUpdated','OrderPartiallyReserved','OrderReservationCompleted','OrderRegistrantAssigned','OrderConfirmed','OrderPaymentConfirmed','OrderTotalsCalculated')"/>
+    <Subscription Name="Registration.PricedOrderViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderTotalsCalculated','OrderConfirmed','OrderExpired','SeatAssignmentsCreated','SeatCreated','SeatUpdated')"/>
+    <Subscription Name="Registration.ConferenceViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('ConferenceCreated','ConferenceUpdated','ConferencePublished','ConferenceUnpublished','SeatCreated','SeatUpdated','AvailableSeatsChanged','SeatsReserved','SeatsReservationCancelled')"/>
+    <Subscription Name="Registration.SeatAssignmentsViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('SeatAssignmentsCreated','SeatAssigned','SeatUnassigned','SeatAssignmentUpdated')"/>
+    <Subscription Name="Registration.SeatAssignmentsHandler" RequiresSession="true" SqlFilter="TypeName IN ('OrderConfirmed','OrderPaymentConfirmed')"/>
+    <Subscription Name="Conference.OrderEventHandler" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderRegistrantAssigned','OrderTotalsCalculated','OrderConfirmed','OrderExpired','SeatAssignmentsCreated','SeatAssigned','SeatAssignmentUpdated','SeatUnassigned')"/>
+</Topic>
 ```
 
-### Task support in ASP.NET MVC4
+### Adding a time-to-live value to the MakeSeatReservation command
 
-As part of the V3 release the team upgraded the Conference.Web.Public 
-site to ASP.NET MVC4. This enabled them to update the 
-**RegistrationController** MVC controller to use the new task support 
-for asynchronous controllers. The following code sample shows an example 
-of this: 
+Windows Azure Service Bus brokered messages can have a value assigned to 
+the TimeToLive property: when the time-to-live expires, the message is 
+automatically sent to a dead-letter queue. The application uses this 
+feature of the Service Bus to avoid processing **MakeSeatReservation** 
+commands if the order they are associated with has already expired. 
 
-```Cs
-[HttpGet]
-[OutputCache(Duration = 0, NoStore = true)]
-public Task<ActionResult> SpecifyRegistrantAndPaymentDetails(Guid orderId, int orderVersion)
-{
-    return this.WaitUntilOrderIsPriced(orderId, orderVersion)
-    .ContinueWith<ActionResult>(
+## Caching conference information
 
-    ...
-
-    );
-}
-
-...
-
-private Task<PricedOrder> WaitUntilOrderIsPriced(Guid orderId, int lastOrderVersion)
-{
-    return
-        TimerTaskFactory.StartNew<PricedOrder>(
-            () => this.orderDao.FindPricedOrder(orderId),
-            order => order != null && order.OrderVersion > lastOrderVersion,
-            PricedOrderPollPeriodInMilliseconds,
-            DateTime.Now.AddSeconds(PricedOrderWaitTimeoutInSeconds));
-}
-```
+As part of the performance optimizations in the V3 release, the team 
+added caching behavior for the conference information stored in the 
+Orders and Registrations bounded context read model. This reduces the 
+time taken to read this commonly used data.
 
 # Impact on testing 
 
@@ -1392,3 +1405,4 @@ use [WatiN][watin] to drive the system through its UI.
 [tags]:              https://github.com/mspnp/cqrs-journey-code/tags
 [memento]:           http://www.oodesign.com/memento-pattern.html
 [loadtest]:          http://msdn.microsoft.com/en-gb/library/gg701769.aspx
+[tfhab]:             http://msdn.microsoft.com/en-us/library/hh680934(PandP.50).aspx
