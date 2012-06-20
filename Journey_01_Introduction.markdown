@@ -8,7 +8,7 @@ new online service that will enable other companies or individuals to
 organize and manage their own conferences and events. This chapter 
 describes, at a high-level, some of the functional and non-functional 
 requirements of the new system, and why Contoso wants to implement parts 
-of it using the Command Query Responsibility Segregation (CQRS) pattern and event sourcing. As with any 
+of it using the Command Query Responsibility Segregation (CQRS) pattern and event sourcing (ES). As with any 
 company considering this process, there are many issues to consider and 
 challenges to be met, particularly because this is the first time 
 Contoso has used both the CQRS pattern and event sourcing. The chapters 
