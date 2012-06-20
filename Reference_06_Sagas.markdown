@@ -53,7 +53,7 @@ Typically, commands are sent within a bounded context. Events may have
 subscribers in the same bounded context as where they are published, or 
 in other bounded contexts. 
 
-The chapter [A CQRS/ES Deep Dive][r_chapter4] in this Reference Guide 
+The chapter [A CQRS and ES Deep Dive][r_chapter4] in this Reference Guide 
 describes the differences between these two message types in detail. 
 
 ## What is a Process Manager?

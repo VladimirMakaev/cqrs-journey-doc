@@ -222,7 +222,7 @@ benefits will vary depending on the domain you are working in.
   
 Quote 6 goes here
 
-The chapter "[A CQRS/ES Deep Dive][r_chapter4]" discusses these benefits 
+The chapter "[A CQRS and ES Deep Dive][r_chapter4]" discusses these benefits 
 in more detail. There are also many illustrations of these benefits in 
 these chapters in the section "A CQRS Journey." 
 
@@ -254,7 +254,7 @@ to use event sourcing in your system:
   events that relate to the state of an aggregate. Using snapshots may
   enable you limit the amount of data that you need to load: you can go
   back to the latest snapshot and replay the events from that point
-  forward. See the chapter "A CQRS/ES Deep Dive" for more information
+  forward. See the chapter "A CQRS and ES Deep Dive" for more information
   about snapshots. 
 - **Versioning.** You may find it necessary to change the definition of
   a particular event type or aggregate at some point in the future. You
@@ -310,7 +310,7 @@ the even store and publishing the event to the read-side.
 
 Normally, these events will enable you to keep the data on the read-side 
 up to date in close to real-time; there will be some delay due to the 
-transport mechanism, and the chapter "[A CQRS/ES Deep Dive][r_chapter4]" 
+transport mechanism, and the chapter "[A CQRS and ES Deep Dive][r_chapter4]" 
 discusses the possible consequences of this delay. 
 
 You can also rebuild the data on the read-side from scratch at any time 

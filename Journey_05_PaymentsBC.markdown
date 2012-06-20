@@ -31,7 +31,7 @@ task-based UIs.
 
 The remainder of this chapter uses the following definitions. 
 For more detail, and possible alternative definitions, see the chapter 
-[A CQRS/ES Deep Dive][r_chapter4] in the Reference Guide. 
+[A CQRS and ES Deep Dive][r_chapter4] in the Reference Guide. 
 
 ### Access Code
 
@@ -542,7 +542,7 @@ system displays if the payment fails.
 > Greg Young, [CQRS, Task Based UIs, Event Sourcing agh!][gregtask].
 
 For more information, see the chapter 
-[A CQRS/ES Deep Dive][r_chapter4] in the Reference Guide. 
+[A CQRS and ES Deep Dive][r_chapter4] in the Reference Guide. 
 
 ## CRUD
 

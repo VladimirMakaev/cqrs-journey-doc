@@ -1,4 +1,4 @@
-# Chapter 4: A CQRS/ES Deep Dive (Chapter Title)
+# Chapter 4: A CQRS and ES Deep Dive (Chapter Title)
 
 # Introduction
 

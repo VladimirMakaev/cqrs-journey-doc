@@ -188,7 +188,7 @@ happened, and they both enable you to recreate the state of your system
 by replaying the historical data. The conclusion was that the 
 distinguishing feature is that events capture intent in addition to 
 recording the facts of of what happened. For more detail on what we mean 
-by intent, see chapter 4, "[A CQRS/ES Deep Dive][r_chapter4]",in the 
+by intent, see chapter 4, "[A CQRS and ES Deep Dive][r_chapter4]",in the 
 reference guide. 
 
 ## Involving the domain expert

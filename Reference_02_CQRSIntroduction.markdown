@@ -471,7 +471,7 @@ always addressed in a standard or consistent manner.
   Udi Dahan talking about collaboration and staleness,
   [Clarified CQRS][dahanclarify].
 
-In the chapter "[A CQRS/ES Deep Dive][r_chapter4]," we will look at how 
+In the chapter "[A CQRS and ES Deep Dive][r_chapter4]," we will look at how 
 the synchronization mechanism between write-side and the read-side 
 determines how you manage the issue of stale data in your application.
 
