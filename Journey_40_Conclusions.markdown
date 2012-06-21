@@ -31,8 +31,11 @@ shared by many in the CQRS community, for example:
 > time."  
 > Kelly Sommers
 
-This was born out in practice during our journey. However, our 
-experience in the last stage of our journey did reveal a set of 
+This was born out in practice during our journey and we benefited 
+significantly from this separation when we did need to solve a 
+performance issue. 
+
+During the last stage of our journey our testing did reveal a set of 
 performance issues in our application. When we investigated these, it 
 turned out they had less to do with the way that we had implemented the 
 CQRS pattern and more to do with the way that we were using our 
@@ -62,7 +65,11 @@ much time as we originally planned on many development tasks because we
 continued to uncover additional infrastructure related requirements. In 
 particular we learnt that having a robust event store from the begining 
 is essential. Another key learning is that all IO on the message bus 
-should be asynchronous. 
+should be asynchronous.
+
+> **JanaPersona:** Although our event store is not production-ready, the
+> current implementation gives a good indication of the type of issues
+> you should address if you decided to implement your own event store.
 
 Although our application is large, it illustrated clearly to us the 
 importance of having end-to-end tracing available, and the value of 
@@ -87,16 +94,25 @@ Cloud environments introduce further challenges:
 * You may not be able to use transactions in all places you'd like to 
   because the distributed nature of the cloud makes ACID transactions
   impractical in many scenarios. Therefore, you need to understand how
-  to work with eventual consistency.
+  to work with eventual consistency. For examples, see chapter 5,
+  "[Preparing for the V1 Release][j_chapter5]," and the section _Options
+  to reduce the delay in the UI_ in chapter 7, "[Adding Resilience and
+  Optimizing Performance][j_chapter7]."
 * You may want to re-examine your assumptions about how to organize your
-  application into different tiers.
+  application into different tiers. For example, see the discussion
+  around in-process, synchronous commands in in chapter 7, "[Adding
+  Resilience and Optimizing Performance][j_chapter7]."
 * You must take into account not only the latency between the browser or
   on-premises environment and the cloud, but also the latency between
   the different parts of your system that are running in cloud.
 
 > **MarkusPersona:** We found that having a single **bus** abstraction
 > in our code obscurred the fact that some messages are handled locally
-> in process and some are handled in a different role instance.
+> in process and some are handled in a different role instance. To see
+> how this is implemented, look at the **ICommandBus** interface and the
+> **CommandBus** and **SynchronousCommandBusDecorator** classes. Chapter
+> 7, "[Adding Resilience and Optimizing Performance][j_chapter7]
+> includes a discussion of **SynchronousCommandBusDecorator** class.
 
 A complex cloud environment can make it harder to run quick tests during 
 development. A local test environment may not mimic the behavior of the 
@@ -111,7 +127,7 @@ cloud exactly, especially in relation to performance.
 At the start of our journey we were warned that although the CQRS 
 pattern appears to be simple, in practice it requires a significant 
 shift in the way that you think about many aspects of the project. Again,
-this was bourne out by our experiences during our journey. You must be 
+this was born out by our experiences during our journey. You must be 
 prepared to throw away many assumptions and pre-conceived ideas and you 
 will probably need to implement the CQRS pattern in several bounded 
 contexts before you begin to fully understand the benefits you can 
@@ -133,13 +149,16 @@ approach. As we become more comfortable with the approach, we hope we
 will become faster at identifiying how to implement the pattern in 
 specific circumstances and improve the accuracy of our estimates. 
 
-The development team also found that test-driven development (TDD) 
-techniques were less useful in identifying how to implement parts of the 
-system than we have come to expect. In a more traditional project, TDD 
-can often help to uncover the best way to approach a particular problem: 
-in this project, the team found they had to rely more on modelling, 
-discussing on the whiteboard, and spiking to design particular pieces of 
-the system. 
+Another comment from the development team relates to their experiences 
+of using test-driven development (TDD) techniques on this project to 
+create the unit and integration tests included in the sample code. Some 
+of our team have found on other projects that formulating tests helps to 
+clarify the design and also uncover the best approach to implementing 
+specific functionality. In this project we found that formulating these 
+tests did not provide the expected benefit of helping to uncover optimal 
+implementation approaches: therefore, we found we had to rely more on 
+modelling, discussing on the whiteboard, and spiking to design 
+particular pieces of the system. 
 
 > **MarkusPersona:** The CQRS pattern is conceptually simple: the devil
 > is in the details.
@@ -173,12 +192,12 @@ Chapter 2 "[Decomposing the Domain][j_chapter2]" introduces our
 decisions for the Contoso Conference Management System. 
 
 Implementing the CQRS pattern is more complex than implementing a 
-traditional CRUD-style system. We see this is a key reason why the CQRS 
-pattern is not a top-level architecture. You must be sure that the costs 
-associated with implementing a CQRS-based bounded context with this 
-level of complexity are worth it; in general, it is in high-contention, 
-collaborative domains that you will see the benefits of the CQRS 
-pattern. 
+traditional CRUD-style system. Our experiences during the journey have 
+clearly confirmed to us why the CQRS pattern is not a top-level 
+architecture. You must be sure that the costs associated with 
+implementing a CQRS-based bounded context with this level of complexity 
+are worth it; in general, it is in high-contention, collaborative 
+domains that you will see the benefits of the CQRS pattern. 
 
 ## Event sourcing and transaction logging
 
@@ -195,7 +214,12 @@ reference guide.
 
 Implementing the CQRS pattern encourages involvement of the domain 
 expert. The pattern enables you to separate out the domain on the 
-write-side and the reporting requirements on the read-side. 
+write-side and the reporting requirements on the read-side and to 
+separate these from infrastructure concerns. This separation makes it 
+easier to involve the domain expert in those aspects of the system where 
+his expertise is most valuable. The use of domain-driven design concepts 
+such as bounded contexts and the ubiquitous language also help to focus 
+the team and to foster clear communication with the domain expert. 
 
 Our acceptance tests proved to be an effective way to involve the domain 
 expert and capture his knowledge. Chapter 4 "[Extending and Enhancing 
@@ -204,7 +228,9 @@ this tesing approach in detail.
 
 > **JanaPersona:** As a side-effect, these acceptance tests also
 > contributed to our ability to handle our pseudo-production releases
-> quickly.
+> quickly because they enables us to run a full set of tests at the UI
+> level to verify the behavior of the system in addition to the unit and
+> integration tests.
 
 In addition to helping the team define the functional requirements of 
 the system, the domain expert should also be involved in evaluating the 
@@ -334,6 +360,11 @@ particular, we'd:
 * Set clear performance goals ahead of time.
 * Run performance tests much earlier in the journey.
 * Use larger and more realistic loads.
+
+We didn't do any performance testing until the last stage of our 
+journey. For a detailed discussion of the issues we found and how we 
+addressed them, see chapter 7 "[Adding Resilience and Optimizing 
+Performance][j_chapter7]." 
 
 ## Think about the UI differently
 
