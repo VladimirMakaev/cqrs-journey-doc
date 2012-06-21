@@ -98,6 +98,8 @@ infrastructure. Figure 1 shows this high-level architecture.
 
 ![Figure 1][fig1]
 
+**The top-level architecture in the V2 release**
+
 While you are exploring and testing the solution, you can run it 
 locally, either using the Windows Azure compute emulator or by running 
 the MVC web application directly and running a console application that 
