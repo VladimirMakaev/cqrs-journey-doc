@@ -36,12 +36,14 @@ Sending a command is an asynchronous operation with no return value.
 
 An event, such as **OrderConfirmed**, describes something that has 
 happened in the system, typically as a result of a command. Aggregates 
-in the domain model raise events. 
+in the domain model raise events. Events can also come from other
+bounded contexts.
 
 Multiple subscribers can handle a specific event. Aggregates publish 
 events to an event bus; handlers register for specific types of event on 
 the event bus and then deliver the events to the subscriber. In this 
-bounded context, the only subscriber is a process manager. 
+bounded context, the subscribers are a process manager and the read
+model generators. 
 
 ### Idempotent
 
@@ -50,7 +52,9 @@ can be applied multiple times without changing the result. For example,
 the operation "set the value _x_ to ten" is idempotent, while the 
 operation "add one to the value of _x_" is not. In a messaging 
 environment, a message is idempotent if it can be delivered multiple 
-times without changing the result. 
+times without changing the result: either because of the nature of the
+message itself, or because of the way that the system handles the
+message.
 
 ## User stories 
 
@@ -319,7 +323,7 @@ is to persist the events in the order that the handler in the Orders and
 Registrations bounded context receives them (the second option). 
 
 > **MarkusPersona:** This choice does not typically arise with event
-> sourcing. Aggregates create events in a fixed order, and that is the
+> sourcing. Each aggregate create events in a fixed order, and that is the
 > order that the system uses to persist the events. In this scenario,
 > the integration events are not created by a single aggregate.
 
@@ -363,7 +367,7 @@ guaranteed to arrive in the correct order.
   before the rejected message.
 
 The preferred solution in this case is to use Windows Azure Service Bus 
-message sessions because this requires less change to the exsiting code. 
+message sessions because this requires less change to the existing code. 
 Both approaches would introduce some additional latency into the message 
 delivery, but the team does not anticipate that this will have a 
 significant effect on the performance of the system. 
@@ -917,7 +921,7 @@ individual source will be received in the correct order.
 > the start-up process to avoid the risk of losing messages if one is
 > sent to a topic before a the system initializes the subscriptions.
 
-However, sessions can only guarantee to deliver messages in order if the messages are placed on the bus in the correct order. If the system sends messages asynchronously, then you must take special care to ensure that messages are placed on the bus in the correct order. In our system, it is important that the events from each individual aggregate instance arrive in order, but we don't care about the ordering of events from different aggregate instances. Therefore, although the system sends events asynchronously, each aggregate instance waits for an acknowledgement that the previous event was sent before sending the next one. The following sample from the **TopicSender** class illustrates this:
+However, sessions can only guarantee to deliver messages in order if the messages are placed on the bus in the correct order. If the system sends messages asynchronously, then you must take special care to ensure that messages are placed on the bus in the correct order. In our system, it is important that the events from each individual aggregate instance arrive in order, but we don't care about the ordering of events from different aggregate instances. Therefore, although the system sends events asynchronously, the **EventStoreBusPublisher** instance waits for an acknowledgement that the previous event was sent before sending the next one. The following sample from the **TopicSender** class illustrates this:
 
 ```Cs
 public void Send(Func<BrokeredMessage> messageFactory)
@@ -1020,9 +1024,13 @@ PartitionKey = message.EnqueuedTimeUtc.ToString("yyyMM"),
 RowKey = message.EnqueuedTimeUtc.Ticks.ToString("D20") + "_" + message.MessageId
 ```
 
-Notice how the rowkey preserves the order in which the messages were 
+Notice how the row key preserves the order in which the messages were 
 originally sent and adds on the message id to guarantee uniqueness just 
-in case two messages were enqueued at exactly the same time. 
+in case two messages were enqueued at exactly the same time.
+
+> **JanaPersona:** This is different from the event store where the
+> partition key identifies the aggregate instance and the row key
+> identifies the aggregate version number.
 
 ### Data migration
 
@@ -1047,14 +1055,15 @@ bounded context.
 
 However, in V1 these event messages were not persisted, so the 
 read-models cannot be re-populated in V2. To work around this problem, 
-the team implemented a data migration utility that generates events to 
-store in the message log that contain the missing data. For example, 
-after the migration to V2, the message log does not contain any 
-**ConferenceCreated** events, so the migration utility finds this 
-information in the SQL database used by the Conference Management 
-bounded context and creates the missing events. You can see how this is 
-done in the **GeneratePastEventLogMessagesForConferenceManagement** in 
-the **Migrator** class in the **MigrationToV2** project. 
+the team implemented a data migration utility that uses a best effort 
+approach to generate events that contain the missing data to store in 
+the message log. For example, after the migration to V2, the message log 
+does not contain any **ConferenceCreated** events, so the migration 
+utility finds this information in the SQL database used by the 
+Conference Management bounded context and creates the missing events. 
+You can see how this is done in the 
+**GeneratePastEventLogMessagesForConferenceManagement** in the 
+**Migrator** class in the **MigrationToV2** project. 
 
 > **MarkusPersona:** You can see in this class that Contoso also copies
 > all of the existing event sourced events into the message log.
@@ -1122,9 +1131,10 @@ Migrating from V1 to V2 requires you to update the deployed application
 code and migrate the data. These are the required steps:
 
 1. Deploy the V2 release to your Windows Azure staging environment. The
-   V2 release has a global **MaintenanceMode** property that is
+   V2 release has a **MaintenanceMode** property that is
    initially set to **true**. In this mode, the application displays a
-   message to the user that site is currently undergoing maintenance.
+   message to the user that site is currently undergoing maintenance and
+   the worker role does not process messages.
 2. When you are ready, swap the V2 release (still in maintenance mode)
    into your Windows Azure production environment.
 3. Leave the V1 release (now running in the staging environment) to run
@@ -1132,7 +1142,7 @@ code and migrate the data. These are the required steps:
    their processing.
 4. Run the migration program to migrate the data (see below).
 5. After the data migration completes successfully, change the
-   **MaintenanceMode** property to **false**.
+   **MaintenanceMode** property of each role type to **false**.
 6. The V2 release is now live in Windows Azure.
 
 > **JanaPersona:** The team considered using a separate application to
@@ -1159,8 +1169,7 @@ command and event messages in a message log in order to future-proof the
 application by capturing everything that might be used in the future. 
 The migration process takes this new feature into account.
 
-The following sections describe the key steps performed by the migration 
-utility. Because the migration process copies large amounts of data 
+Because the migration process copies large amounts of data 
 around, you should run it in a Windows Azure worker role in order to 
 minimize the cost . The migration utility is a console application so 
 you can use the Windows Azure remote desktop feature. For information 
