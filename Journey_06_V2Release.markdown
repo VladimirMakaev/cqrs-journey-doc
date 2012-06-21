@@ -41,9 +41,9 @@ bounded contexts.
 
 Multiple subscribers can handle a specific event. Aggregates publish 
 events to an event bus; handlers register for specific types of event on 
-the event bus and then deliver the events to the subscriber. In this 
-bounded context, the subscribers are a process manager and the read
-model generators. 
+the event bus and then deliver the events to the subscriber. In the 
+orders and registrations bounded context bounded context, the 
+subscribers are a process manager and the read model generators. 
 
 ### Idempotent
 
