@@ -28,20 +28,22 @@ perform an action.
 
 Commands are processed once by a single recipient. Commands are either 
 transported to their recipients by a command bus, or delivered directly 
-inline. If a command is delivered through a command bus, then then the 
+in-process. If a command is delivered through a command bus, then then the 
 command is sent asynchronously. If the comand can be delivered directly 
-inline, then the command is sent synchronously. 
+in-process, then the command is sent synchronously. 
 
 ### Event
 
 An event, such as **OrderConfirmed**, describes something that has 
 happened in the system, typically as a result of a command. Aggregates 
-in the domain model raise events. 
+in the domain model raise events. Events can also come from other
+bounded contexts.
 
 Multiple subscribers can handle a specific event. Aggregates publish 
 events to an event bus; handlers register for specific types of event on 
-the event bus and then deliver the events to the subscriber. In this 
-bounded context, the only subscriber is a process manager.
+the event bus and then deliver the events to the subscriber. In the 
+orders and registrations bounded context bounded context, the 
+subscribers are a process manager and the read model generators. 
 
 ### Snapshots
 
@@ -62,7 +64,9 @@ for data storage, both on the write-side and the read-side. The
 application uses the Windows Azure Service Bus to provide its messaging 
 infrastructure. Figure 1 shows this high-level architecture.
 
-![Figure 1][fig1] 
+![Figure 1][fig1]
+
+**The top-level architecture in the V3 release**
 
 While you are exploring and testing the solution, you can run it 
 locally, either using the Windows Azure compute emulator or by running 
@@ -204,12 +208,12 @@ Azure Service Bus and a SQL Database table together in a distributed
 transcation. 
 
 The solution adopted by the team for the V3 release ensures that the 
-system persists any commands that the **RegistrationProcessManager** 
-tries but fails to send. When the system next reloads the 
-**RegistrationProcessManager** class, it tries to re-send the failed 
-commands. If this fails, then the process manager cannot be loaded and 
-cannot process any further messages until the cause of the failure is 
-resolved. 
+system persists all commands that the **RegistrationProcessManager** 
+generates at the same time that it persists the state of the 
+**RegistrationProcessManager** instance. Then the system tries to send 
+the commands, removing them from storage after they have been sent 
+successfully. The system also checks for un-dispatched messages whenever
+it loads a **RegistrationProcessManager** instance from storage.
 
 ## Optimizing the interactions between the UI and the domain
 
@@ -334,6 +338,10 @@ Registrant is entering information on the Registrant screen. This
 reduces the chance that the Registrant experiences a delay before seeing 
 the Registrant screen. 
 
+> **JanaPersona:** Essentially we are relying on the fact that a
+> reservation is likely to succeed, avoiding a time-consuming check. We
+> still perform the check before the registrant makes a payment.
+
 However, if the controller checks and finds that there are not enough 
 seats available to fulfill the order _before_ it sends the 
 **RegisterToConference** command, it can re-display the Register screen 
@@ -361,7 +369,7 @@ total when the order is placed instead of when the reservation is
 complete. This will enable the UI flow to move more quickly to the 
 Registrant screen than in the V2 release.
 
-## Sending and receiving commands and event asynchronously
+## Sending and receiving commands and events asynchronously
 
 As part of the optimization process, the team updated the system to 
 ensure that all messages sent on the Service Bus are sent 
@@ -402,9 +410,9 @@ There are a number of factors that the team will consider when we
 determine whether to continue using the Windows Azure Service Bus for 
 transporting all command messages. 
 
-* Which commands, if any, can be processed in memory?
-* Will the system lose any resilience if it handles some commands in memory?
-* Will there be any significant performance gains if it handles some commands in memory?
+* Which commands, if any, can be handles in-process?
+* Will the system lose any resilience if it handles some commands in-process?
+* Will there be any significant performance gains if it handles some commands in-process?
 
 In addition, by processing commands in-process, it becomes easier to use
 commands as synchronous, two-way messages.
@@ -449,7 +457,11 @@ with the **SeatAvailability** aggregate. The solution we implmented uses
 a memento to capture the state of the **SeatAvailability** aggregate, 
 and then keeps a copy of the memento in a cache. The system then tries 
 to work with the cached data instead of always reloading the aggregate 
-from the event store. 
+from the event store.
+
+> **GaryPersona:** Often, in the context of event sourcing, snapshots
+> are persisent, not transient local caches as we have implemented in
+> our project.
 
 ## Other optimizations
 
@@ -478,11 +490,14 @@ completes.
 The following list summarizes the steps of the migration:
 
 1. Deploy the V3 release to the staging slot in Windows Azure.
-2. Switch the V2 release worker role for the V3 release worker role.
-   While this is taking place, Registrants continue to use the V2 web
+2. Deactivate the V2 worker role using the **MaintenanceMode** mode flag
+   and activate the V3 worker role. The V3 worker role now handles
+   messages from the V2 web role running in the production slot. While
+   this is taking place, registrants continue to use the V2 web
    roles and see the "Cannot determine the state of the registration"
-   message because for a while, no worker role instance is available.
-3. Switch the V2 release web role for the V3 release worker role.
+   message because, for a while, no worker role instance is available.
+2. Switch the deployments by performing a VIP swap. The V3 web roles now
+   start serving requests.
 
 For details of these steps, see Appendix 1,
 "[Building and Running the Sample Code][appendix]."
@@ -674,15 +689,15 @@ public void Handle(OrderPlaced @event)
 
 It is not possible to have a transaction in Windows Azure that spans 
 persisting the **RegistrationProcessManager** to storage and sending the 
-command. Therefore the team decided to save any failed commands that the 
-process manager sends, and to automatically retry those commands the next time 
-that the system loads the process manager from storage. 
+command. Therefore the team decided to save all the commands that the 
+process manager generates, and to use another process to handle sending
+the commands reliably. 
 
 > **MarkusPersona:** The migration utility for moving to the V3 release
 > updates the database schema to accomodate the new storage requirement.
 
 The following code sample from the **SqlProcessDataContext** class shows 
-how the system persists the failed commands along with the state of the 
+how the system persists all the commands along with the state of the 
 process manager: 
 
 ```Cs
@@ -693,83 +708,77 @@ public void Save(T process)
     if (entry.State == System.Data.EntityState.Detached)
         this.context.Set<T>().Add(process);
 
-    var commandIndex = 0;
     var commands = process.Commands.ToList();
+    UndispatchedMessages undispatched = null;
+    if (commands.Count > 0)
+    {
+        // if there are pending commands to send, we store them as undispatched.
+        undispatched = new UndispatchedMessages(process.Id)
+                            {
+                                Commands = this.serializer.Serialize(commands)
+                            };
+        this.context.Set<UndispatchedMessages>().Add(undispatched);
+    }
 
     try
     {
-        for (int i = 0; i < commands.Count; i++)
-        {
-            this.commandBus.Send(commands[i]);
-            commandIndex++;
-        }
+        this.context.SaveChanges();
     }
-    catch (Exception) // We catch a generic exception as we don't know what implementation of ICommandBus we might be using.
+    catch (DbUpdateConcurrencyException e)
     {
-        var pending = this.context.Set<PendingCommandsEntity>().Find(process.Id);
-        if (pending == null)
-        {
-            pending = new PendingCommandsEntity(process.Id);
-            this.context.Set<PendingCommandsEntity>().Add(pending);
-        }
-
-        pending.Commands = this.serializer.Serialize(commands.Skip(commandIndex));
+        throw new ConcurrencyException(e.Message, e);
     }
 
-    // Saves both the state of the process as well as the pending commands if any.
-    this.context.SaveChanges();
+    this.DispatchMessages(undispatched, commands);
 }
 ```
 
 The following code sample from the **SqlProcessDataContext** class shows 
-how the system retries the failed commands when the system next reloads 
-the process manager: 
+how the system tries to send the command messages: 
 
 ```Cs
-public T Find(Expression<Func<T, bool>> predicate)
+private void DispatchMessages(UndispatchedMessages undispatched, List<Envelope<ICommand>> deserializedCommands = null)
 {
-    var process = this.context.Set<T>().Where(predicate).FirstOrDefault();
-    if (process == null)
-        return default(T);
-
-    var pendingCommands = this.context.Set<PendingCommandsEntity>().Find(process.Id);
-    if (pendingCommands != null)
+    if (undispatched != null)
     {
-        // Must dispatch pending commands before the process 
-        // can be further used.
-        var commands = this.serializer.Deserialize<IEnumerable<Envelope<ICommand>>>(pendingCommands.Commands).OfType<Envelope<ICommand>>().ToList();
-        var commandIndex = 0;
+        if (deserializedCommands == null)
+        {
+            deserializedCommands = this.serializer.Deserialize<IEnumerable<Envelope<ICommand>>>(undispatched.Commands).ToList();
+        }
 
-        // Here we try again, one by one. Anyone might fail, so we have to keep 
-        // decreasing the pending commands count until no more are left.
+        var originalCommandsCount = deserializedCommands.Count;
         try
         {
-            for (int i = 0; i < commands.Count; i++)
+            while (deserializedCommands.Count > 0)
             {
-                this.commandBus.Send(commands[i]);
-                commandIndex++;
+                this.commandBus.Send(deserializedCommands.First());
+                deserializedCommands.RemoveAt(0);
             }
-        }
-        catch (Exception) // We catch a generic exception as we don't know what implementation of ICommandBus we might be using.
-        {
-            pendingCommands.Commands = this.serializer.Serialize(commands.Skip(commandIndex));
+
+            // we remove all the undispatched messages for this process
+            this.context.Set<UndispatchedMessages>().Remove(undispatched);
             this.context.SaveChanges();
-            // If this fails, we propagate the exception.
+        }
+        catch (Exception)
+        {
+            // We catch a generic exception as we don't know what implementation of ICommandBus we might be using.
+            if (originalCommandsCount != deserializedCommands.Count)
+            {
+                // if we were able to send some commands, then updates the undispatched messages.
+                undispatched.Commands = this.serializer.Serialize(deserializedCommands);
+                this.context.SaveChanges();
+            }
+
             throw;
         }
-
-        // If succeed, we delete the pending commands.
-        this.context.Set<PendingCommandsEntity>().Remove(pendingCommands);
-        this.context.SaveChanges();
     }
-
-    return process;
 }
 ```
 
-> **Note:** If it is still not possible to send a command when it is
-> re-tried. The **Find** method throws an exception and the system is
-> not able to load the **RegistrationProcessManager** instance.
+The **DispatchMessages** method is also invoked from the **Find** method 
+in the **SqlProcessDataContext** class so that it tries to send any 
+un-dispatched messages whenever the system rehydrates a 
+**RegistrationProcessManager** instance. 
 
 ## Optimizing the UI
 
@@ -916,6 +925,10 @@ public ActionResult SpecifyRegistrantAndPaymentDetails(Guid orderId, int orderVe
         });
 }
 ```
+
+> **Note:** We made this method asynchronous later on during this stage
+> of the journey.
+
 The second optimization is to perform the calculation of the order total 
 earlier in the process. In the previous code sample, the 
 **SpecifyRegistrantAndPaymentDetails** method still calls the 
@@ -950,16 +963,16 @@ Previously, in the V2 release the **Order** aggregate waited until it
 received a **MarkAsReserved** command before it called the 
 **CalculateTotal** method. 
 
-## Handling commands synchronously and inline
+## Handling commands synchronously and in-process
 
 In the V2 release, the system used the Windows Azure Service Bus to 
 deliver all commands to their recipients. This meant that the system 
 delivered the commands asynchronously. In the v3 release, the MVC 
-controllers now send their commands synchronously and inline in order to 
+controllers now send their commands synchronously and in-process in order to 
 improve the response times in the UI by bypassing the command bus and 
 delivering commands directly to their handlers. In addition, in the 
 **ConferenceProcessor** worker role, commands sent to **Order** 
-aggregates are sent synchronously inline using the same mechanism. 
+aggregates are sent synchronously in-process using the same mechanism. 
 
 > **MarkusPersona:** We still continue to send commands to the
 > **SeatsAvailability** aggregate asynchronously because with multiple
@@ -987,7 +1000,7 @@ container.RegisterType<ICommandHandler, SeatAssignmentsHandler>("SeatAssignments
 ```
 
 > **Note:** There is similar code in the Conference.Azure.cs file to
-> configure the worker role to send some commands inline.
+> configure the worker role to send some commands in-process.
 
 
 The following code sample shows how the 
@@ -1179,7 +1192,9 @@ method in the **SessionSubscriptionReceiver** class.
 
 > **MarkusPersona:** This code sample also shows how to use the
 > [Transient Fault Handling Application Block][tfhab] to reliably
-> receive messages asynchronously from the Service Bus topic.
+> receive messages asynchronously from the Service Bus topic. The
+> asynchronous loops make the code much harder to read, but much more
+> efficient. This is recommended best practice.
 
 ### Completing messages asynchronously
 
@@ -1253,10 +1268,12 @@ protected SubscriptionReceiver(ServiceBusSettings settings, string topic, string
 ### Accepting multiple sessions in parallel
 
 In the V2 release, the **SessionSubscriptionReceiver** creates sessions 
-to receive messages from the Windows Azure Service Bus in sequence. In 
-the V3 release, the **SessionSubscriptionReceiver** creates multiple 
-sessions in parallel. This helps to improve the throughput and reduce 
-the latency when the system retrieves messages from the Service Bus.
+to receive messages from the Windows Azure Service Bus in sequence. 
+However if you are using a session, you can only handle messages from 
+that session, other messages are ignored until you switch to a different 
+session. In the V3 release, the **SessionSubscriptionReceiver** creates 
+multiple sessions in parallel, this enables the system to receive 
+messages from multiple sessions simultaneously. 
 
 For details, see the **AcceptSession** method in the 
 **SessionSubscriptionReceiver** class. 
@@ -1300,14 +1317,18 @@ Task.Factory.StartNew(
     {
         try
         {
-            Parallel.ForEach(
-                new BlockingCollectionPartitioner<string>(this.enqueuedKeys),
-                new ParallelOptions
+            foreach (var key in GetThrottlingEnumerable(this.enqueuedKeys.GetConsumingEnumerable(cancellationToken), this.throttlingSemaphore, cancellationToken))
+            {
+                if (!cancellationToken.IsCancellationRequested)
                 {
-                    MaxDegreeOfParallelism = MaxDegreeOfParallelism,
-                    CancellationToken = cancellationToken
-                },
-                this.ProcessPartition);
+                    ProcessPartition(key);
+                }
+                else
+                {
+                    this.enqueuedKeys.Add(key);
+                    return;
+                }
+            }
         }
         catch (OperationCanceledException)
         {

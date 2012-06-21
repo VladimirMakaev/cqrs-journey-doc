@@ -35,9 +35,9 @@
      inkscape:document-units="px"
      inkscape:current-layer="layer2"
      showgrid="false"
-     inkscape:window-width="1846"
+     inkscape:window-width="1600"
      inkscape:window-height="1178"
-     inkscape:window-x="1592"
+     inkscape:window-x="3512"
      inkscape:window-y="-8"
      inkscape:window-maximized="1">
     <inkscape:grid
@@ -74,12 +74,12 @@
            height="20.314005"
            x="16.552153"
            y="14.295041" /></flowRegion><flowPara
-         id="flowPara3116"></flowPara></flowRoot>    <text
+         id="flowPara3116" /></flowRoot>    <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ff0000;font-family:Courier New;-inkscape-font-specification:Courier New"
        x="10"
        y="24.094482"
-       id="versiontext">Journey_07_TopLevel.svg (v1)</text>
+       id="versiontext">Journey_07_TopLevel.svg (v2)</text>
     <path
        style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
        id="path3125"
@@ -532,6 +532,27 @@
          y="315.35474"
          style="font-size:12px"
          id="tspan3555-7">state</tspan></text>
+    <path
+       style="fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       d="M 240.8125 400.25 L 238.21875 401.71875 C 239.56498 405.64758 241.10451 409.5174 242.71875 413.34375 C 245.36487 419.89245 248.87754 426.01122 252.4375 432.09375 C 255.33564 437.0486 258.46703 441.8665 261.53125 446.71875 C 263.86796 450.1959 265.91481 453.85054 267.90625 457.53125 C 269.15512 459.89903 270.32478 462.29492 271.3125 464.78125 C 272.11335 466.72529 273.09593 468.56171 273.90625 470.5 C 274.70222 472.64337 275.79155 474.64923 276.8125 476.6875 C 275.7689 476.48471 274.74853 476.16552 273.75 475.75 C 272.77469 475.31635 271.73076 475.07457 270.6875 474.875 L 268.25 476.59375 C 269.28129 476.77237 270.31764 476.98271 271.28125 477.40625 C 272.86769 478.07352 274.45304 478.54985 276.1875 478.65625 C 279.14231 478.78494 282.08204 477.05744 283.5 474.5 C 284.52305 472.15344 285.41191 469.74218 286.21875 467.3125 L 283.53125 468.5625 C 282.77307 470.99917 281.86933 473.38334 280.84375 475.71875 C 280.62105 476.05995 280.40306 476.41922 280.15625 476.75 C 280.03561 476.7818 279.83261 476.82553 279.34375 476.875 L 279.9375 476.53125 L 279.4375 475.375 C 278.39776 473.28977 277.31173 471.25345 276.5 469.0625 C 275.68181 467.12989 274.68061 465.25211 273.875 463.3125 C 272.8786 460.81779 271.70311 458.43363 270.4375 456.0625 C 268.42817 452.38451 266.37229 448.73153 264.03125 445.25 C 260.94992 440.41183 257.80982 435.60506 254.90625 430.65625 C 251.34894 424.58563 247.82055 418.46216 245.21875 411.90625 C 243.62448 408.07115 242.09877 404.19979 240.8125 400.25 z "
+       id="path3079" />
+    <text
+       xml:space="preserve"
+       style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print"
+       x="271.76334"
+       y="436.33347"
+       id="text3195-1-0-1"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         x="271.76334"
+         y="436.33347"
+         id="tspan3199-4-9-7"
+         style="font-size:12px">Send commands and</tspan><tspan
+         sodipodi:role="line"
+         x="271.76334"
+         y="451.33347"
+         style="font-size:12px"
+         id="tspan3248-4">publish events</tspan></text>
   </g>
   <g
      inkscape:label="Layer 1"
