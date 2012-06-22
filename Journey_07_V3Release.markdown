@@ -11,13 +11,13 @@ the UI. The effort to harden the system focuses on the
 bounded context. The focus on performance is on the way the UI interacts 
 with the domain-model during the order creation process. 
 
-## Working definitions for this chapter 
+# Working definitions for this chapter 
 
 The following definitions are used for the remainder of this chapter. 
 For more detail, and possible alternative definitions, see [A CQRS/ES 
 Deep Dive][r_chapter4] in the Reference Guide. 
 
-### Command
+## Command
 
 A command is a request for the system to perform an action that changes 
 the state of the system. Commands are imperatives, for example 
@@ -32,7 +32,7 @@ in-process. If a command is delivered through a command bus, then then the
 command is sent asynchronously. If the comand can be delivered directly 
 in-process, then the command is sent synchronously. 
 
-### Event
+## Event
 
 An event, such as **OrderConfirmed**, describes something that has 
 happened in the system, typically as a result of a command. Aggregates 
@@ -45,7 +45,7 @@ the event bus and then deliver the events to the subscriber. In the
 orders and registrations bounded context bounded context, the 
 subscribers are a process manager and the read model generators. 
 
-### Snapshots
+## Snapshots
 
 Snapshots are an optimization that you can apply to event sourcing: 
 instead of replaying all of the persisted events associated with an 
@@ -54,7 +54,7 @@ the aggregate and then replay only the events that were persisted after
 saving the snapshot. In this way you can reduce the amount of data that 
 you must load from the event store. 
 
-## Architecture 
+# Architecture 
 
 The application is designed to deploy to Windows Azure. At this stage in 
 the journey, the application consists of web roles that contains the 
@@ -79,7 +79,7 @@ database.
 For more information about the options for running the application, see 
 [Appendix 1][appendix1]. 
 
-# Patterns and concepts 
+# Adding resilience
 
 During this stage of the journey the team looked at options for 
 hardening the **RegistrationProcessManager** class. This part of the 
@@ -89,33 +89,6 @@ bounded context and for ensuring that they are all consistent with each
 other. It is important that this process manager is resilient to a wide 
 range of failure conditions if the bounded context as a whole is to 
 maintain its consistent state. 
-
-We also ran performance tests using the [Visual Studio Load Test Feature 
-Pack][loadtest] to analyze response times and identify bottlenecks. The 
-team used Visual Studio Load Test to simulate different numbers of users 
-accessing the application, and added additonal tracing into the code to 
-record timing information for detailed analysis. As a result of this 
-exercise, the team made a number of changes to the system to optimize 
-its performance.
-
-The team created the performance test environment in Windows Azure, 
-running the test controller and test agents in Windows Azure VM role 
-instances. This enabled us to test how the Contoso Conference Management 
-System performed under different loads by using the test agents to 
-simulate different numbers of virtual users. 
-
-> **GaryPersona:** Although in this journey the team did their
-> performance testing and optimization work at the end of the project,
-> it typically makes sense to do this work as you go, addressing
-> performance issues and adding hardening as soon as possible.
-
-> **MarkusPersona:** Because implementing the CQRS pattern leads to a
-> very clear separation of responsibities for the many different parts
-> that make up the system, we found it relatively easy to add
-> optimizations and hardening because many of the necessary changes were
-> very localized within the system.
-
-## Making the RegistrationProcessManager class more resilient to failure
 
 Typically, a process manager receives incoming events and then, based on 
 the state of the process manager, sends out one or more commands to 
@@ -173,7 +146,7 @@ address:
 2. The **RegistrationProcessManager** handles an event successfully, marks it
    as complete, but then fails to send out the commands.
 
-### Making the system resilient whan an event is reprocessed
+## Making the system resilient whan an event is reprocessed
 
 If the behavior of the process manager itself is idempotent, then if it 
 receives and processes an event a second time then this does not result 
@@ -198,7 +171,7 @@ queue. The exceptions are the **OrderPlaced** event and the
 release of the system processes these two commands in order to address
 this issue.
 
-### Ensuring that commands are always sent
+## Ensuring that commands are always sent
 
 To ensure that the system always sends commands when the 
 **RegistrationProcessManager** class saves its state requires 
@@ -215,13 +188,40 @@ the commands, removing them from storage after they have been sent
 successfully. The system also checks for un-dispatched messages whenever
 it loads a **RegistrationProcessManager** instance from storage.
 
-## Optimizing the interactions between the UI and the domain
+# Optimizing performance
+
+During this stage of the journey we ran performance tests using the 
+[Visual Studio Load Test Feature Pack][loadtest] to analyze response 
+times and identify bottlenecks. The team used Visual Studio Load Test to 
+simulate different numbers of users accessing the application, and added 
+additonal tracing into the code to record timing information for 
+detailed analysis. As a result of this exercise, the team made a number 
+of changes to the system to optimize its performance. 
+
+The team created the performance test environment in Windows Azure, 
+running the test controller and test agents in Windows Azure VM role 
+instances. This enabled us to test how the Contoso Conference Management 
+System performed under different loads by using the test agents to 
+simulate different numbers of virtual users. 
+
+> **GaryPersona:** Although in this journey the team did their
+> performance testing and optimization work at the end of the project,
+> it typically makes sense to do this work as you go, addressing
+> performance issues and adding hardening as soon as possible.
+
+> **MarkusPersona:** Because implementing the CQRS pattern leads to a
+> very clear separation of responsibities for the many different parts
+> that make up the system, we found it relatively easy to add
+> optimizations and hardening because many of the necessary changes were
+> very localized within the system.
 
 The performance tests we ran using Visual Studio Load Test uncovered 
 unacceptable response times for Registrants creating orders when the 
 system was under load. The intitial optimization effort focused on how
 the UI interacts with the domain, and we identified ways to streamline
 this aspect of the system.
+
+## UI flow before optimization
 
 When a Registrant creates an order, she visits the following sequence of 
 screens in the UI. 
@@ -281,14 +281,14 @@ web and worker role instances we found that:
 > service bus and the time when the priced order becomes visible in the
 > read-model enabling the UI to display the next screen to the user.
 
-To address this issue, the team identified two possible optimizations: 
-optimizing the interaction between the UI and the domain, and optimizing 
-the command handling process. We decided to address the interaction 
-between the UI and the domain first and then to evaluate whether any 
-further optimization was necessary. In the end, we implemented both of
-these optimizations.
+To address this issue, the team identified two possible sets of 
+optimizations: optimizing the interaction between the UI and the domain, 
+and optimizing the infrastructure. We decided to address the interaction 
+between the UI and the domain first; when this did not improve 
+performance sufficiently we added the infrastructure optimizations as 
+well. 
 
-### Options to reduce the delay in the UI
+## Optimizing the UI
 
 The team discussed with the domain expert whether or not is always 
 necessary to validate the seats availability before the UI sends the 
@@ -321,7 +321,7 @@ far as the Payment screen in the UI.
 > confirmed. This type of decision is clearly one for the business and
 > the domain expert.
 
-#### Optimization #1
+### UI optimization 1
 
 Most of the time, there are plenty of seats available for a conference 
 and Registrants do not have to compete with each other to reserve seats. 
@@ -355,7 +355,7 @@ availability.
 > seats are sold. However, this scenario will occur infrequently enough
 > that it is probably not worth implementing.
 
-#### Optimization #2
+### UI optimization 2
 
 In the V2 release, the MVC controller cannot display the Registrant 
 screen until the domain publishes the **OrderTotalsCalculated** event 
@@ -369,6 +369,12 @@ total when the order is placed instead of when the reservation is
 complete. This will enable the UI flow to move more quickly to the 
 Registrant screen than in the V2 release.
 
+# Optimizing the infrastructure
+
+The second set of optimizations that the team added in this stage of the 
+journey related to the infrastructure in the system. The following 
+sections describe the most significant changes we made here. 
+
 ## Sending and receiving commands and events asynchronously
 
 As part of the optimization process, the team updated the system to 
@@ -377,7 +383,12 @@ asynchronously. This optimization is intended to improve the overall
 responsiveness of the application and improve the throughput of 
 messages. As part of this change, the team also used the [Transient 
 Fault Handling Application Block][tfhab] to handle an transient errors 
-encountered when using the Service Bus. 
+encountered when using the Service Bus.
+
+> **MarkusPersona:** This optimization resulted in major changes to the
+> infrastructure code. Combining asynchronous calls with the Transient
+> Fault Handling Block is complex: we would benefit from some of the new
+> simplifying syntax in C# 4.5!
 
 ## Optimizing command processing 
 
@@ -388,31 +399,23 @@ in this area.
 
 The current implementation uses the same messaging infrastructure, the 
 Windows Azure Service Bus, for both commands and events. The team plans 
-to evaluate whether the same infrastructure is necesssary for all 
-commands and events within the Contoso Conference Management System. 
+to evaluated whether the Contoso Conference Management System needs to 
+send all its command messages using the same infrastructure. 
 
-The system uses events as its primary mechanism for integrating between 
-bounded contexts. One bounded context can raise an event that is then 
-handled in another bounded context. These different bounded contexts 
-typically run in different role instances in Windows Azure: for example 
-the Conference Management bounded context runs in its own web role and 
-integrates with the Orders and Registrations bounded context. The 
-Windows Azure Service Bus provides a mechanism to transport messages 
-between these worker role instances. 
-
-> **GaryPersona:** It's also possible in the future that, for some
-> bounded contexts, the read-model will be hosted in a separate role
-> instance from the write-model. Windows Azure Service Bus will
-> transport the events that the system uses to construct the
-> denormalized read-model.
-
-There are a number of factors that the team will consider when we 
-determine whether to continue using the Windows Azure Service Bus for 
+There are a number of factors that we considered when we 
+determined whether to continue using the Windows Azure Service Bus for 
 transporting all command messages. 
 
 * Which commands, if any, can be handles in-process?
 * Will the system lose any resilience if it handles some commands in-process?
 * Will there be any significant performance gains if it handles some commands in-process?
+
+We identified a set of commands that the system can send synchronously 
+and in-process from the public conference web application. To implement 
+this optimization we had to add some infrastructure elements (the event 
+store repositories, the event bus, and the event publishers) to the 
+public conference web application; previously, these infrastructure 
+elements were only in the system's worker role. 
 
 In addition, by processing commands in-process, it becomes easier to use
 commands as synchronous, two-way messages.
@@ -425,17 +428,11 @@ commands as synchronous, two-way messages.
 > Greg Young - Why lot's of developers use one-way command messaging 
 > (async handling) when it's not needed? - DDD/CQRS Google Groups
 
-The team evaluated the impact of the optimizations to the interaction 
-between the UI and the domain first, and when those optimizations didn't 
-produce the necessary improvement we then implemented this 
-optimization. 
-
 ## Using snapshots with event sourcing
 
 The performance tests also uncovered a bottleneck in the use of the 
-**SeatsAvailability** aggregate. This proved to be the most effective 
-optimization when the team implemented it and re-ran the performance 
-tests. 
+**SeatsAvailability** aggregate that we addressed by using a form of 
+snapshot. 
 
 > **JanaPersona:** Once the team identified this bottleneck, it was easy
 > to implement and test this solution. One of the advantages of the
@@ -463,6 +460,35 @@ from the event store.
 > are persisent, not transient local caches as we have implemented in
 > our project.
 
+## Publishing events in parallel
+
+This optimization proved to be one of the most significant in terms of improving the throughput of event messages in the system. The team went through several interations to obtain the best results:
+
+* Iteration 1: This approach used the [Parallel.ForEach][pforeach] method with a custom partitioning scheme to assign messages to partitions and to set an upper bound on the degree of parallelism. This approach used synchronous Windows Azure Service Bus API calls to publish the messages.
+* Iteration 2: This approach used some asynchronous API calls. This approach required the use of custom semaphore-based throttling to handle the asynchronous callbacks correctly.
+* Iteration 3: This approach uses dynamic throttling that takes into account the transient failures that indicate to many messages are being sent in a partition. This approach uses more asynchronous Windows Azure Service Bus API calls.
+
+## Filtering messages in subscriptions
+
+This optimization adds filters to the Windows Azure Service Bus topic subscriptions to avoid reading messages that would later be ignored by the handlers associated with the subscription.
+
+**MarkusPersona:** Here we are taking advantage of a feature provided by Windows Azure Service Bus.
+
+## Creating a dedicated receiver for the **SeatsAvailability** aggregate
+
+This enables the receiver for the **SeatsAvailability** aggreagte to use a session Id in the command messages to use sessions to guarantee the ordering of the messages. This avoids a potential bottleneck in the session if the system is scaled out horizontally and there are multiple, active conferences.
+
+## Caching conference information
+
+This optimization caches several read models that the public conference web site uses extensively. It includes logic to determine how to keep the data in the cache based on the number of available seats for a particular conference: if there are plenty of seats available the system can cache the data for a long period of time, but if there are very few seats available the data is not cached.
+
+> **GaryPersona:** Here we are switching between autonomy and authority
+> based on the number of remaining seats. When there are lots of
+> available seats, favoring autonomy enables us to improve performance
+> by using the cache. When there are very few seats available we favor
+> authority to ensure we have accurate data at the cost of reduced
+> performance in this particular circumstance.
+
 ## Other optimizations
 
 The team performed some additional optimizations that are listed in the 
@@ -475,9 +501,13 @@ resources. For example: a further optimization that the team considered
 was to scale out the view model generators that populate the various 
 read-models in the system. Every web-role that hosts a view model 
 generator instance must handle the events published by the write-side by 
-creating a subscription the the Windows Azure Service Bus topics. 
+creating a subscription the the Windows Azure Service Bus topics.
 
-## No downtime migration
+## Results of the optimization work
+
+
+
+# No downtime migration
 
 The team planned to have a no downtime migration from the V2 to the V3 
 release in Windows Azure. Although the web roles continue to run during 
@@ -512,7 +542,7 @@ role.
 > migration is to use a message-based approach that uses a configuration
 > bus.
 
-### Data migration
+## Data migration
 
 The V3 release uses one additional table called 
 **UndispatchedMessages**, and requires an additional column called 
@@ -780,7 +810,7 @@ in the **SqlProcessDataContext** class so that it tries to send any
 un-dispatched messages whenever the system rehydrates a 
 **RegistrationProcessManager** instance. 
 
-## Optimizing the UI
+## Optimizing the UI flow
 
 The first optimization is to allow the UI to navigate directly to the 
 Registrant screen provided that there are plenty of seats still 
@@ -929,7 +959,7 @@ public ActionResult SpecifyRegistrantAndPaymentDetails(Guid orderId, int orderVe
 > **Note:** We made this method asynchronous later on during this stage
 > of the journey.
 
-The second optimization is to perform the calculation of the order total 
+The second optimization in the UI flow is to perform the calculation of the order total 
 earlier in the process. In the previous code sample, the 
 **SpecifyRegistrantAndPaymentDetails** method still calls the 
 **WaitUntilOrderIsPriced** method which pauses the UI flow until the 
@@ -962,6 +992,67 @@ public Order(Guid id, Guid conferenceId, IEnumerable<OrderItem> items, IPricingS
 Previously, in the V2 release the **Order** aggregate waited until it 
 received a **MarkAsReserved** command before it called the 
 **CalculateTotal** method. 
+
+## Receiving, completing, and sending messages asynchronously
+
+This section outlines how the system now performs all IO on the Windows 
+Azure Service Bus asynchronously. 
+
+### Receiving messages asynchronously
+
+The **SubscriptionReceiver** and **SessionSubscriptionReceiver** classes 
+now receive messages asynchronously instead of synchronously in the loop 
+in the **ReceiveMessages** method. 
+
+For details see either the **ReceiveMessages** method in the 
+**SubscriptionReceiver** class or the **ReceiveMessagesAndCloseSession** 
+method in the **SessionSubscriptionReceiver** class. 
+
+> **MarkusPersona:** This code sample also shows how to use the
+> [Transient Fault Handling Application Block][tfhab] to reliably
+> receive messages asynchronously from the Service Bus topic. The
+> asynchronous loops make the code much harder to read, but much more
+> efficient. This is recommended best practice.
+
+### Completing messages asynchronously
+
+The system uses the peek/lock mechanism to retrieve messages from the 
+Service Bus topic subscriptions. The **BrokeredMessageExtensions** class 
+now includes three new methods to support completing messages 
+asynchronously: 
+
+* **SafeCompleteAsync**
+* **SafeAbandonAsync**
+* **SafeDeadLetterAsync**
+
+The **SubscriptionReceiver** and **SessionSubscriptionReceiver** invoke 
+one of these methods based on the result of processing a message as 
+shown in the following code sample from the **ReceiveMessages** method 
+in the **SubscriptionReceiver** class: 
+
+```Cs
+var releaseAction = MessageReleaseAction.AbandonMessage;
+
+try
+{
+    // Make sure we are not told to stop receiving while we were waiting for a new message.
+    if (!cancellationToken.IsCancellationRequested)
+    {
+        // Process the received message.
+        releaseAction = this.InvokeMessageHandler(msg);
+    }
+}
+finally
+{
+    // Ensure that any resources allocated by a BrokeredMessage instance are released.
+    this.ReleaseMessage(msg, releaseAction);
+}
+```
+
+### Sending messages asynchronously
+
+The application now sends all messages on the Service Bus 
+asynchronously. For more details see the **TopicSender** class. 
 
 ## Handling commands synchronously and in-process
 
@@ -1164,77 +1255,150 @@ public IMemento SaveToMemento()
 }
 ```
 
-## Other optimizations
+## Publishing Events in parallel
 
-This section describes some of optimizations to the way that the 
-application uses the Windows Azure Service Bus in the V3 release. These 
-optimizations include: 
-
-* Receiving, completing, and sending messages asynchronously.
-* Using prefetch to retrieve multiple messages from the Service Bus.
-* Accepting multiple Windows Azure Service Bus sessions in parallel.
-* Publishing events to the Service Bus in parallel.
-* Filtering messages by subscription.
-* Using time-to-live for some messages.
-
-These optimizations are described in more detail in the following 
-sections. 
-
-### Receiving messages asynchronously
-
-The **SubscriptionReceiver** and **SessionSubscriptionReceiver** classes 
-now receive messages asynchronously instead of synchronously in the loop 
-in the **ReceiveMessages** method. 
-
-For details see either the **ReceiveMessages** method in the 
-**SubscriptionReceiver** class or the **ReceiveMessagesAndCloseSession** 
-method in the **SessionSubscriptionReceiver** class. 
-
-> **MarkusPersona:** This code sample also shows how to use the
-> [Transient Fault Handling Application Block][tfhab] to reliably
-> receive messages asynchronously from the Service Bus topic. The
-> asynchronous loops make the code much harder to read, but much more
-> efficient. This is recommended best practice.
-
-### Completing messages asynchronously
-
-The system uses the peek/lock mechanism to retrieve messages from the 
-Service Bus topic subscriptions. The **BrokeredMessageExtensions** class 
-now includes three new methods to support completing messages 
-asynchronously: 
-
-* **SafeCompleteAsync**
-* **SafeAbandonAsync**
-* **SafeDeadLetterAsync**
-
-The **SubscriptionReceiver** and **SessionSubscriptionReceiver** invoke 
-one of these methods based on the result of processing a message as 
-shown in the following code sample from the **ReceiveMessages** method 
-in the **SubscriptionReceiver** class: 
+In chapter 5, [Preparing for the V1 Release][j_chapter5], you saw how 
+the system publishes events whenever it saves them to the event store. 
+This optimization enables the system to publish some of these events in 
+parallel insteand of publishing them sequentially. It is important that 
+the events associated with a specific aggregate instance are sent in the 
+correct order, so the system only creates new tasks for different 
+partition keys. The following code sample from the **Start** method in 
+the **EventStoreBusPublisher** class shows how the parallel tasks are 
+defined: 
 
 ```Cs
-var releaseAction = MessageReleaseAction.AbandonMessage;
-
-try
-{
-    // Make sure we are not told to stop receiving while we were waiting for a new message.
-    if (!cancellationToken.IsCancellationRequested)
+Task.Factory.StartNew(
+    () =>
     {
-        // Process the received message.
-        releaseAction = this.InvokeMessageHandler(msg);
-    }
-}
-finally
+        try
+        {
+            foreach (var key in GetThrottlingEnumerable(this.enqueuedKeys.GetConsumingEnumerable(cancellationToken), this.throttlingSemaphore, cancellationToken))
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                {
+                    ProcessPartition(key);
+                }
+                else
+                {
+                    this.enqueuedKeys.Add(key);
+                    return;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+    },
+    TaskCreationOptions.LongRunning);
+```
+
+For more information about the **BlockingCollectionPartitioner** class, 
+see the blog post [ParallelExtensionsExtras Tour - #4 - 
+BlockingCollectionExtensions][parallelext].
+
+## Filtering messages in subscriptions
+
+The team added filters to the Windows Azure Service Bus subscriptions to restrict the messages that each each subscription receives to those messages that the subscription is intended to handle. You can see the definitions of these filters in the Settings.Template.xml file as shown in the following snippet:
+
+```Xml
+<Topic Path="conference/events" IsEventBus="true">
+    <Subscription Name="log" RequiresSession="false"/>
+    <Subscription Name="Registration.RegistrationProcessRouter" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderUpdated','SeatsReserved','PaymentCompleted','OrderConfirmed')"/>
+    <Subscription Name="Registration.OrderViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderUpdated','OrderPartiallyReserved','OrderReservationCompleted','OrderRegistrantAssigned','OrderConfirmed','OrderPaymentConfirmed','OrderTotalsCalculated')"/>
+    <Subscription Name="Registration.PricedOrderViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderTotalsCalculated','OrderConfirmed','OrderExpired','SeatAssignmentsCreated','SeatCreated','SeatUpdated')"/>
+    <Subscription Name="Registration.ConferenceViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('ConferenceCreated','ConferenceUpdated','ConferencePublished','ConferenceUnpublished','SeatCreated','SeatUpdated','AvailableSeatsChanged','SeatsReserved','SeatsReservationCancelled')"/>
+    <Subscription Name="Registration.SeatAssignmentsViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('SeatAssignmentsCreated','SeatAssigned','SeatUnassigned','SeatAssignmentUpdated')"/>
+    <Subscription Name="Registration.SeatAssignmentsHandler" RequiresSession="true" SqlFilter="TypeName IN ('OrderConfirmed','OrderPaymentConfirmed')"/>
+    <Subscription Name="Conference.OrderEventHandler" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderRegistrantAssigned','OrderTotalsCalculated','OrderConfirmed','OrderExpired','SeatAssignmentsCreated','SeatAssigned','SeatAssignmentUpdated','SeatUnassigned')"/>
+</Topic>
+```
+
+## Creating a dedicated **SessionSubscriptionReciever** instance for the **SeatsAvailability** aggregate
+
+The following code sample from the Conference.Processor.Azure.cs file shows how the system creates a dedicated **SessionSubscriptionReceiver** instance to receive messages destined for the **SeatsAvailability** aggregate:
+
+```Cs
+var seatsAvailabilityCommandProcessor =
+    new CommandProcessor(new SessionSubscriptionReceiver(azureSettings.ServiceBus, Topics.Commands.Path, Topics.Commands.Subscriptions.SeatsAvailability, false), serializer);
+
+...
+
+container.RegisterInstance<IProcessor>("SeatsAvailabilityCommandProcessor", seatsAvailabilityCommandProcessor);
+```
+
+The following code sample shows the new abstract **SeatsAvailabilityCommand** class that includes a session Id based on the conference that the command is associated with:
+
+```Cs
+public abstract class SeatsAvailabilityCommand : ICommand, IMessageSessionProvider
 {
-    // Ensure that any resources allocated by a BrokeredMessage instance are released.
-    this.ReleaseMessage(msg, releaseAction);
+    public SeatsAvailabilityCommand()
+    {
+        this.Id = Guid.NewGuid();
+    }
+
+    public Guid Id { get; set; }
+    public Guid ConferenceId { get; set; }
+
+    string IMessageSessionProvider.SessionId
+    {
+        get { return "SeatsAvailability_" + this.ConferenceId.ToString(); }
+    }
 }
 ```
 
-### Sending messages asynchronously
+The command bus now uses a separate subscription for commands destined for the **SeatsAvailability** aggregate.
 
-The application now sends all messages on the Service Bus 
-asynchronously. For more details see the **TopicSender** class. 
+## Caching read-model data
+
+As part of the performance optimizations in the V3 release, the team 
+added caching behavior for the conference information stored in the 
+Orders and Registrations bounded context read model. This reduces the 
+time taken to read this commonly used data.
+
+The following code sample from the **GetPublishedSeatTypes** method in the **CachingConferenceDao** class shows how the system determines whether to cache the data for a conference based on the number of available seats:
+
+```Cs
+TimeSpan timeToCache;
+if (seatTypes.All(x => x.AvailableQuantity > 200 || x.AvailableQuantity <= 0))
+{
+    timeToCache = TimeSpan.FromMinutes(5);
+}
+else if (seatTypes.Any(x => x.AvailableQuantity < 30 && x.AvailableQuantity > 0))
+{
+    // there are just a few seats remaining. Do not cache.
+    timeToCache = TimeSpan.Zero;
+}
+else if (seatTypes.Any(x => x.AvailableQuantity < 100 && x.AvailableQuantity > 0))
+{
+    timeToCache = TimeSpan.FromSeconds(20);
+}
+else
+{
+    timeToCache = TimeSpan.FromMinutes(1);
+}
+
+if (timeToCache > TimeSpan.Zero)
+{
+    this.cache.Set(key, seatTypes, new CacheItemPolicy { AbsoluteExpiration = DateTimeOffset.UtcNow.Add(timeToCache) });
+}
+```
+
+## Other optimizing and hardening changes
+
+This section outlines some of the additional ways that the team optimized the performance of the application and improved its resilience: 
+
+* Using asynchronous ASP.NET MVC controllers.
+* Using prefetch to retrieve multiple messages from the Service Bus.
+* Accepting multiple Windows Azure Service Bus sessions in parallel.
+* Expiring seat reservation commands.
+
+### Asynchronous ASP.NET MVC controllers.
+
+The team converted some of the MVC controllers in the public conference web application to be asynchronous contollers. This avoids blocking some ASP.NET threads and enabled us to use the support for the **Task** class in ASP.NET MVC 4.
+
+For example, the team modified the way that the controller polls for updates in the read models to use timers. 
 
 ### Using Prefetch with Windows Azure Service Bus
 
@@ -1299,66 +1463,6 @@ With the optimistic concurrency check in place, we also removed the C#
 lock in the **SessionSubscriptionReceiver** class that was a potential 
 bottleneck in the system. 
 
-### Publishing Events in parallel
-
-In chapter 5, [Preparing for the V1 Release][j_chapter5], you saw how 
-the system publishes events whenever it saves them to the event store. 
-This optimization enables the system to publish some of these events in 
-parallel insteand of publishing them sequentially. It is important that 
-the events associated with a specific aggregate instance are sent in the 
-correct order, so the system only creates new tasks for different 
-partition keys. The following code sample from the **Start** method in 
-the **EventStoreBusPublisher** class shows how the parallel tasks are 
-defined: 
-
-```Cs
-Task.Factory.StartNew(
-    () =>
-    {
-        try
-        {
-            foreach (var key in GetThrottlingEnumerable(this.enqueuedKeys.GetConsumingEnumerable(cancellationToken), this.throttlingSemaphore, cancellationToken))
-            {
-                if (!cancellationToken.IsCancellationRequested)
-                {
-                    ProcessPartition(key);
-                }
-                else
-                {
-                    this.enqueuedKeys.Add(key);
-                    return;
-                }
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            return;
-        }
-    },
-    TaskCreationOptions.LongRunning);
-```
-
-For more information about the **BlockingCollectionPartitioner** class, 
-see the blog post [ParallelExtensionsExtras Tour - #4 - 
-BlockingCollectionExtensions][parallelext].
-
-### Filtering messages by subscription
-
-The team added filters to the Windows Azure Service Bus subscriptions to restrict the messages that each each subscription receives to those messages that the subscription is intended to handle. You can see the definitions of these filters in the Settings.Template.xml file as shown in the following snippet:
-
-```Xml
-<Topic Path="conference/events" IsEventBus="true">
-    <Subscription Name="log" RequiresSession="false"/>
-    <Subscription Name="Registration.RegistrationProcessRouter" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderUpdated','SeatsReserved','PaymentCompleted','OrderConfirmed')"/>
-    <Subscription Name="Registration.OrderViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderUpdated','OrderPartiallyReserved','OrderReservationCompleted','OrderRegistrantAssigned','OrderConfirmed','OrderPaymentConfirmed','OrderTotalsCalculated')"/>
-    <Subscription Name="Registration.PricedOrderViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderTotalsCalculated','OrderConfirmed','OrderExpired','SeatAssignmentsCreated','SeatCreated','SeatUpdated')"/>
-    <Subscription Name="Registration.ConferenceViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('ConferenceCreated','ConferenceUpdated','ConferencePublished','ConferenceUnpublished','SeatCreated','SeatUpdated','AvailableSeatsChanged','SeatsReserved','SeatsReservationCancelled')"/>
-    <Subscription Name="Registration.SeatAssignmentsViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('SeatAssignmentsCreated','SeatAssigned','SeatUnassigned','SeatAssignmentUpdated')"/>
-    <Subscription Name="Registration.SeatAssignmentsHandler" RequiresSession="true" SqlFilter="TypeName IN ('OrderConfirmed','OrderPaymentConfirmed')"/>
-    <Subscription Name="Conference.OrderEventHandler" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderRegistrantAssigned','OrderTotalsCalculated','OrderConfirmed','OrderExpired','SeatAssignmentsCreated','SeatAssigned','SeatAssignmentUpdated','SeatUnassigned')"/>
-</Topic>
-```
-
 ### Adding a time-to-live value to the MakeSeatReservation command
 
 Windows Azure Service Bus brokered messages can have a value assigned to 
@@ -1366,13 +1470,6 @@ the TimeToLive property: when the time-to-live expires, the message is
 automatically sent to a dead-letter queue. The application uses this 
 feature of the Service Bus to avoid processing **MakeSeatReservation** 
 commands if the order they are associated with has already expired. 
-
-## Caching conference information
-
-As part of the performance optimizations in the V3 release, the team 
-added caching behavior for the conference information stored in the 
-Orders and Registrations bounded context read model. This reduces the 
-time taken to read this commonly used data.
 
 # Impact on testing 
 
@@ -1418,6 +1515,7 @@ use [WatiN][watin] to drive the system through its UI.
 [j_chapter5]:        Journey_05_PaymentsBC.markdown
 [appendix]:          Appendix1_Running.markdown
 
+[pforeach]:          http://msdn.microsoft.com/en-us/library/dd460720.aspx
 [repourl]:           https://github.com/mspnp/cqrs-journey-code
 [watin]:             http://watin.org
 [codefirst]:         http://msdn.microsoft.com/en-us/library/gg197525(VS.103).aspx
