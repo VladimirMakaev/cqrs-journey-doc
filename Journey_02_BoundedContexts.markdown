@@ -1,8 +1,8 @@
 # Chapter 2: Decomposing the Domain 
 
-*Planning the journey: What will be the main stopping places along the way?*
+_Planning the stops._
 
-# Introduction
+>"Without stones there is no arch," Marco Polo
 
 In this chapter, we provide a high-level overview of the Contoso 
 Conference Management System. The discussion will help you understand 

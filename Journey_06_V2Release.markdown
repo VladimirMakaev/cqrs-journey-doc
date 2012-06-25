@@ -1,8 +1,8 @@
 # Chapter 6: Versioning our System 
 
-*"Variety is the very spice of life." William Cowper, Olney Hymns (1779)*
+_Preparing for the next stop: upgrading and migrating_
 
-# Upgrading the code and migrating the data 
+> "Variety is the very spice of life," William Cowper
 
 The top-level goal for this stage in the journey is to learn about how 
 to upgrade a system that includes bounded contexts that implement the 

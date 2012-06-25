@@ -1,8 +1,8 @@
 # Chapter 7: Adding Resilience and Optimizing Performance 
 
-"You cannot fly like an eagle with the wings of a wren." Henry Hudson
+_Reaching the end of our journey: the final tasks_
 
-# Introduction
+> "You cannot fly like an eagle with the wings of a wren," Henry Hudson
 
 The two primary goals for this last stage in our journey are to make the 
 system more resilient to failures and to improve the responsiveness of 

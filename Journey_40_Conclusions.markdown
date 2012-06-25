@@ -1,6 +1,8 @@
 # Chapter 8: Epilogue: Lessons Learned 
 
-*How good was our map? Where did we get to? What did we learn on our journey? Did we get lost?*
+_How good was our map? Where did we get to? What did we learn? Did we get lost?_
+
+> "I have never been lost, but I will admit to being confused for several weeks," Daniel Boone
 
 This chapter summarizes the findings from our journey. It highlights 
 what we feel were the most significant things that we learnt along the 

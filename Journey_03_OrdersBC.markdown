@@ -1,8 +1,8 @@
 # Chapter 3: Orders and Registrations Bounded Context 
 
-_The first stopping point on our CQRS journey._
+_The first stop on our CQRS journey._
 
-_"Following the light of the sun, we left the Old World,"_ Christopher Columbus.
+> "The Allegator is the same, as the Crocodile, and differs only in Name," John Lawson
 
 # A description of the bounded context
 
@@ -159,12 +159,12 @@ benefits to this bounded context, then they would revisit this decision.
 
 One of the important discussions the team had concerned the choice of aggregates and entities that they would implement. The following images from the team's whiteboard illustrate some of their initial thoughts, and questions about the alternative approaches they could take with a simple conference seat reservation scenario to try and understand the pros and cons of alternative approaches.
 
-> A value I think developers would benefit greatly from recognizing is
+> "A value I think developers would benefit greatly from recognizing is
 > the de-emphasis on the means and methods for persistence of objects in
 > terms of relational storage. Teach them to avoid modeling the domain
 > as if it was a relational store, and I think it will be easier to
-> introduce and understand both DDD and CQRS.  
-> Josh Elster - CQRS Advisors Mail List
+> introduce and understand both DDD and CQRS."  
+> &mdash; Josh Elster, CQRS Advisors Mail List
 
 > **GaryPersona:** These diagrams deliberately exclude details of how
 > the system delivers commands and events through command and event
@@ -178,9 +178,9 @@ several seats at a conference. The system must:
 - Record details of the registration.
 - Update the total number of seats booked for the conference.
 
-> **Note:** The scenario is kept deliberately simple to avoid
-  distractions while the team examines the alternatives. These examples
-  do not illustrate the final implementation of this bounded context. 
+> **Note:** We deliberately kept the scenario simple to avoid
+> distractions while the team examines the alternatives. These examples
+> do not illustrate the final implementation of this bounded context. 
 
 The first approach considered by the team, shown in Figure 2, uses two 
 separate aggregates.
@@ -382,7 +382,7 @@ As we described in the previous section, the team initially decided to
 implement the reservations story in the Conference Management System 
 using the CQRS pattern but without using event sourcing. Figure 5 shows 
 the key elements of the implementation: an MVC web application, a data 
-store implemented using SQL Database, the read and write models, and 
+store implemented using a Windows Azure SQL Database instance, the read and write models, and 
 some infrastructure components. 
 
 > **Note:** We'll describe what goes on inside the read and write models 
@@ -649,7 +649,7 @@ version of this class, the properties **Id**, **UserId**,
 following conversation between two developers explores this decision. 
 
 > *Developer 1:* I'm really convinced you should not make the 
-> property virtual, except if required by the ORM. If this is just for 
+> property virtual, except if required by the object-relational mapping (ORM) layer. If this is just for 
 > testing purposes, entities and aggregate roots should never be tested 
 > using mocking. If you need mocking to test your entities, this is a 
 > clear smell that something is wrong in the design. 
@@ -696,7 +696,7 @@ following conversation between two developers explores this decision.
 > some performance measurement. Make it simple first, optimize if 
 > needed. 
 
-> *Thanks to J&eacute;r&eacute;mie Chassaing and Craig Wilson*
+> &mdash; *Thanks to J&eacute;r&eacute;mie Chassaing and Craig Wilson*
 
 ### Aggregates and process managers
 
@@ -1250,7 +1250,7 @@ the Reference Guide.
 > (on the write-side you may not need additional tiers), in which case
 > you could use an in memory queue to deliver your commands."
   
-> Greg Young - Conversation with the PnP team.
+> &mdash; Greg Young, conversation with the patterns and practices team
 
 # Impact on testing
 

@@ -2,6 +2,8 @@
 
 _The starting point: Where have we come from, what are we taking, and who is coming with us?_
 
+> "Without stones there is no arch," Marco Polo
+
 This chapter introduces a fictitious company named Contoso. It describes 
 Contoso's plans to launch the Contoso Conference Management System, a 
 new online service that will enable other companies or individuals to 

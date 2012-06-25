@@ -2,10 +2,13 @@
 
 _Why are we embarking on this journey?_
 
-# What are the motivations for creating this guidance now?
+> "The best way to observe a fish is to become a fish," Jacques Cousteau
+
+
+# Why we created this guidance now
 
 The **Command Query Responsibility Segregation (CQRS)** pattern and 
-**Event Sourcing** are currently generating a great deal of interest 
+**Event Sourcing** (ES) are currently generating a great deal of interest 
 from developers and architects who are designing and building 
 large-scale, distributed systems. There are conference sessions, blogs, 
 articles, and frameworks all dedicated to the CQRS pattern and to event 
@@ -37,8 +40,8 @@ expect you'll be well prepared to embark on your own CQRS journey.
 There are two closely related parts to this guidance: 
 
 * A working reference implementation (RI) sample, which is intended to
-  illustrate many of the concepts related to the CQRS pattern and Event
-  Sourcing (ES) approaches to developing complex enterprise
+  illustrate many of the concepts related to the CQRS pattern and event
+  sourcing approaches to developing complex enterprise
   applications. 
 
 * This written guidance, which is intended to complement the RI by 
@@ -148,7 +151,7 @@ the written guidance:
 
 
 
-## Criteria for selecting the domain for the reference implementation
+## Selecting the domain for the RI
 
 Before embarking on our journey, we needed to have an outline of the 
 route we planned to take and an idea of what the final destination 
