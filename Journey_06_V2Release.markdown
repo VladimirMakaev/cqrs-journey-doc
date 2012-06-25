@@ -1129,8 +1129,10 @@ information to the priced-order read-model.
 
 ## Migrating from V1 to V2
 
-Migrating from V1 to V2 requires you to update the deployed application
-code and migrate the data. These are the required steps:
+Migrating from V1 to V2 requires you to update the deployed application 
+code and migrate the data. You should always rehearse the migration in a 
+test environment before performing it in your production environment. 
+These are the required steps: 
 
 1. Deploy the V2 release to your Windows Azure staging environment. The
    V2 release has a **MaintenanceMode** property that is

@@ -542,6 +542,9 @@ role.
 > migration is to use a message-based approach that uses a configuration
 > bus.
 
+> **PoePersona:** You should always rehearse the migration in a test
+> environment before performing it in your production environment.
+
 ## Data migration
 
 The V3 release uses one additional table called 
@@ -1511,6 +1514,7 @@ use [WatiN][watin] to drive the system through its UI.
 
 [fig1]:              images/Journey_07_TopLevel.png?raw=true
 
+[r_chapter4]:        Reference_04_DeepDive.markdown
 [j_chapter4]:        Journey_04_ExtendingEnhancing.markdown
 [j_chapter5]:        Journey_05_PaymentsBC.markdown
 [appendix]:          Appendix1_Running.markdown
