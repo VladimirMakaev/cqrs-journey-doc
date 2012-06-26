@@ -53,9 +53,9 @@ The challenges we encountered in tackling the performance issues in the
 system were more to do with the fact that our system is a distributed, 
 message-based system than the fact that it implements the CQRS pattern. 
 
-Chapter 7, "[Adding Resilience and Optimizing Performance][j_chapter7] 
+Chapter 7, "[Adding Resilience and Optimizing Performance][j_chapter7]" 
 provides more information about the ways that we addressed the 
-performance issues in the system." 
+performance issues in the system and makes some suggestions about additional changes that we would like to make, but didn't have time to implement. 
 
 ## Implementing a message-driven system is far from simple
 
