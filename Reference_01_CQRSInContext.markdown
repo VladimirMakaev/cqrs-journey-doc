@@ -12,10 +12,10 @@ from the application of the pattern.
 
 Before we look at the issues surrounding the use of different 
 architectures within a complex application, we need to introduce some of 
-the terminology that we will use in this chapter, and in subsequent 
-chapters of this reference guide. Much of this terminology comes from an 
-approach known as Domain-driven Design (DDD). There are a few important 
-points to note about our use of this terminology: 
+the terminology that we will use in this, and subsequent chapters of 
+this reference guide. Much of this terminology comes from an approach to 
+developing software systems known as domain-driven design (DDD). There 
+are a few important points to note about our use of this terminology: 
 
 - There are other approaches that tackle the same problems that DDD 
   tackles, with similar concepts, but with their own specific
@@ -64,7 +64,7 @@ process as a part of the attempt to help you manage complexity:
   knowledge, but should also be very close to the code that is actually
   written. 
 - Domain models are also useful in the longer term if they are
-  maintained. By capturing valuable domain knowledge, they facilitate
+  kept up to date. By capturing valuable domain knowledge, they facilitate
   maintaining and enhancing the system in the future. 
 - DDD offers guidance on how large problem domains can be effectively
   divided up, enabling multiple teams to work in parallel, and enabling
@@ -75,13 +75,6 @@ The DDD approach is appropriate for large, complex systems that are
 expected to have a long life span. You are unlikely to see a return on 
 your investment in DDD if you use it on small, simple, or short-term 
 projects. 
-
-<div style="margin-left:20px;margin-right:20px;">
-  <span style="background-color:yellow;">
-    <b>Comment [DRB]:</b>
-	Look for a suitable quote to use for the previous paragraph.
-  </span>
-</div>
 
 # Domain-Driven Design: Concepts and terminology 
 
@@ -115,8 +108,8 @@ what is valuable or unique to the business.
 
 Much of the DDD approach focuses on how to create, maintain, and use 
 these domain models. Domain models are typically composed of elements 
-such as Entities, Value Objects, Aggregates, and described using terms 
-from a Ubiquitous Language. 
+such as _Entities_, _Value Objects_, _Aggregates_, and described using terms 
+from a _Ubiquitous Language_. 
 
 ## Ubiquitous language 
 
@@ -125,12 +118,12 @@ the domain model. One of the functions of the domain model is to foster
 a common understanding of the domain between the domain experts and the 
 developers. If both the domain experts and the developers use the same 
 terms for things and actions within the domain (for example, conference, 
-chair, Attendee, reserve, waitlist), there is less possibility for 
+chair, attendee, reserve, waitlist), there is less possibility for 
 confusion or misunderstanding. More specifically, if everyone uses the 
 same language there are less likely to be misunderstandings that result 
 from translations between languages. For example, if a developer has to 
 think, "if the domain expert talks about a delegate, he is really 
-talking about an Attendee in the software," then eventually something 
+talking about an attendee in the software," then eventually something 
 will go wrong as a result of a misunderstanding or mistranslation. 
 
 ## Entities, Value Objects, and Services 
@@ -154,7 +147,7 @@ only to be re-instantiated at some point in the future.
 Not all objects are defined by their identity: for some objects what is 
 important are the values of their attributes. For example, within our 
 conference management system we do not need to assign an identity to 
-every Attendee's address (for a start all of the Attendee's from a 
+every attendee's address (for a start all of the attendees from a 
 particular organization may share the same address). All we are 
 concerned with are the values of the attributes of an address: street, 
 city, state, etc. Value objects are usually immutable. 
@@ -162,7 +155,7 @@ city, state, etc. Value objects are usually immutable.
 ### Services 
 
 You cannot always model everything as an object. For example, in the 
-conference management system it makes sense to model a third-party 
+conference management system it may make sense to model a third-party 
 payment processing system as a service: the system can pass the 
 parameters required by the payment processing service and then receive a 
 result back from the service. Notice that a common characteristic of a 
@@ -193,13 +186,13 @@ knowledge of the domain:
 
 - You need to know which set of entities and value objects each
   transaction can potentially affect. For example, are there
-  transactions in the system that can update Attendee, conference, and
+  transactions in the system that can update attendee, conference, and
   room objects? 
 - You need to know how far the relationships from one object extend
   through other entities and value objects within the domain, and where
   you must define the consistency boundaries. For example, if you delete
   a room object, should you also delete a projector object, or a set of
-  Attendee objects? 
+  attendee objects? 
 
 DDD uses the term aggregate to define a cluster of related entities and 
 value objects that form a consistency boundary within the system. That 
@@ -216,6 +209,7 @@ complex set of relationships that typically exist between the many
 entities and value objects that exist within a typical domain model. 
 
 # Bounded Contexts 
+
 So far, the DDD concepts and terminology that we have briefly introduced 
 are related to creating, maintaining, and using a domain model. For a 
 large system, it may not be practical to maintain a single domain model; 
@@ -277,10 +271,10 @@ the boundaries between the bounded contexts: it shows where and how the
 bounded contexts exchange data and share data, and also where you must 
 translate data as it moves from one domain model to another.
 
-A business entity such as a Customer might exist in the different 
+A business entity such as a customer might exist in several 
 bounded contexts. However it may may need to expose different facets or 
 properties that are relevant to a particular bounded context. As a 
-Customer entity moves from one bounded context to another you may need 
+customer entity moves from one bounded context to another you may need 
 to translate it so that it exposes the relevant facets or properties for 
 its current context. 
 
@@ -296,14 +290,14 @@ bounded context will include everything from the data store, right up to
 the UI. 
 
 The same domain concept can exist in multiple bounded contexts: for 
-example, the concept of an Attendee in a conference management system 
+example, the concept of an attendee in a conference management system 
 might exist in the bounded context that deals with bookings, in the 
 bounded context that deals with badge printing, and in the bounded 
 context that deals with hotel reservations. From the perspective of the 
-domain expert, these different versions of the Attendee may require 
+domain expert, these different versions of the attendee may require 
 different behaviors and attributes. For example, in the bookings bounded 
-context the Attendee is associated with a Registrant who makes the 
-bookings and payments. Information about the Registrant is not relevant 
+context the attendee is associated with a registrant who makes the 
+bookings and payments. Information about the registrant is not relevant 
 in the hotel reservations bounded context where information such as 
 dietary requirements or smoking preferences is important. 
 
@@ -321,8 +315,8 @@ the UI.
 
 **Multiple architectural styles within a large, complex application**
 
-This highlights another benefit of dividing the system into bounded 
-contexts in addition to managing complexity. You can use an appropriate 
+This highlights another benefit, in addition to managing complexity, of 
+dividing the system into bounded contexts. You can use an appropriate 
 technical architecture for different parts of the system that addresses 
 the specific characteristics of that part: is it a complex part of the 
 system; does it contain core domain functionality; what is its expected 
@@ -346,7 +340,7 @@ to exchange data with each other, and this exchange of data will be
 complicated if you need to translate between the different definitions 
 of the same thing that exist in the different domain models. In our 
 conference management system, we may need to move information about 
-Attendees between the bounded contexts that deal with conference 
+attendees between the bounded contexts that deal with conference 
 bookings, badge printing, and hotel reservations. The DDD approach 
 offers a number of approaches for handling the interactions between 
 multiple models in multiple bounded contexts such as using 
@@ -378,13 +372,13 @@ implementation of the CQRS pattern.
 Some experts consider the DDD approach to be an essential pre-requisite
 for implementing the CQRS pattern.
 
-Quote 1 goes here
+[Quote 1 goes here]
 
 However, many people can point to projects where they have seen real 
 benefits from implementing the CQRS pattern, but where they have not 
 used the DDD approach for the domain analysis and model design. 
 
-Quote 2 goes here
+[Quote 2 goes here]
 
 In summary, the DDD approach is not a pre-requisite for implementing the 
 CQRS pattern, but in practice they do often go together. 

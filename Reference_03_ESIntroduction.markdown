@@ -1,6 +1,6 @@
 # Chapter 3: Introducing Event Sourcing
 
-Event sourcing and Command Query Responsibility Segregation (CQRS) are 
+Event sourcing (ES) and Command Query Responsibility Segregation (CQRS) are 
 frequently mentioned together. Although neither one necessarily implies 
 the other, you will see that they do complement each other. This chapter 
 introduces the key concepts that underlie event sourcing, with some 
@@ -21,7 +21,7 @@ that captures their essential characteristics:
   effects of earlier events. For example, "the reservation was
   cancelled." 
 - Events are one-way messages. Events have a single source (publisher) 
-  that fires the event. One or more recipients (subscribers) may receive
+  that publishes the event. One or more recipients (subscribers) may receive
   events. 
 - Typically, events include parameters that provide additional
   information about the event. For example, "Seat E23 was booked by
@@ -48,10 +48,10 @@ relevant to events and event sourcing are:
 
 For the remainder of this chapter, we will use the term aggregate to 
 refer to a cluster of associated objects that are treated as a unit for 
-the purposes of data changes. This does mean that event sourcing is 
+the purposes of data changes. This does not mean that event sourcing is 
 directly related to the DDD approach; we are simply using the 
 terminology from DDD to try to maintain some consistency in our 
-terminology. 
+terminology in this guide. 
 
 # What is Event Sourcing? 
 
@@ -73,22 +73,22 @@ ways:
   replaying the events associated with the conference for which you
   wanted to check the current total number of bookings. 
   
-## Comparing using an ORM and Event Sourcing
+## Comparing using an ORM layer and Event Sourcing
 
 ![Figure 1][fig1]
 
-**Using an ORM mapping layer**
+**Using an object-relational mapping layer**
 
 Figure 1 illustrates the first approach to storing the total number of 
 reservations. The following list of steps corresponds to the numbers in 
 the diagram: 
 
-1. A command is issued, from the UI or from a saga, to reserve seats 
-   for two Attendees on a conference with an ID of 157. The command is 
+1. A process manager or a UI issues a command to reserve seats 
+   for two attendees on the conference with an ID of 157. The command is 
    handled by the command handler for the **SeatsAvailability** 
    aggregate type. 
-2. If necessary, the ORM layer populates an aggregate instance with 
-   data. The ORM retrieves the data by issuing a query against the table 
+2. If necessary, the object-relational mapping (ORM) layer populates an aggregate instance with 
+   data. The ORM layer retrieves the data by issuing a query against the table 
    (or tables) in the data store. This includes the existing number of 
    reservations for the conference. 
 3. The command handler invokes the business method on the aggregate
@@ -99,9 +99,11 @@ the diagram:
 5. The ORM persists the information in the aggregate instance to 
    the data store. The ORM layer constructs the necessary update (or 
    updates) that must be executed. 
+   
+**Note:** For a definition of _process manager_, see Chapter 6, "[A Saga on Sagas][r_chapter6]."
 
 This diagram provides a deliberately simplified view of the process. In 
-practice, the mapping performed by the ORM will be significantly more 
+practice, the mapping performed by the ORM layer will be significantly more 
 complex. You will also need to consider exactly when the load and save 
 operations must happen to balance the demands of consistency, 
 reliability, scalability, and performance. 
@@ -116,15 +118,15 @@ of an ORM layer and an RDMS.
 
 
 > **Note:** You might decide to implement the event store using an 
-RDBMS, but it will have a much simpler schema than in the first 
+RDBMS. The relational schema will be much simpler than the schema used by the ORM layer in the first 
 approach. You can also use a custom event store. 
 
 The following list of steps corresponds to the numbers in the diagram. 
 Note that steps one, two, and four are the same. 
 
 
-1. A command is issued, from the UI or from a saga, to reserve seats 
-   for two Attendees on a conference with an ID of 157. The command is 
+1. A process manager or a UI issues a command to reserve seats  
+   for two attendees on a conference with an ID of 157. The command is 
    handled by the command handler for the **SeatsAvailability** 
    aggregate type. 
 2. An aggregate instance is populated by querying for all of the
@@ -162,7 +164,7 @@ conference.
 In some domains, such as accounting, event sourcing is the natural, 
 well-established approach: accounting systems store individual 
 transactions from which it always possible to reconstruct the current 
-state of the system. Event sourcing can bring a number of benefits to 
+state of the system. Event sourcing can bring similar benefits to 
 other domains. 
 
 # Why should I use Event Sourcing? 
@@ -224,7 +226,7 @@ Quote 6 goes here
 
 The chapter "[A CQRS and ES Deep Dive][r_chapter4]" discusses these benefits 
 in more detail. There are also many illustrations of these benefits in 
-these chapters in the section "A CQRS Journey." 
+these reference implementation described in the guide "A CQRS Journey." 
 
 > From experience, ORMs lead you down the path of a structural model
 > while ES leads you down the path of a behavioral model. Sometimes one 
@@ -263,16 +265,16 @@ to use event sourcing in your system:
 - **Querying.** Although it is easy to load the current state of an
   object by replaying its event stream (or its state at some point in
   the past), it is difficult or expensive to run a query such as: find
-  all my orders where the total value is greater than $250. However, you
+  all my orders where the total value is greater than $250. However, if you are implementing the CQRS pattern, you
   should remember that such queries will typically be executed on the
-  read-side where you can ensure that you build data projections that
+  read-side where you can ensure that you can build data projections that
   are specifically designed to answer such questions.
   
 # CQRS/ES
 
-The chapter "Introducing Command Query Responsibility Segregation" 
+The chapter "[Introducing Command Query Responsibility Segregation][r_chapter2]" 
 suggested that events can form the basis of the push synchronization of 
-the applications state from the data store on the write-side to the data 
+the application's state from the data store on the write-side to the data 
 store on the read-side. Remember that typically the read-side data-store 
 contains denormalized data that is optimized for the queries that are 
 run against your data, for example to display information in your 
@@ -288,7 +290,7 @@ application's UI.
 > complementary.  
 > Clemens Vasters  (CQRS Advisors Mail List)
 
-> Event Sourcing is about the state of the domain model being persisted as 
+> Event sourcing is about the state of the domain model being persisted as 
 > a stream of events rather than as a single snapshot, not about how the 
 > command and query sides are kept in sync (usually with a 
 > publish/subscribe message-based approach).  
@@ -453,7 +455,9 @@ Dive][r_chapter4]".
 [coffee]:            http://eaipatterns.com/docs/IEEE_Software_Design_2PC.pdf
 
 [r_chapter1]:     Reference_01_CQRSContext.markdown
+[r_chapter2]:     Reference_02_CQRSIntroduction.markdown
 [r_chapter4]:     Reference_04_DeepDive.markdown
+[r_chapter6]:     Reference_06_Sagas.markdown
 
 [fig1]:           images/Reference_03_ORM.png?raw=true
 [fig2]:           images/Reference_03_ES.png?raw=true

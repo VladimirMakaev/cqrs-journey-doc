@@ -4,7 +4,7 @@
 
 This chapter begins with a brief recap of some of the key points from 
 the previous chapters before exploring in more detail the key concepts 
-that relate to CQRS and Event Sourcing (ES). 
+that relate to the CQRS pattern and Event Sourcing (ES). 
 
 ## Read-models and write-models
 
@@ -12,7 +12,7 @@ The CQRS pattern assigns the responsibility for modifying your
 application data and querying your application data to different sets of 
 objects: a write-model and a read-model. The immediate benefit of this 
 segregation is to clarify and simplify your code by applying the 
-single-responsibilty principle: objects are responsible either for 
+single-responsibilty principle: objects are responsible for either  
 modifying data or querying data. 
 
 However, the most important benefit of this segregation of 
@@ -22,11 +22,11 @@ that will provide additional benefits.
 
 ## Commands and Data Transfer Objects
 
-A typical approach to enabling a user to edit data is to use DTOs: the 
+A typical approach to enabling a user to edit data is to use data transfer objects (DTO): the 
 UI retrieves the data to be edited from the application as a DTO, a user 
 edits the DTO in the UI, the UI sends the modified DTO back to the 
 application, and then the application applies those changes to the data
-in the database. 
+in the database. For an example of implementing a DTO, see "[Implementing Data Transfer Object in .NET with a DataSet][dtodataset]."
 
 This approach is data-centric and tends to use standard CRUD operations 
 throughout. In the UI, the user performs operations that are essentially
@@ -40,7 +40,7 @@ directly represent operations in the domain, maybe more intuitive to
 users, and can capture the user's intent more effectively than DTOs.
 
 In a typical CQRS implementation, the read-model returns data to the UI
-as DTOs. The UI sends commands to the write-model.
+as a DTO. The UI then sends a command (not a DTO) to the write-model.
 
 ## Domain-driven design (DDD) and aggregates
 
@@ -65,7 +65,7 @@ Several benefits flow from this: better performance because each
 database is optimized for a particlar set of operations, better 
 scalability because you can scale-out each side independently, and 
 simpler locking schemes. On the write side you no longer need to worry 
-about how your locks impact queries, and on the read-side your database 
+about how your locks impact on queries, and on the read-side your database 
 can be read-only. 
 
 ## Events and Event Sourcing
@@ -129,9 +129,9 @@ the aggregate through the aggregate root, and you should only hold
 references to the aggregate root. Every aggregate instance should have a 
 unique identifier. 
 
-## Aggregates and ORMs
+## Aggregates and object-relational mapping layers
 
-To persist your aggregates when you are using an ORM such as Entity 
+To persist your aggregates when you are using an object-relational mapping (ORM) layer such as Entity 
 Framework to manage your persistence requires minimal code in your 
 aggregate classes. 
 
@@ -171,7 +171,7 @@ public struct SeatQuantity
 
 If you are using event sourcing, then your aggregates must create events 
 to record all of the state changes that result from processing commands. 
-This requires slightly more code in your aggregate definitons than when 
+This requires slightly more code in your aggregate definitons than if 
 you are using an ORM. 
 
 The following code sample shows an **IEventSourced** interface, an 
@@ -323,7 +323,7 @@ perform some work for you.
 
 > When a user issues a Command, it'll give the best user experience if it 
 > rarely fails. However, from an architectural/implementation point of 
-> view, Commands will fail once in a while, and the application should be 
+> view, commands will fail once in a while, and the application should be 
 > able to handle that.  
 > Mark Seeman (CQRS Advisors Mail List)
 
@@ -469,9 +469,9 @@ A common scenario for commands is that some of the information included
 in the command is provided by the user of the system through the UI, and 
 some of the information is retrieved from the read-model. For example, 
 the UI builds a list of orders by querying the read-model, the user 
-selects one of those orders and modifies the list of Attendees 
+selects one of those orders and modifies the list of attendees 
 associated with that order. The UI then sends the command that contains 
-the list of Attendees associated with the order to the write-model for 
+the list of attendees associated with the order to the write-model for 
 processing. 
 
 However, because of eventual consistency, it is possible that the 
@@ -515,19 +515,19 @@ business intent, in addition to the change in state of the aggregate.
 The concept of intent is hard to pin down, as shown in the following 
 conversation: 
 
-> *Developer #1*: One of the claims that I often hear for using event 
+> *Developer 1*: One of the claims that I often hear for using event 
 > sourcing is that it enables you to capture the user's intent, and that 
 > this is valuable data. It may not be valuable right now, but if we 
 > capture it, it may turn out to have business value at some point in 
 > the future. 
 > 
-> *Developer #2*: Sure. For example, rather than saving a just a 
+> *Developer 2*: Sure. For example, rather than saving a just a 
 > customer's latest address, we might want to store a history of the 
 > addresses the customer has had in the past. It may also be useful to 
 > know why a customer's address was changed: they moved house or you 
 > discovered a mistake with the existing address that you have on file. 
 > 
-> *Developer #1*: So in this example, the intent might help you to 
+> *Developer 1*: So in this example, the intent might help you to 
 > understand why the customer hadn't responded to offers that you sent, 
 > or might indicate that now might be a good time to contact the 
 > customer about a particular product. But isn't the information about 
@@ -535,32 +535,32 @@ conversation:
 > analysis right, you'd capture the fact that the reason an address 
 > changes is an important piece of information to store? 
 > 
-> *Developer #2*: By storing events, we can automatically capture all 
+> *Developer 2*: By storing events, we can automatically capture all 
 > intent. If we miss something during our analysis, but we have the 
 > event history, we can make use of that information later. If we 
 > capture events we don't lose any potentially valuable data. 
 > 
-> *Developer #1*: But what if the event that you stored was just, "the 
+> *Developer 1*: But what if the event that you stored was just, "the 
 > customer address was changed"? That doesn't tell me why the address 
 > was changed. 
 > 
-> *Developer #2*: OK. You still need to make sure that you store useful 
+> *Developer 2*: OK. You still need to make sure that you store useful 
 > events that capture what is meaningful from the perspective of the 
 > business. 
 > 
-> *Developer #1*: So what do events and event sourcing give me that I 
+> *Developer 1*: So what do events and event sourcing give me that I 
 > can't get with a well designed relational database that captures 
 > everything that I may need? 
 > 
-> *Developer #2*: It really simplifies things. The schema is simple. 
+> *Developer 2*: It really simplifies things. The schema is simple. 
 > With a relational database you have all the problems of versioning if 
 > you need to start storing new or different data. With an event 
 > sourcing, you just need to define a new event type. 
 > 
-> *Developer #1*: So what do events and event sourcing give me that I 
+> *Developer 1*: So what do events and event sourcing give me that I 
 > can't get with a standard database transaction log? 
 > 
-> *Developer #2*: Using events as your primary data model makes it very 
+> *Developer 2*: Using events as your primary data model makes it very 
 > easy and natural to do time related analysis of data in your system, 
 > for example: "what was the balance on the account at a particular 
 > point in time?" or, "what would the customer's status be if we'd 
@@ -568,11 +568,11 @@ conversation:
 > data is not hidden away and inaccessible on a tape somewhere, it's 
 > there in your system. 
 > 
-> *Developer #1*: So back to this idea of intent. Is it something 
+> *Developer 1*: So back to this idea of intent. Is it something 
 > special that you can capture using events, or is it just some 
 > additional data that you save? 
 > 
-> *Developer #2*: I guess in the end, the intent is really there in the 
+> *Developer 2*: I guess in the end, the intent is really there in the 
 > commands that originate from the users of the system. The events 
 > record the consequences of those commands. If those events record the 
 > consequences in business terms then it makes it easier for you to 
@@ -1533,6 +1533,7 @@ transaction.
 [azurestorage]:   https://www.windowsazure.com/en-us/develop/net/fundamentals/cloud-storage/
 [capinfoq]:       http://www.infoq.com/articles/cap-twelve-years-later-how-the-rules-have-changed
 [idempotency]:    http://queue.acm.org/detail.cfm?id=2187821
+[dtodataset]:     http://msdn.microsoft.com/en-us/library/ff649325.aspx
 
 [fig1]:           images/Reference_04_Consistency_01.png?raw=true
 [fig2]:           images/Reference_04_Consistency_02.png?raw=true

@@ -505,7 +505,46 @@ creating a subscription the the Windows Azure Service Bus topics.
 
 ## Results of the optimization work
 
+## Further changes that would improve performance
 
+In addition to the changes we made during this last stage of the journey to improve the performance of the application, the team identified a number of other changes that would result in further improvements. However, the available time for this journey was limited so it was not possible to make these changes in the V3 release.
+
+* We added asynchronous behavior to many areas of the application, especially in the calls the application makes to the Windows Azure Service Bus. However, there are other areas where the application still makes blocking, synchronous calls that we could make asynchronous: for example, when the system accesses the data stores. In addition, we would make use of new language features such as **async** and **await** that will be available in Visual Studio 2012 (the application is currently implemented using .Net 4.0 and Visual Studio 2010).
+* There are opportunities to process messages in batches and to reduce the number of round-trips the the data store by adopting a [store and forward][storeforward] design. For example, taking advantage of Windows Azure Service Bus sessions would enable us to accept a session from the Service Bus, read multiple items from the data store, process multiple messages, save once to the data store, and then complete all the messages. 
+
+> **MarkusPersona:** By accepting a Service Bus session you have a single writer and listener for that session for as long as you keep the lock: this reduces the chances of an optimistic concurrency exception. This design would fit particularly well in the **SeatsAvailability** read and write models. For the read-models associated with the **Order** aggregates, which have very small partitions, you could acquire multiple small sessions from the Service Bus and use the store and forward approach on each session. Although both the read and write models in the system could benefit from this approach, it's easier to implement in the read-models where we expect the data to be eventually consistent and not fully consistent.
+
+* The website already caches some frequently accessed read-model data, but we could extend the use of caching to other areas of the system. The CQRS pattern means that we can regard a cache as part of the eventually consistent read-model, and if necessary provide  access to read-model data from different parts of the system using different caches or no caching at all.
+* We could improve the cached snapshot implementation that we have for the **SeatsAvailability** aggregate. The current implementation is described in detail later in this chapter, and is designed to always check the event store for events that arrived after the system created the latest cached snapshot. If we could check that we are still using the same Service Bus session as we were when the system created the latest cached snapshot when we receive a new comand to process, then we would know if they could be other events in the event store. If the session hasn't changed, then we know we are the only writer so there is no need to check the event store. If the session has changed, then potentially someone else has written events associated with the aggregate to the store, and we need to check.
+* The application currently listens for all messages on all Service Bus subscriptions using the same priority. In practice, some messages are more important then others; therefore, when the application is under stress we should prioritize some message processing to minimize the impact on core application functionality. For example, we could identify certain read-models where we are willing to accept more latency.
+
+> **PoePersona:** We could also use autoscaling to scale out the application when load increases, but adding new instances takes time. By prioritizing certain message types, we can continue to deliver performance in key areas of the application while the autoscaler adds resources.
+
+* The current implementation uses randomly generated Guids as keys for all of the entities stored in out SQL Database instance. When the system is under heavy load, it may perform better if we use sequential Guids especially in relation to clustered indexes. For a discussion of sequential Guids, see [The Cost of GUIDs as Primary Keys][combguids].
+* As part of our optimizations to the system, we now process some commands in-process instead of sending them through the Service Bus. We could extend this to other commands and potentially the process manager.
+* In the current implementation, the process manager processes incoming messages and then the repository tries to send the outgoing messages synchronously (it uses the [Transient Fault Handling Application Block][tfhab] to retry sending commands if the Service Bus throws any exceptions due to throttling behavior). We could instead use a mechanism similar to that used by the **EventStoreBusPublisher** class so that the process manager saves a list of messages that must be sent along with its state in a single transaction, and then notifies a separate part of the system, that is responsible for sending the messages, that there are some new messages ready to send.
+
+**MarkusPersona:** The part of the system that is reponsible for sending the messages can do so asynchronously. It could also implement dynamic throttling for sending the messages and dynamically control how many parallel senders to use.
+
+## Further changes that would enhance scalability
+
+The Contoso Conference Management System is designed to allow you to deploy multiple instances of the web and worker roles to scale out the application to handle larger loads. However, the design is not fully scalable because some of the other elements of the system such as the messages buses and data stores place constraints on the maximum achievable throughput. This section outlines some changes that we could make to the system to remove some of these constraints and significantly enhance the scalability of the system. The available time for this journey was limited so it was not possible to make these changes in the V3 release.
+
+* **Partition the Service Bus:** We could partition the Service Bus to avoid throttling when the volume of messages that the system is sending approaches the maximum throughput that the Service Bus can handle. Possible partitioning schemes include; using separate topics for different message types, or using multiple, similar topics and listening to them all on a round-robin to spread the load.
+
+**GaryPersona:** Not all messages have the same importance. You could also use seprate, prioritized message buses to handle different messge types or even consider not using a message bus for some messages.
+
+* **Partition the data:** The system stores different types of data in different partitions. You can see in the bootstrapping code how the different bounded contexts use different connection strings to connect to the SQL Database instance. However, the system currently uses a single SQL Database instance and we could change this to use multiple different instances, each holding a specific set of data that the system uses. For example the the orders and registrations bounded context could use different SQL Database instances for the different read-models. We could also consider using the Federations feature to use sharding to scale out some of the SQL Database instances.
+
+**JanaPersona:** Where the system stores data in Windows Azure table storage, we chose keys to partition the data for scalability. As an alternative to using SQL Database federations to shard the data we could move some of the read-model data currently in the SQL Database instance to either Windows Azure table storage or blob storage.
+
+* **Store and forward:** We introduced the store and forward design in the previous section that discuss performance improvement. By batching multiple operations, you not only reduce the number of round-trips to the data store and reduce the latency in the system, you also enhace the scalability of the system because fewer requests reduces the stress on the data store.
+
+* **Listen for and react to throttling indicators:** Currently, the system uses the [Transient Fault Handling Application Block][tfhab] to detect transient error conditions such as throttling indicators from the Windows Azure Service Bus, the SQL Database instance, and Windows Azure table storage. The system uses the block to implement retries in these scenarios, typically by using an exponential back-off strategy. However, a single worker role instance might be processing a large number of messages in parallel which results in throttling errors on all the threads. In this case, we would like to dynamically reduce the degree of parallelism as a way to proactively avoid encountering throttling behavior and having to make multiple retries.
+
+**JanaPersona:** For an example of implementing dynamic throttling within the application to avoid throttling from the service, see the way that the **Start ** method in the **EventStoreBusPublisher** class manages the degree of parallelism that it uses to send messages. Ideally, you should design your application to avoid reaching the point where it starts being throttled by a service.
+
+**PoePersona:** Each service (Windows Azure Service Bus, SQL Database, Windows Azure storage) has its own particular way of implementing throttling behavior and notifying you when it is placed under heavy load. For example, see [SQL Azure Throttling][sqlthrottle].
 
 # No downtime migration
 
@@ -1529,3 +1568,6 @@ use [WatiN][watin] to drive the system through its UI.
 [memento]:           http://www.oodesign.com/memento-pattern.html
 [loadtest]:          http://msdn.microsoft.com/en-gb/library/gg701769.aspx
 [tfhab]:             http://msdn.microsoft.com/en-us/library/hh680934(PandP.50).aspx
+[storeforward]:      http://social.technet.microsoft.com/wiki/contents/articles/sql-azure-performance-and-elasticity-guide.aspx#SQL_Azure_Performance_Checklist
+[combguids]:         http://www.informit.com/articles/article.aspx?p=25862
+[sqlthrottle]:       http://social.technet.microsoft.com/wiki/contents/articles/sql-azure-performance-and-elasticity-guide.aspx#SQL_Azure_Throttling

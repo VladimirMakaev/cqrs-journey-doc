@@ -10,11 +10,11 @@ and build enterprise applications, and that it is not a top-level
 architectural approach. You will see the full benefits of applying the 
 CQRS pattern when you apply it selectively to key portions of your 
 system. The chapter [Decomposing the Domain][j_chapter2] in "A CQRS 
-Journey" describes how Contoso divided up the Conference Management 
+Journey" describes how Contoso divided up the Contoso Conference Management 
 System into bounded contexts and identified which bounded contexts would 
 benefit from using the CQRS pattern.
 
-Subsequent chapters provide a more in depth guidance on how to apply the 
+Subsequent chapters  in "A CQRS Journey" provide a more in depth guidance on how to apply the 
 CQRS pattern and other related patterns to your implementation. 
 
 # What is CQRS?
@@ -90,12 +90,12 @@ There are several motivations for this segregation including:
   results in simpler, more maintainable, and more flexible models. 
 - Segregation can also occur in the data store. The write-side may use a 
   database schema that is close to third normal form (3NF) and optimized 
-  for data modification, while the read-side uses a denormalized 
+  for data modifications, while the read-side uses a denormalized 
   database that is optimized for fast query operations. 
 
 > **Note:** Although figure 1 shows two data stores, applying the CQRS 
-  pattern does not mandate you to split the data store, or to use any 
-  particular technology such as a relational database, NoSQL store, or 
+  pattern does not mandate that you split the data store, or that you use any 
+  particular persistence technology such as a relational database, NoSQL store, or 
   event store. You should view CQRS as a pattern that facilitates 
   splitting the data store and enabling you to select from a range of 
   storage mechanisms.
@@ -123,13 +123,13 @@ figure 1.
 - What exactly do we mean when we talk about models?
 
 The remainder of this chapter will begin to address these questions and 
-to explore the motivations for using the CQRS pattern in more detail. 
+to explore the motivations for using the CQRS pattern. 
 Later chapters will explore these issues in more depth.
 
 # CQRS and Domain-Driven Design
 
 The previous chapter "[CQRS in Context][r_chapter1]," introduced some 
-of the concepts and terminology from Domain-Driven Design (DDD) that 
+of the concepts and terminology from the Domain-Driven Design (DDD) approach that 
 are relevant to the implementation of the CQRS pattern. Two areas are 
 particularly significant to the CQRS pattern.
 
@@ -175,8 +175,7 @@ A bounded context defines the context for a model:
   Eric Evans, "Domain-Driven Design," p335.
 
 > **Note:** Other design approaches may use different terminology: for 
-example in Event-Driven SOA, the concept of a service is roughly 
-equivalent to a bounded context in DDD.
+example in Event-Driven SOA, the service concept is similar to the bounded context concept in DDD.
 
 When we say that you should apply the CQRS pattern to a portion of a 
 system, we mean that you should implement the CQRS pattern within a 
@@ -198,7 +197,7 @@ the CQRS pattern to business components rather than bounded contexts.
   A Business Component can exist in only one Bounded Context.  
   CQRS, if it is to be used at all, should be used within a Business 
   Component."  
-  Udi Dahan, Udi & Greg Reach CQRS Agreement.
+  Udi Dahan, [Udi & Greg Reach CQRS Agreement][udigreg].
 
 It is quite possible that your bounded contexts map exactly on to your 
 business components.
@@ -229,7 +228,7 @@ is particularly true of applications that use a task-oriented UI.
   tasks and behavior specified in the domain model implemented using 
   commands and events. However, many advocates of the CQRS pattern are 
   also strongly influenced by the DDD approach so it is common to see 
-  DDD terminology in use whenever there is a discussion of CQRS. 
+  DDD terminology in use whenever there is a discussion of the CQRS pattern. 
 
 *Commands are imperatives;* they are requests for the system to 
 perform a task or action. For example, "book two places on conference X" 
@@ -247,14 +246,14 @@ data between objects. In DDD terms, these messages represent business
 behaviors and therefore help the system capture the business intent 
 behind the message.
 
-One possible implementation of the CQRS pattern may use separate data 
-stores for the read-side and the write-side, each data store optimized 
+A possible implementation of the CQRS pattern uses separate data 
+stores for the read-side and the write-side; each data store is optimized 
 for the use cases that it supports. Events provide the basis of a 
 mechanism for synchronizing the changes on the write-side (that result 
 from processing commands) with the read-side. If the write-side raises 
 an event whenever the state of the application changes, the read-side 
 should respond to that event and update the data that is used by its 
-queries and views. Figure 2 shows how commands and events could be used 
+queries and views. Figure 2 shows how commands and events can be used 
 if you implement the CQRS pattern.
 
 ![Figure 2][fig2]
@@ -272,7 +271,7 @@ we will explore this in more detail in later chapters.
 Stepping back from CQRS for a moment, one of the benefits of dividing 
 the domain into bounded contexts in DDD is to enable you to identify and 
 focus on those portions (bounded contexts) of the system that are more 
-complex, subject to ever-changing business rules, or offer functionality 
+complex, subject to ever-changing business rules, or deliver functionality 
 that is a key business differentiator. 
 
 You should consider applying the CQRS pattern within a specific bounded 
@@ -301,7 +300,7 @@ role instances to each.
   you're adding web servers - there is no real scalability problem 
   (caveat, until you're Amazon/Google/Facebook scale).  
   Database servers can be cheap - if using MySQL/SQL Express/others."  
-  Udi Dahan, When to avoid CQRS.
+  Udi Dahan, [When to avoid CQRS][dahanavoid].
 
 ## Managing complexity
 
@@ -325,7 +324,7 @@ model in the domain.
   that don't. This is because you can use queries in many situations 
   with much more confidence, introducing them anywhere, changing their 
   order. You have to be more careful with modifiers."  
-  Martin Fowler, CommandQuerySeparation
+  Martin Fowler, [CommandQuerySeparation][cqsterm]
 
 Like many patterns, you can view the CQRS pattern as a mechanism for 
 shifting some of the complexity inherent in your domain into something 
@@ -445,23 +444,26 @@ pattern.
 ## Stale data
 
 In a collaborative environment where multiple users can operate on the 
-same data simultaneously, you also encounter the issue of stale data: if 
+same data simultaneously, you will also encounter the issue of stale data: if 
 one user is viewing a piece of data while another user changes it, then 
 the first user's view of the data is stale. 
 
-Whatever architecture you choose, you must address this problem; for 
-example, by using a particular locking scheme in your database, or 
-defining the refresh policy for the cache from which your users read 
+Whatever architecture you choose, you must address this problem. For 
+example, you can use a particular locking scheme in your database, or 
+define the refresh policy for the cache from which your users read 
 data. 
 
-The CQRS pattern helps you address the issue of stale data explicitly at 
-the architectural level. Changes to data happen on the write-side, users 
-view data by querying the read-side. Whatever mechanism you chose to use 
-to push the changes from the write-side to the read-side is also the 
-mechanism that controls when the data on the read-side becomes stale, 
-and for how long. This differs from other architectures, where 
-management of stale data is more of an implementation detail that is not 
-always addressed in a standard or consistent manner. 
+The two previous examples show two different areas in a system where you 
+might encounter and need to deal with stale data; in most collaborative 
+enterprise systems there will be many more. The CQRS pattern helps you 
+address the issue of stale data explicitly at the architectural level. 
+Changes to data happen on the write-side, users view data by querying 
+the read-side. Whatever mechanism you chose to use to push the changes 
+from the write-side to the read-side is also the mechanism that controls 
+when the data on the read-side becomes stale, and for how long. This 
+differs from other architectures, where management of stale data is more 
+of an implementation detail that is not always addressed in a standard 
+or consistent manner. 
 
 > Standard layered architectures don't explicitly deal with either of 
   these issues. While putting everything in the same database may be one
@@ -514,7 +516,7 @@ rules, deliver competitive advantage to the business, and are
 collaborative. 
 
 The next chapters will discuss how to implement the CQRS pattern in more 
-detail, for example explaining specific class-pattern implementations, 
+detail, for example by explaining specific class-pattern implementations, 
 exploring how to synchronize the data between the write-side and 
 read-side, and describing different options for storing data. 
 
@@ -530,6 +532,7 @@ read-side, and describing different options for storing data.
 [dahaneverywhere]:http://www.udidahan.com/2011/10/02/why-you-should-be-using-cqrs-almost-everywhere%E2%80%A6/
 [dahanclarify]:   http://www.udidahan.com/2009/12/09/clarified-cqrs/
 [dahanavoid]:     http://www.udidahan.com/2011/04/22/when-to-avoid-cqrs/
+[udigreg]:        http://www.udidahan.com/2012/02/10/udi-greg-reach-cqrs-agreement/
 
 [fig1]:           images/Reference_02_Arch_01.png?raw=true
 [fig2]:           images/Reference_02_Messages.png?raw=true
