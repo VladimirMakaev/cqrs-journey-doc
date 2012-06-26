@@ -107,6 +107,11 @@ Cloud environments introduce further challenges:
 * You must take into account not only the latency between the browser or
   on-premises environment and the cloud, but also the latency between
   the different parts of your system that are running in cloud.
+* You must take into account transient errors and be aware of how
+  different cloud services might implment throttling. If your application
+  uses several cloud services that might be throttled, you must
+  coordinate how your application handles being throttled by different
+  services at different times.
 
 > **MarkusPersona:** We found that having a single **bus** abstraction
 > in our code obscurred the fact that some messages are handled locally

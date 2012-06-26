@@ -489,6 +489,18 @@ This optimization caches several read models that the public conference web site
 > authority to ensure we have accurate data at the cost of reduced
 > performance in this particular circumstance.
 
+## Optimizing read-models
+
+During this stage of the journey, the team also revisited the implementation of the read-models in the orders and registrations bounded context. The motivation was two-fold: these read-models were originally implemented using SQL Database tables and the team encountered throttling behavior in the SQL Database instance during some of the high-volume performance tests; also, these read-models were implemented when the bounded context used SQL Database tables for all persistenece and before it started to use event sourcing. Accessing some of the read-models (such as the priced-order and draft-order read-models) is done just by aggregate Id, so a SQL-based implmentation is possibly more complex than this feature warrants. The team considered three approaches to improving the scalability of the application by modifying the implementation of these read-models.
+
+1. Partition the SQL Database instance into several instances. This would be a relatively simple change because the application already uses different connection strings in different bounded contexts. However, the team were unsure about the improvements in scalability that this option would bring. It also continues to use SQL Database tables to store these read-models, which as has already been mentioned may be more complex than necessary.
+2. Migrate the read-model storage from the SQL Database instance to Windows Azure blob storage. This would be a slightly more complex approach, but the team thought that this would be more likely to enhance the scalability of the application than the first option. It is also a solution that better fits the requirements for these read-models.
+3. Implement batching behavior for calls to the SQL Azure instance. The team thought that this would have the most significant impact on the scalability of the application of the three options. It also by far the most complex option because it would affect the already complex areas of code that currently make the reliable, asynchronous calls to the database.
+
+Given the time constraints during this stage of the journey, we opted for the second option rather than the third as the best way to address the limits on the scalability of the application.
+
+**PoePersona:** The team also has to take into account the migration of data from the V2 to the V3 release when planning this optimization.
+
 ## Other optimizations
 
 The team performed some additional optimizations that are listed in the 
@@ -544,7 +556,7 @@ The Contoso Conference Management System is designed to allow you to deploy mult
 
 **JanaPersona:** For an example of implementing dynamic throttling within the application to avoid throttling from the service, see the way that the **Start ** method in the **EventStoreBusPublisher** class manages the degree of parallelism that it uses to send messages. Ideally, you should design your application to avoid reaching the point where it starts being throttled by a service.
 
-**PoePersona:** Each service (Windows Azure Service Bus, SQL Database, Windows Azure storage) has its own particular way of implementing throttling behavior and notifying you when it is placed under heavy load. For example, see [SQL Azure Throttling][sqlthrottle].
+**PoePersona:** Each service (Windows Azure Service Bus, SQL Database, Windows Azure storage) has its own particular way of implementing throttling behavior and notifying you when it is placed under heavy load. For example, see [SQL Azure Throttling][sqlthrottle]. It's important to be aware of all the throttling that your application may be subject in different services that your application uses.
 
 # No downtime migration
 
