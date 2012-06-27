@@ -191,7 +191,7 @@ tiers in the last stage of our journey, bringing some processing into
 our web roles from the worker role where it was originally done. This 
 is described in chapter 7 "[Adding Resilience and Optimizing 
 Performance][j_chapter7]" in the section that discusses moving some 
-command processing inline. Partitioning the system into bounded contexts 
+command processing in-process. Partitioning the system into bounded contexts 
 should be done based on your domain model: each bounded context has its 
 own domain model and ubiquitous language. This affects how and where you 
 need to implement integration between these isolated bounded contexts. 
@@ -204,7 +204,14 @@ clearly confirmed to us why the CQRS pattern is not a top-level
 architecture. You must be sure that the costs associated with 
 implementing a CQRS-based bounded context with this level of complexity 
 are worth it; in general, it is in high-contention, collaborative 
-domains that you will see the benefits of the CQRS pattern. 
+domains that you will see the benefits of the CQRS pattern.
+
+> **GaryPersona:** Analyzing the business requirements, building a
+> useful model, maintaining the model, expressing 
+> it in code, and implementing it using the CQRS pattern all take time
+> and cost money. If this is the first time you have implemented the
+> CQRS pattern, you'll also have the overhead of investing in the
+> infrastructure such as message buses and event stores.
 
 ## Event sourcing and transaction logging
 
@@ -256,14 +263,15 @@ A the end of our journey, we can suggest some of the criteria you should
 evaluate to determine whether or not you should consisder implementing 
 the CQRS pattern in one or more bounded contexts in your application. 
 The more of these questions you can answer positively, the more likely 
-it is that the CQRS pattern will bring net benefits to your solution: 
+it is that applying the CQRS pattern to a given bounded context will
+bring net benefits to your solution: 
 
-* Is it core bounded context in your domain that implements an area of
+* Does the bounded context implement an area of
   business functionality that is a key differentiator in your market?
 * Is the bounded context collaborative in nature with elements that are
   likely to have high-levels of contention at run time? By collaborative
   we mean multiple users competing for access to the same resources.
-* Is the bounded context likely to see experience ever-changing business
+* Is the bounded context likely to experience ever-changing business
   rules?
 * Do you have a robust, scalable messaging and persistence
   infrastructure already in place?
@@ -271,13 +279,16 @@ it is that the CQRS pattern will bring net benefits to your solution:
 * Is the business logic in the bounded context complex?
 * Are you clear about the benefits that the CQRS pattern will bring to
   this bounded context?
+  
+**GaryPersona:** These are rules of thumb, not hard and fast rules.
 
 
 # What would we do differently if we started over? 
 
 This section is a result of our reflection on our journey and identifies 
-some things that we'd do differently if we were starting over with the 
-knowledge of the CQRS pattern and event sourcing that we now have. 
+some things that we'd do differently and some other opportunities that 
+we'd like to pursue if we were starting over with the knowledge of the 
+CQRS pattern and event sourcing that we now have. 
 
 ## Start with a solid infrastructure for messaging and persistence
 
@@ -329,14 +340,24 @@ the last stage of the journey. Again, starting with some solid
 infrastructure support for process managers to make them more resilient 
 would have helped us. However, if starting over, we'd also wait to 
 implement a process manager until a later stage in the journey rather 
-than diving straing in. 
+than diving straight in.
+
+We began implementing the **RegistrationProcessManager** class 
+during the first stage in our journey. The intial implementation is 
+described in Chapter 3, "[Orders and Registrations Bounded 
+Context][j_chapter3]." We made changes to this process manager during 
+every subsequent stage of our journey. 
 
 ## Partition the application differently
 
 We'd think more carefully at the start of the project about the tiering 
-of the system. We found that the default assumptions we made at the 
-start were not optimal, and in the last stage of the journey we found we 
-had to make some changes as part of the performance optimization. 
+of the system. We found that the way that we partitioned the application 
+into web roles and worker roles as described in Chapter 4 "[Extending 
+and Enhancing the Orders and Registrations Bounded Context][j_chapter4]" 
+was not optimal, and in the last stage of the journey, Chapter 7 
+"[Adding Resilience and Optimizing Performance][j_chapter7]" we made 
+some major changes to this architecture as part of the performance 
+optimization effort. 
 
 As a part of this reorganization in the last stage of the journey we 
 introduced synchronous command processing alongside the pre-existing 
@@ -353,11 +374,12 @@ have uncovered a broader set of solutions and approaches.
 
 ## Evaluate how appropriate the domain and the bounded contexts are for the CQRS pattern
 
-We'd like to start with a clearer set of heuristics to determine whether 
-or not a particular bounded context will benefit from the CQRS pattern. 
-We may have learnt more if we had focused on a more complex area of the 
-domain such as wait-listing instead of on the Orders and Registrations 
-bounded context and Payments bounded context. 
+We'd like to start with a clearer set of heuristics, such as those 
+outlined earlier in this chapter, to determine whether or not a 
+particular bounded context will benefit from the CQRS pattern. We may 
+have learnt more if we had focused on a more complex area of the domain 
+such as wait-listing instead of on the Orders and Registrations bounded 
+context and Payments bounded context. 
 
 ## Plan for performance
 

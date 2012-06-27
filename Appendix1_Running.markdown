@@ -474,6 +474,16 @@ This change is faster than changing the value of the **MaintenanceMode** propert
 
 # Known Issues
 
+## Running the acceptance tests using the xUnit console
+
+If you want to run the acceptance tests in the **Conference.AcceptanceTests** solution, you must add the following to the console configuration file:
+
+```Xml
+<startup useLegacyV2RuntimeActivationPolicy="true">
+  <supportedRuntime version="v4.0" />
+</startup>
+```
+
 ## Localizability is not in scope
 
 The RI is not designed with localizability in mind. For example, it 

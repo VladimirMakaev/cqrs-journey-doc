@@ -1711,7 +1711,7 @@ SendCustomerInvoice? -> CustomerInvoiceHandler
         *InvoiceAgeingProcess.ProcessState = Unpaid
 ````
 
-### Summary
+## Summary
 
 We've just walked through the basic steps used when describing messaging 
 interactions in a loosely-coupled application. Although the interactions 
