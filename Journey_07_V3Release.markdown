@@ -215,11 +215,12 @@ simulate different numbers of virtual users.
 > optimizations and hardening because many of the necessary changes were
 > very localized within the system.
 
-The performance tests we ran using Visual Studio Load Test uncovered 
-unacceptable response times for Registrants creating orders when the 
-system was under load. The intitial optimization effort focused on how
-the UI interacts with the domain, and we identified ways to streamline
-this aspect of the system.
+The initial optimization effort focused on how the UI interacts with 
+the domain, and we identified ways to streamline this aspect of the 
+system. The detailed performance tests we ran using Visual Studio Load 
+Test after this uncovered unacceptable response times for Registrants 
+creating orders when the system was under load and we then looked at 
+ways to optimize the infrastructure. 
 
 ## UI flow before optimization
 
@@ -260,20 +261,18 @@ sufficient seats available to fulfill the order before it sends the
 initial **RegisterToConference** command. 
 
 The team load tested the application using Visual Studio Load Test with 
-different user load patterns. We noticed that with a constant load 
-pattern of ten virtual users, the UI often has to wait for the domain to 
+different user load patterns. We noticed that with higher loads, the UI often has to wait for the domain to 
 to complete its processing and for the read-models to receive data from 
 the write-model, before it can display the next screen to the 
 Registrant. In particular, with the V2 release deployed to medium-sized 
 web and worker role instances we found that: 
 
-* With a constant load pattern of a single virtual user creating orders,
+* With a constant load pattern of less than five orders per second,
   all orders are processed within a five second window.
-* With  a constant load pattern of ten virtual users simultaneoulsy
-  creating orders, many orders are not processed within the five second
-  window.
-* With a constant load pattern of ten virtual users simultaneoulsy
-  creating orders, the role instances are used sub-optimally (for
+* With a constant load pattern of between eight and ten orders per
+  second, many orders are not processed within the five second window.
+* With a constant load pattern of between eight and ten orders per
+  second, the role instances are used sub-optimally (for
   example CPU usage is low).
 
 > **Note:** The five second window is the maximum duration that we want
@@ -392,11 +391,6 @@ encountered when using the Service Bus.
 
 ## Optimizing command processing 
 
-The analysis of the performance data collected from the load tests also 
-identified a potential bottleneck in the way that the system delivers 
-command messages. The team identified a number of optimizations to make 
-in this area. 
-
 The current implementation uses the same messaging infrastructure, the 
 Windows Azure Service Bus, for both commands and events. The team plans 
 to evaluated whether the Contoso Conference Management System needs to 
@@ -416,9 +410,6 @@ this optimization we had to add some infrastructure elements (the event
 store repositories, the event bus, and the event publishers) to the 
 public conference web application; previously, these infrastructure 
 elements were only in the system's worker role. 
-
-In addition, by processing commands in-process, it becomes easier to use
-commands as synchronous, two-way messages.
 
 > An asynchronous command doesn't exist, it's actually another event. If
 > I must accept what you send me and raise an event if I disagree, it's
@@ -557,6 +548,11 @@ The Contoso Conference Management System is designed to allow you to deploy mult
 **JanaPersona:** For an example of implementing dynamic throttling within the application to avoid throttling from the service, see the way that the **Start ** method in the **EventStoreBusPublisher** class manages the degree of parallelism that it uses to send messages. Ideally, you should design your application to avoid reaching the point where it starts being throttled by a service.
 
 **PoePersona:** Each service (Windows Azure Service Bus, SQL Database, Windows Azure storage) has its own particular way of implementing throttling behavior and notifying you when it is placed under heavy load. For example, see [SQL Azure Throttling][sqlthrottle]. It's important to be aware of all the throttling that your application may be subject in different services that your application uses.
+
+For some additional information relating to scalability, see:
+
+* [Windows Azure Storage Abstractions and their Scalability Targets][wascale]
+* [Best Practices for Performance Improvements Using Service Bus Brokered Messaging][sbscale]
 
 # No downtime migration
 
@@ -1583,3 +1579,5 @@ use [WatiN][watin] to drive the system through its UI.
 [storeforward]:      http://social.technet.microsoft.com/wiki/contents/articles/sql-azure-performance-and-elasticity-guide.aspx#SQL_Azure_Performance_Checklist
 [combguids]:         http://www.informit.com/articles/article.aspx?p=25862
 [sqlthrottle]:       http://social.technet.microsoft.com/wiki/contents/articles/sql-azure-performance-and-elasticity-guide.aspx#SQL_Azure_Throttling
+[wascale]:           http://blogs.msdn.com/b/windowsazurestorage/archive/2010/05/10/windows-azure-storage-abstractions-and-their-scalability-targets.aspx
+[sbscale]:           http://msdn.microsoft.com/en-us/library/windowsazure/hh528527.aspx
