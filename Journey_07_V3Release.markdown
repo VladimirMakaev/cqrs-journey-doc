@@ -146,7 +146,7 @@ address:
 2. The **RegistrationProcessManager** handles an event successfully, marks it
    as complete, but then fails to send out the commands.
 
-## Making the system resilient whan an event is reprocessed
+## Making the system resilient when an event is reprocessed
 
 If the behavior of the process manager itself is idempotent, then if it 
 receives and processes an event a second time then this does not result 
