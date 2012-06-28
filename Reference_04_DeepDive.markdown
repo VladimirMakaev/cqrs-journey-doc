@@ -752,22 +752,24 @@ theorem][captheorem] on Wikipedia and the article [CAP Twelve Years
 Later: How the "Rules" Have Changed][capinfoq] by Eric Brewer on the
 InfoQ website.
 
-The concept of *eventual consistency* offers to way to make these three 
-guarantees simultaneously by relaxing the guarantee of consistency. In 
-the CAP theorem, the consistency guarantee specifies that all the nodes 
-should see the same data *at the same time*; if instead, we state that 
-all the nodes will eventually see the same data, we can make the 
-consistency guarantee compatible with the other two. Another way of 
-viewing this is to say that we will accept that at any given time, some 
-of the data seen by users of the system could be stale. For many 
-business scenarios, this turns out to be perfectly acceptable: a 
-business user will accept that the information they are seeing on a 
-screen may be a few seconds, or even minutes out of date. Depending on 
-the details of the scenario, the business user can refresh the display a 
-bit later on to see what has changed, or simply accepts that what they 
-see is always slightly out of date. There are some scenarios where this 
-delay is unacceptable, but they tend to be the exception rather than the 
-rule. 
+The concept of *eventual consistency* offers to way to make it appear 
+from the outside that we are meeting these three guarantees. In the CAP 
+theorem, the consistency guarantee specifies that all the nodes should 
+see the same data *at the same time*; if instead, we state that all the 
+nodes will eventually see the same data, we can make the consistency 
+guarantee appear to be compatible with the other two. It's important that 
+changes are propagated to other nodes in the system at a faster rate 
+than new changes arrive in order to avoid the differences between the 
+nodes continuing to increase. Another way of viewing this is to say that 
+we will accept that, at any given time, some of the data seen by users of 
+the system could be stale. For many business scenarios, this turns out 
+to be perfectly acceptable: a business user will accept that the 
+information they are seeing on a screen may be a few seconds, or even 
+minutes out of date. Depending on the details of the scenario, the 
+business user can refresh the display a bit later on to see what has 
+changed, or simply accept that what they see is always slightly out of 
+date. There are some scenarios where this delay is unacceptable, but 
+they tend to be the exception rather than the rule. 
 
 > Very often people attempting to introduce eventual consistency into a 
 > system run into problems from the business side. A very large part of 
