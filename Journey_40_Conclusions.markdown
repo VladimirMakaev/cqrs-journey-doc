@@ -91,7 +91,7 @@ to the distributed, message-driven nature of our solution.
 
 ## The cloud has challenges
 
-Cloud environments introduce further challenges: 
+Although the cloud brings many benefits such as reliable, scalable, off-the-shelf services that you can provision with just a few mouse clicks, cloud environments also introduce some challenges: 
 
 * You may not be able to use transactions in all places you'd like to 
   because the distributed nature of the cloud makes ACID transactions
@@ -156,16 +156,23 @@ approach. As we become more comfortable with the approach, we hope we
 will become faster at identifiying how to implement the pattern in 
 specific circumstances and improve the accuracy of our estimates. 
 
-Another comment from the development team relates to their experiences 
-of using test-driven development (TDD) techniques on this project to 
-create the unit and integration tests included in the sample code. Some 
-of our team have found on other projects that formulating tests helps to 
-clarify the design and also uncover the best approach to implementing 
-specific functionality. In this project we found that formulating these 
-tests did not provide the expected benefit of helping to uncover optimal 
-implementation approaches: therefore, we found we had to rely more on 
-modelling, discussing on the whiteboard, and spiking to design 
-particular pieces of the system. 
+TDD tends to be used in a bottom-up approach focusing on small, discrete 
+areas of functionality within the system and some of the design 
+decisions that the team made early on in the journey (for example for 
+synchronous behavior) turned out later to be poor choices. This is 
+because this was the first time that the team had used the CQRS pattern 
+and they did not know in advance what types of challenge they would 
+meet, therefore they were not in a position to apply knowledge of the 
+implications of using the CQRS pattern while using TDD. However, for 
+subsequent projects, being aware of these types of issue will mean that 
+the team will have greater confidence in some of the implementation 
+choices that they make early on. Another issue, again due to the teams 
+lack of familiarity with the CQRS pattern, was deciding whether or not 
+to use the CQRS pattern in individual bounded contexts. The team 
+anticipates that on future projects, the help that TDD can give to 
+uncovering the best implementation choice in specific areas, can also be 
+brought to bear on the implementation choices for individual bounded 
+contexts. 
 
 > **MarkusPersona:** The CQRS pattern is conceptually simple: the devil
 > is in the details.
@@ -186,14 +193,17 @@ helps to reduce the amount of work that a subscriber must perform.
 The CQRS pattern introduces additional considerations in how to 
 partition your system. Not only do you need to consider how to partition 
 your system into tiers, but you also need to consider how to partition 
-your system into bounded contexts. We revised some of assumptions about 
+your system into bounded contexts (some of which will contain 
+implementations the CQRS pattern). We revised some of our assumptions about 
 tiers in the last stage of our journey, bringing some processing into 
 our web roles from the worker role where it was originally done. This 
 is described in chapter 7 "[Adding Resilience and Optimizing 
 Performance][j_chapter7]" in the section that discusses moving some 
-command processing in-process. Partitioning the system into bounded contexts 
-should be done based on your domain model: each bounded context has its 
-own domain model and ubiquitous language. This affects how and where you 
+command processing in-process. Partitioning the system into bounded 
+contexts should be done based on your domain model: each bounded context 
+has its own domain model and ubiquitous language. Once you have 
+identified your bounded contexts, you can then identify in which bounded 
+contexts to implement the CQRS pattern. This affects how and where you 
 need to implement integration between these isolated bounded contexts. 
 Chapter 2 "[Decomposing the Domain][j_chapter2]" introduces our 
 decisions for the Contoso Conference Management System. 
@@ -210,8 +220,8 @@ domains that you will see the benefits of the CQRS pattern.
 > useful model, maintaining the model, expressing 
 > it in code, and implementing it using the CQRS pattern all take time
 > and cost money. If this is the first time you have implemented the
-> CQRS pattern, you'll also have the overhead of investing in the
-> infrastructure such as message buses and event stores.
+> CQRS pattern, you'll also have the overhead of investing in your
+> infrastructure elements such as message buses and event stores.
 
 ## Event sourcing and transaction logging
 
@@ -397,17 +407,35 @@ Performance][j_chapter7]."
 
 ## Think about the UI differently
 
-We'd investigate ways to avoid waiting in the UI unless its absolutely 
-necessary, perhaps using browser push techniques. The UI in the current 
-system still needs to wait, in some places, for asynchronous updates to 
-take place against the read-model. 
+We felt that the way our UI interacts with the write models and read 
+models, and handles eventual consistency worked well and met the 
+requirements from the business. 
+
+We'd like investigate other ways to avoid waiting in the UI unless its 
+absolutely necessary, perhaps by using browser push techniques. The UI 
+in the current system still needs to wait, in some places, for 
+asynchronous updates to take place against the read-model. 
 
 ## Explore some of additional benefits of event sourcing
 
-In the current journey, we didn't explore the promise of flexibility and 
-the ability to mine past events for new business insights. However, we 
-did ensure that the system persists copies of all events and commands to 
-enable this scenario. 
+We found during the third stage of our journey, described in Chapter 5, 
+"[Preparing for the V1 Release][j_chapter5]", that modifying the Orders 
+and Registrations bounded context to use event sourcing helped to 
+simplify the implementation of this bounded context, in part because it 
+was already using a large number of events. 
+
+In the current journey, we didn't get a chance to explore the further 
+promises of flexibility and the ability to mine past events for new 
+business insights from event sourcing. However, we did ensure that the 
+system persists copies of all events (not just those that are needed to 
+rebuild the state of the aggregates) and commands to enable these types 
+of scenario in the future.
+
+> **GaryPersona:** It would also be interesting to investigate whether
+> the ability to mine past event streams for new business insights is
+> easier to achieve with event sourcing or other technologies such as
+> database transaction logs or the [StreamInsight][streaminsight]
+> feature of SQL Server.
 
 ## Explore the issues associated with integrating bounded contexts 
 
@@ -431,4 +459,5 @@ of the journey describing your experiences.
 [r_chapter4]:        Reference_04_DeepDive.markdown
 [jolivereventstore]: https://github.com/joliver/EventStore
 [backlog]:           https://github.com/mspnp/cqrs-journey-code/issues?labels=Type.Story%2CStat.Pending&page=1&state=open
+[streaminsight]:     http://www.microsoft.com/sqlserver/en/us/solutions-technologies/business-intelligence/complex-event-processing.aspx
 
