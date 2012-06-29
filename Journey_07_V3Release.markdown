@@ -1354,15 +1354,19 @@ The team added filters to the Windows Azure Service Bus subscriptions to restric
 
 ```Xml
 <Topic Path="conference/events" IsEventBus="true">
-    <Subscription Name="log" RequiresSession="false"/>
-    <Subscription Name="Registration.RegistrationProcessRouter" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderUpdated','SeatsReserved','PaymentCompleted','OrderConfirmed')"/>
-    <Subscription Name="Registration.OrderViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderUpdated','OrderPartiallyReserved','OrderReservationCompleted','OrderRegistrantAssigned','OrderConfirmed','OrderPaymentConfirmed','OrderTotalsCalculated')"/>
-    <Subscription Name="Registration.PricedOrderViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderTotalsCalculated','OrderConfirmed','OrderExpired','SeatAssignmentsCreated','SeatCreated','SeatUpdated')"/>
-    <Subscription Name="Registration.ConferenceViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('ConferenceCreated','ConferenceUpdated','ConferencePublished','ConferenceUnpublished','SeatCreated','SeatUpdated','AvailableSeatsChanged','SeatsReserved','SeatsReservationCancelled')"/>
-    <Subscription Name="Registration.SeatAssignmentsViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('SeatAssignmentsCreated','SeatAssigned','SeatUnassigned','SeatAssignmentUpdated')"/>
-    <Subscription Name="Registration.SeatAssignmentsHandler" RequiresSession="true" SqlFilter="TypeName IN ('OrderConfirmed','OrderPaymentConfirmed')"/>
-    <Subscription Name="Conference.OrderEventHandler" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderRegistrantAssigned','OrderTotalsCalculated','OrderConfirmed','OrderExpired','SeatAssignmentsCreated','SeatAssigned','SeatAssignmentUpdated','SeatUnassigned')"/>
+  <Subscription Name="log" RequiresSession="false"/>
+  <Subscription Name="Registration.RegistrationPMOrderPlaced" RequiresSession="false" SqlFilter="TypeName IN ('OrderPlaced')"/>
+  <Subscription Name="Registration.RegistrationPMNextSteps" RequiresSession="false" SqlFilter="TypeName IN ('OrderUpdated','SeatsReserved','PaymentCompleted','OrderConfirmed')"/>
+  <Subscription Name="Registration.OrderViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderUpdated','OrderPartiallyReserved','OrderReservationCompleted','OrderRegistrantAssigned','OrderConfirmed','OrderPaymentConfirmed')"/>
+  <Subscription Name="Registration.PricedOrderViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderTotalsCalculated','OrderConfirmed','OrderExpired','SeatAssignmentsCreated','SeatCreated','SeatUpdated')"/>
+  <Subscription Name="Registration.ConferenceViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('ConferenceCreated','ConferenceUpdated','ConferencePublished','ConferenceUnpublished','SeatCreated','SeatUpdated','AvailableSeatsChanged','SeatsReserved','SeatsReservationCancelled')"/>
+  <Subscription Name="Registration.SeatAssignmentsViewModelGenerator" RequiresSession="true" SqlFilter="TypeName IN ('SeatAssignmentsCreated','SeatAssigned','SeatUnassigned','SeatAssignmentUpdated')"/>
+  <Subscription Name="Registration.SeatAssignmentsHandler" RequiresSession="true" SqlFilter="TypeName IN ('OrderConfirmed','OrderPaymentConfirmed')"/>
+  <Subscription Name="Conference.OrderEventHandler" RequiresSession="true" SqlFilter="TypeName IN ('OrderPlaced','OrderRegistrantAssigned','OrderTotalsCalculated','OrderConfirmed','OrderExpired','SeatAssignmentsCreated','SeatAssigned','SeatAssignmentUpdated','SeatUnassigned')"/>
+
+  ...
 </Topic>
+
 ```
 
 ## Creating a dedicated **SessionSubscriptionReciever** instance for the **SeatsAvailability** aggregate
@@ -1400,6 +1404,8 @@ public abstract class SeatsAvailabilityCommand : ICommand, IMessageSessionProvid
 
 The command bus now uses a separate subscription for commands destined for the **SeatsAvailability** aggregate.
 
+**MarkusPersona:** The team applied a similar technique to the  RegistrationProcessManager process manager by creating a separate subscription for OrderPlaced events to handle new orders. A separate subscription receives all the other events destined for the process manager.
+
 ## Caching read-model data
 
 As part of the performance optimizations in the V3 release, the team 
@@ -1434,6 +1440,44 @@ if (timeToCache > TimeSpan.Zero)
     this.cache.Set(key, seatTypes, new CacheItemPolicy { AbsoluteExpiration = DateTimeOffset.UtcNow.Add(timeToCache) });
 }
 ```
+
+## Storing read-model data in Windows Azure blob storage
+
+Previously, the system stored the **DraftOrder** and **PricedOrder** view model data in SQL Database tables. During this stage of the journey, the team decided to store this data in Windows Azure blob storage. This required changes to the view model generator classes to enable them to save and find order information in blob storage. The following code sample shows the **Find** and **Save** methods from the **DraftOrderViewModelGenerator** class.
+
+```Cs
+private readonly IBlobStorage blobStorage;
+
+...
+
+private T Find<T>(string id)
+    where T : class
+{
+    var dto = this.blobStorage.Find(id);
+    if (dto == null)
+    {
+        return null;
+    }
+
+    using (var stream = new MemoryStream(dto))
+    using (var reader = new StreamReader(stream, Encoding.UTF8))
+    {
+        return (T)this.serializer.Deserialize(reader);
+    }
+}
+
+private void Save<T>(T dto, string id)
+    where T : class
+{
+    using (var writer = new StringWriter())
+    {
+        this.serializer.Serialize(writer, dto);
+        this.blobStorage.Save(id, "text/plain", Encoding.UTF8.GetBytes(writer.ToString()));
+    }
+}
+```
+
+For more details of how the system uses Windows Azure blob storage, see the **CloudBlobStorage** class that implements the **IBlobStorage** interface.
 
 ## Other optimizing and hardening changes
 
