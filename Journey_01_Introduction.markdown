@@ -1,4 +1,4 @@
-# Chapter 1: The Contoso Conference Management System 
+# Chapter 1: Our Domain: The Contoso Conference Management System 
 
 _The starting point: Where have we come from, what are we taking, and who is coming with us?_
 
