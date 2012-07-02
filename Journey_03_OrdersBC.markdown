@@ -331,7 +331,7 @@ system persists the new **Order** aggregate and one when the system
 persists the updated **SeatsAvailability** aggregate.
 
 > **Note:** The term _consistency boundary_ refers to a boundary within
-> which you can assume that everything is fully consistent.
+> which you can assume that all the elements remain consistent with each other all the time.
 
 To ensure the consistency of the system when a registrant creates an 
 order, both transactions must succeed. To guarantee this, we must take 

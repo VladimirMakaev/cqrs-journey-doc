@@ -47,7 +47,11 @@ right tracing and the right data for analysis was the challenge. Once we
 identified the bottlenecks, fixing them turned out to be relatively 
 easy, largely because of the way that the CQRS pattern enables you to 
 clearly separate out different elements, such as reads and writes, in 
-the system. 
+the system. Although the separation of concerns that results from 
+implementing the CQRS pattern can make it harder to indentify an issue, 
+once you have identified an issue it is not only easier to fix but also 
+easier to keep fixed: the decoupled architecture means that it is easier 
+to write unit tests that reproduce issues. 
 
 The challenges we encountered in tackling the performance issues in the 
 system were more to do with the fact that our system is a distributed, 
@@ -155,24 +159,6 @@ how long things would take due to our unfamiliarity with the pattern and
 approach. As we become more comfortable with the approach, we hope we 
 will become faster at identifiying how to implement the pattern in 
 specific circumstances and improve the accuracy of our estimates. 
-
-TDD tends to be used in a bottom-up approach focusing on small, discrete 
-areas of functionality within the system and some of the design 
-decisions that the team made early on in the journey (for example for 
-synchronous behavior) turned out later to be poor choices. This is 
-because this was the first time that the team had used the CQRS pattern 
-and they did not know in advance what types of challenge they would 
-meet, therefore they were not in a position to apply knowledge of the 
-implications of using the CQRS pattern while using TDD. However, for 
-subsequent projects, being aware of these types of issue will mean that 
-the team will have greater confidence in some of the implementation 
-choices that they make early on. Another issue, again due to the teams 
-lack of familiarity with the CQRS pattern, was deciding whether or not 
-to use the CQRS pattern in individual bounded contexts. The team 
-anticipates that on future projects, the help that TDD can give to 
-uncovering the best implementation choice in specific areas, can also be 
-brought to bear on the implementation choices for individual bounded 
-contexts. 
 
 > **MarkusPersona:** The CQRS pattern is conceptually simple: the devil
 > is in the details.
