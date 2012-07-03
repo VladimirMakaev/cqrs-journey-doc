@@ -13,8 +13,17 @@ or you might decide to take.
 
 You should bear in mind that this summary reflects our specific journey 
 and that not all of these findings will necessarily apply to your own 
-CQRS journeys. However, we hope that these findings do prove useful, 
-especially if you are just starting out with CQRS and event sourcing. 
+CQRS journeys. For example, one of the goals of our journey was to 
+explore how to implement the CQRS pattern in a application that is 
+deployed to Windows Azure and that makes use of the scalability and 
+reliability offered by the cloud. For our project, this meant using 
+messaging to enable multiple role types and instances to communicate 
+with each other. It may be that your project does not require multiple 
+role instances or is not deployed to the cloud and therefore may not 
+need to use messaging so extensively (or at all). 
+
+We hope that these findings do prove useful, especially if you are just 
+starting out with CQRS and event sourcing. 
 
 # What Did we Learn?
 
@@ -193,6 +202,11 @@ contexts to implement the CQRS pattern. This affects how and where you
 need to implement integration between these isolated bounded contexts. 
 Chapter 2 "[Decomposing the Domain][j_chapter2]" introduces our 
 decisions for the Contoso Conference Management System. 
+
+**GaryPersona:** A single process (role instance in our deployment) can 
+host multiple bounded contexts. In this scenario, you don't necessarily 
+need to use messaging for the bounded contexts to communicate with each 
+other. 
 
 Implementing the CQRS pattern is more complex than implementing a 
 traditional CRUD-style system. Our experiences during the journey have 
