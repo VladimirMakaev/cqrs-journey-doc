@@ -101,13 +101,13 @@ the scripts folder.
 The projects in the solution use this database to store application 
 data. The SQL-based message bus and event store also use this database. 
 
-## SQL Database Database
+## Windows Azure SQL Database instance
 
-For scenario 5, you must create a SQL Database database called
+For scenario 5, you must create a SQL Database instance called
 **Conference** by running the script **Install-Database.ps1** in 
 the scripts folder.
 
-The follow command will populate a SQL Database database called 
+The follow command will populate a SQL Database instance called 
 **Conference** with the tables and views required to support the RI
 (this script assumes that you have already created the **Conference**
 database in SQL Database): 

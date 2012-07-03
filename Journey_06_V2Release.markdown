@@ -972,7 +972,7 @@ Aggregator][sessionseq].
 The team decided to create a message log of all the commands and events 
 that are sent. This will enable the Orders and Registrations bounded 
 context to query this log for the events from the Conference Management 
-bounded context that it requires to build its read-models. 
+bounded context that it requires to build its read-models. This is not event sourcing because we are not using these events to rebuild the state of our aggregates although we are using similar techniques to capture and persist these integration events.
 
 > **GaryPersona:** This message log ensures that no messages are
 > lost, so that in the future it will be possible to meet additional

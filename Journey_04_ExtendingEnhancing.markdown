@@ -1,8 +1,11 @@
 # Chapter 4: Extending and Enhancing the Orders and Registrations Bounded Context
 
-*Exploring further in the Orders and Registrations bounded context*
+_Further exploration of the Orders and Registrations bounded context._
 
-# A description of the Orders and Registrations Bounded Context 
+_"I see that it is by no means useless to travel, if a man wants to see something new." Jules Verne, Around the World in Eighty Days_
+
+
+# Changes to the bounded context
 
 The previous chapter describes the **Orders and Registrations** bounded context in some 
 detail. This chapter describes some changes that 
@@ -179,8 +182,10 @@ and the querying mechanism from the MVC controllers.
 
 In this initial exploration of the CQRS pattern, the team decided to use 
 SQL views in the database as the underlying source of the data queried 
-by the MVC controllers on the read-side. These views currently exist in 
-the same database as the normalized tables that the write model uses. 
+by the MVC controllers on the read-side. To minimize the work that the 
+queries on the read side must perform, these SQL views provide a 
+denormalized version of the data. These views currently exist in the 
+same database as the normalized tables that the write model uses. 
 
 > **JanaPersona:** The team will split the database into two and explore
 > options for pushing changes from the normalized write-side to the
@@ -478,10 +483,11 @@ address and the order access code. The system will use these two items
 to locate the correct order. This logic is part of the read-side. 
 
 The following code sample from the **OrderController** class in the web 
-application shows how the MVC controller submits the query to the 
-repository to discover the unique **OrderId** value. This **Find** 
-action passes the **OrderId** value to a **Display** action that 
-displays the order information to the Registrant. 
+application shows how the MVC controller submits the query to the read 
+side using the **LocateOrder** method to discover the unique **OrderId** 
+value. This **Find** action passes the **OrderId** value to a 
+**Display** action that displays the order information to the 
+Registrant. 
 
 ```Cs
 [HttpPost]
@@ -495,25 +501,6 @@ public ActionResult Find(string email, string accessCode)
     }
 
     return RedirectToAction("Display", new { conferenceCode = this.ConferenceCode, orderId = orderId.Value });
-}
-```
-
-This illustrates two ways of querying the read-side. The first, as shown 
-in the previous code sample, enables you to use a LINQ query against an 
-**IQueryable** instance. The second, as used in the MVC controller's 
-**Display** action, retrieves a single instance based on its unique Id. 
-The following code sample shows the **Find** and **Query** methods in 
-the **OrmViewRepository** class that the MVC controller uses. 
-
-```Cs
-public T Find<T>(Guid id) where T : class
-{
-	return this.Set<T>().Find(id);
-}
-
-public IQueryable<T> Query<T>() where T : class
-{
-	return this.Set<T>();
 }
 ```
 
@@ -975,7 +962,11 @@ Features\UserInterface\Views\Management folder shows an acceptance test
 for the Conference Management bounded context. A typical SpecFlow test 
 scenario consists of a collection of **Given**, **When**, and **Then** 
 statements. Some of these statements include the data that the test is 
-uses. 
+uses.
+
+> **MarkusPersona:** SpecFlow feature files in fact use the Gherkin
+> language; a domain specific language (DSL) created especially for
+> behavior descriptions.
 
 ```
 Feature:  Conference configuration scenarios for creating and editing Conference settings
@@ -1624,10 +1615,10 @@ indicate explicitly a no-op (in other words, nothing is receiving the
 message). The following snippet shows an example of the nil element 
 sysntax: 
 
-````
-SendCustomerInvoice? -> .
+```
+SendCustomerInvoice? -> .  
 CustomerInvoiceSent! -> .
-````
+```
 
 Once a Command or Event has been published, something needs to do 
 something with it. Commands have one and only one handler, while events 
@@ -1635,12 +1626,12 @@ can have multiple handlers. MIL represents this relationship between
 message and handler by placing the name of the handler on the other side 
 of the messaging operation as shown in the following snippet: 
 
-````
-SendCustomerInvoice? -> CustomerInvoiceHandler
-CustomerInvoiceSent! ->
-    -> CustomerNotificationHandler
+```
+SendCustomerInvoice? -> CustomerInvoiceHandler  
+CustomerInvoiceSent! ->  
+    -> CustomerNotificationHandler  
     -> AccountsAgeingViewModelGenerator
-````
+```
 
 Notice how the command handler is on the same line as the command while 
 the event is separated from its handlers? That's because in CQRS, there 
@@ -1665,10 +1656,10 @@ repository which persists the Aggregate Root is the element responsible
 for actually publishing the events to a bus. The following snippet shows 
 an example of the AggregateRoot syntax: 
 
-````
-SendCustomerInvoice? -> CustomerInvoiceHandler
+```
+SendCustomerInvoice? -> CustomerInvoiceHandler  
 @Invoice::CustomerInvoiceSent! -> .
-````
+```
 
 In the above example, a new language element called the scope context 
 operator appears alongside the '@AggregateRoot'. Denoted by double 
@@ -1680,21 +1671,21 @@ between two objects. Above, the AR '@Invoice' is generating the
 element on an AR which generates multiple events in response to a single 
 command: 
 
-````
-'SendCustomerInvoice? -> CustomerInvoiceHandler
-'@Invoice:
-    :CustomerInvoiceSent! -> .
+```
+SendCustomerInvoice? -> CustomerInvoiceHandler  
+@Invoice:  
+    :CustomerInvoiceSent! -> .  
     :InvoiceAged! -> .
-````
+```
 
 Scope context is also used to signify intra-element routing that does
 not involve infrastructure messaging apparatus:
 
-````
-SendCustomerInvoice? -> CustomerInvoiceHandler
-@Invoice::CustomerInvoiceSent! ->
+```
+SendCustomerInvoice? -> CustomerInvoiceHandler  
+@Invoice::CustomerInvoiceSent! ->  
     -> InvoiceAgeingProcessRouter::InvoiceAgeingProcess
-````
+```
 
 The last element that I'll introduce is the State Change element. State 
 changes are one of the best ways to track what is happening within a 
@@ -1704,12 +1695,12 @@ character. It's the only time in MIL that there is any mention or
 appearance of assignment because it's just that important! The following
 snippet shows an example of the State Change element: 
 
-````
-SendCustomerInvoice? -> CustomerInvoiceHandler
-@Invoice::CustomerInvoiceSent! ->
-    -> InvoiceAgegingProcessRouter::InvoiceAgeingProcess
+```
+SendCustomerInvoice? -> CustomerInvoiceHandler  
+@Invoice::CustomerInvoiceSent! ->  
+    -> InvoiceAgegingProcessRouter::InvoiceAgeingProcess  
         *InvoiceAgeingProcess.ProcessState = Unpaid
-````
+```
 
 ## Summary
 
