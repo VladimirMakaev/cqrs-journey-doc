@@ -459,6 +459,11 @@ This optimization proved to be one of the most significant in terms of improving
 * Iteration 2: This approach used some asynchronous API calls. This approach required the use of custom semaphore-based throttling to handle the asynchronous callbacks correctly.
 * Iteration 3: This approach uses dynamic throttling that takes into account the transient failures that indicate to many messages are being sent in a partition. This approach uses more asynchronous Windows Azure Service Bus API calls.
 
+> **JanaPersona:** We adopted the same dynamic throttling approach in
+> the SubscriptionReceiver and SessionSubscriptionReceiver classes when
+> the system retrieves messages from the service bus.
+
+
 ## Filtering messages in subscriptions
 
 This optimization adds filters to the Windows Azure Service Bus topic subscriptions to avoid reading messages that would later be ignored by the handlers associated with the subscription.
@@ -1088,13 +1093,26 @@ try
     // Make sure we are not told to stop receiving while we were waiting for a new message.
     if (!cancellationToken.IsCancellationRequested)
     {
-        // Process the received message.
-        releaseAction = this.InvokeMessageHandler(msg);
+        try
+        {
+            try
+            {
+                // Process the received message.
+                releaseAction = this.InvokeMessageHandler(msg);
+            }
+            catch
+            {
+                ...
+            }
+        }
+        finally
+        {
+            ...
+        }
     }
 }
 finally
 {
-    // Ensure that any resources allocated by a BrokeredMessage instance are released.
     this.ReleaseMessage(msg, releaseAction);
 }
 ```
@@ -1344,9 +1362,7 @@ Task.Factory.StartNew(
     TaskCreationOptions.LongRunning);
 ```
 
-For more information about the **BlockingCollectionPartitioner** class, 
-see the blog post [ParallelExtensionsExtras Tour - #4 - 
-BlockingCollectionExtensions][parallelext].
+The **SubscriptionReceiver** and **SessionSubscriptionReceiver** classes use the same **DynamicThrottling** class to dynamically throttle retrieving messages from the service bus.
 
 ## Filtering messages in subscriptions
 
