@@ -542,6 +542,8 @@ The Contoso Conference Management System is designed to allow you to deploy mult
 
 **PoePersona:** Each service (Windows Azure Service Bus, SQL Database, Windows Azure storage) has its own particular way of implementing throttling behavior and notifying you when it is placed under heavy load. For example, see [SQL Azure Throttling][sqlthrottle]. It's important to be aware of all the throttling that your application may be subject in different services that your application uses.
 
+**PoePersona:** The team also considered using the SQL Azure Business edition instead of the SQL Azure Web edition, but on investigation we determined that at present, the only difference between the editions is the maximum database size. They are not tuned to support different types of workload, and both editions implement the same throttling behavior.
+
 For some additional information relating to scalability, see:
 
 * [Windows Azure Storage Abstractions and their Scalability Targets][wascale]
@@ -812,39 +814,46 @@ how the system tries to send the command messages:
 ```Cs
 private void DispatchMessages(UndispatchedMessages undispatched, List<Envelope<ICommand>> deserializedCommands = null)
 {
-    if (undispatched != null)
-    {
-        if (deserializedCommands == null)
-        {
-            deserializedCommands = this.serializer.Deserialize<IEnumerable<Envelope<ICommand>>>(undispatched.Commands).ToList();
-        }
+	if (undispatched != null)
+	{
+		if (deserializedCommands == null)
+		{
+			deserializedCommands = this.serializer.Deserialize<IEnumerable<Envelope<ICommand>>>(undispatched.Commands).ToList();
+		}
 
-        var originalCommandsCount = deserializedCommands.Count;
-        try
-        {
-            while (deserializedCommands.Count > 0)
-            {
-                this.commandBus.Send(deserializedCommands.First());
-                deserializedCommands.RemoveAt(0);
-            }
+		var originalCommandsCount = deserializedCommands.Count;
+		try
+		{
+			while (deserializedCommands.Count > 0)
+			{
+				this.commandBus.Send(deserializedCommands.First());
+				deserializedCommands.RemoveAt(0);
+			}
+		}
+		catch (Exception)
+		{
+			// We catch a generic exception as we don't know what implementation of ICommandBus we might be using.
+			if (originalCommandsCount != deserializedCommands.Count)
+			{
+				// if we were able to send some commands, then updates the undispatched messages.
+				undispatched.Commands = this.serializer.Serialize(deserializedCommands);
+				try
+				{
+					this.context.SaveChanges();
+				}
+				catch (DbUpdateConcurrencyException)
+				{
+					// if another thread already dispatched the messages, ignore and surface original exception instead
+				}
+			}
 
-            // we remove all the undispatched messages for this process
-            this.context.Set<UndispatchedMessages>().Remove(undispatched);
-            this.context.SaveChanges();
-        }
-        catch (Exception)
-        {
-            // We catch a generic exception as we don't know what implementation of ICommandBus we might be using.
-            if (originalCommandsCount != deserializedCommands.Count)
-            {
-                // if we were able to send some commands, then updates the undispatched messages.
-                undispatched.Commands = this.serializer.Serialize(deserializedCommands);
-                this.context.SaveChanges();
-            }
+			throw;
+		}
 
-            throw;
-        }
-    }
+		// we remove all the undispatched messages for this process manager.
+		this.context.Set<UndispatchedMessages>().Remove(undispatched);
+		this.retryPolicy.ExecuteAction(() => this.context.SaveChanges());
+	}
 }
 ```
 
@@ -1256,45 +1265,50 @@ is a cached memento containing A snapshot of the state of the object to
 use: 
 
 ```Cs
+
+private readonly Func<Guid, Tuple<IMemento, DateTime?>> getMementoFromCache;
+
+...
+
 public T Find(Guid id)
 {
-    var memento = this.getMementoFromCache(id);
-    if (memento != null)
-    {
-        // NOTE: if we had a guarantee that this is running in a single process, there is
-        // no need to check if there are new events after the cached version.
-        var deserialized = this.eventStore.Load(GetPartitionKey(id), memento.Version + 1)
-            .Select(this.Deserialize);
+	var cachedMemento = this.getMementoFromCache(id);
+	if (cachedMemento != null && cachedMemento.Item1 != null)
+	{
+		IEnumerable<IVersionedEvent> deserialized;
+		if (!cachedMemento.Item2.HasValue || cachedMemento.Item2.Value < DateTime.UtcNow.AddSeconds(-1))
+		{
+			deserialized = this.eventStore.Load(GetPartitionKey(id), cachedMemento.Item1.Version + 1).Select(this.Deserialize);
+		}
+		else
+		{
+			deserialized = Enumerable.Empty<IVersionedEvent>();
+		}
 
-        return this.originatorEntityFactory.Invoke(id, memento, deserialized);
-    }
-    else
-    {
-        var deserialized = this.eventStore.Load(GetPartitionKey(id), 0)
-            .Select(this.Deserialize)
-            .AsCachedAnyEnumerable();
+		return this.originatorEntityFactory.Invoke(id, cachedMemento.Item1, deserialized);
+	}
+	else
+	{
+		var deserialized = this.eventStore.Load(GetPartitionKey(id), 0)
+			.Select(this.Deserialize)
+			.AsCachedAnyEnumerable();
 
-        if (deserialized.Any())
-        {
-            return this.entityFactory.Invoke(id, deserialized);
-        }
-    }
+		if (deserialized.Any())
+		{
+			return this.entityFactory.Invoke(id, deserialized);
+		}
+	}
 
-    return null;
+	return null;
 }
 ```
 
-In this solution, whenever the system updates the aggregate and invokes 
-the **Save** method, it also updates the existing memento. Therefore, if 
-there is only a single process, the **Find** method doesn't need to load 
-events from the event store. However, the Contoso Conference Management 
-System may use multiple processes, therefore the **Find** method checks 
-in the event store for recent events. If the cached memento expires, the 
-**Find** method loads all of the events associated with the aggregate 
-from the store. 
-
-**MarkusPersona:** If we were sure that we'd always be running this in a 
-single process we could optimize further by not querying for new events. 
+If the cache entry was updated in the last few seconds, there is a high 
+probability that it is not stale because we have a single writer for 
+high-contention aggregates. Therefore, we optimistically avoid checking 
+for new events in the event store since the memento was created. 
+Otherwise, we check in the event store for events that arrived after the 
+memento was created. 
 
 The following code sample shows how the **SeatsAvailability** class adds 
 a snapshot of its state data to the memento object to be cached: 
@@ -1451,10 +1465,54 @@ The system now also uses a cache to hold seat type descriptions in the **PricedO
 
 This section outlines some of the additional ways that the team optimized the performance of the application and improved its resilience: 
 
+* Using sequential GUIDs
 * Using asynchronous ASP.NET MVC controllers.
 * Using prefetch to retrieve multiple messages from the Service Bus.
 * Accepting multiple Windows Azure Service Bus sessions in parallel.
 * Expiring seat reservation commands.
+
+### Sequential GUIDs
+
+Previously, the system generated the GUIDs that it used for the IDs of aggregates such as orders and reservations using the **Guid.NewGuid** method which generates random GUIDs. If these GUIDs are used as primary key values in a SQL Azure instance, this causes frequent page splits in the indexes which has a negative impact on the performance of the database. In the V3 release, the team added a utility class that generates sequential GUIDs. This ensures that new entries in the SQL Database instance tables are always appends, and therefore improves the overall performance of the database. The following code sample shows the new **GuidUtil** class:
+
+```Cs
+public static class GuidUtil
+{
+	private static readonly long EpochMilliseconds = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).Ticks / 10000L;
+
+	/// <summary>
+	/// Creates a sequential GUID according to SQL Server's ordering rules.
+	/// </summary>
+	public static Guid NewSequentialId()
+	{
+		// This code was not reviewed to guarantee uniqueness under most conditions, nor completely optimize for avoiding
+		// page splits in SQL Server when doing inserts from multiple hosts, so do not re-use in production systems.
+		var guidBytes = Guid.NewGuid().ToByteArray();
+
+		// get the milliseconds since Jan 1 1970
+		byte[] sequential = BitConverter.GetBytes((DateTime.Now.Ticks / 10000L) - EpochMilliseconds);
+
+		// discard the 2 most significant bytes, as we only care about the milliseconds increasing, but the highest ones should be 0 for several thousand years to come.
+		if (BitConverter.IsLittleEndian)
+		{
+			guidBytes[10] = sequential[5];
+			guidBytes[11] = sequential[4];
+			guidBytes[12] = sequential[3];
+			guidBytes[13] = sequential[2];
+			guidBytes[14] = sequential[1];
+			guidBytes[15] = sequential[0];
+		}
+		else
+		{
+			Buffer.BlockCopy(sequential, 2, guidBytes, 10, 6);
+		}
+
+		return new Guid(guidBytes);
+	}
+}
+```
+
+For further information, see [Good Page Splits and Sequential GUID Key Generation][seqguids].
 
 ### Asynchronous ASP.NET MVC controllers.
 
@@ -1601,3 +1659,4 @@ use [WatiN][watin] to drive the system through its UI.
 [sqlthrottle]:       http://social.technet.microsoft.com/wiki/contents/articles/sql-azure-performance-and-elasticity-guide.aspx#SQL_Azure_Throttling
 [wascale]:           http://blogs.msdn.com/b/windowsazurestorage/archive/2010/05/10/windows-azure-storage-abstractions-and-their-scalability-targets.aspx
 [sbscale]:           http://msdn.microsoft.com/en-us/library/windowsazure/hh528527.aspx
+[seqguids]:          http://blogs.msdn.com/b/dbrowne/archive/2012/06/26/good-page-splits-and-sequential-guid-key-generation.aspx
