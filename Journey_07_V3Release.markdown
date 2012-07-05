@@ -1445,6 +1445,8 @@ if (timeToCache > TimeSpan.Zero)
 }
 ```
 
+The system now also uses a cache to hold seat type descriptions in the **PricedOrderViewModelGenerator** class.
+
 ## Other optimizing and hardening changes
 
 This section outlines some of the additional ways that the team optimized the performance of the application and improved its resilience: 
@@ -1530,6 +1532,14 @@ the TimeToLive property: when the time-to-live expires, the message is
 automatically sent to a dead-letter queue. The application uses this 
 feature of the Service Bus to avoid processing **MakeSeatReservation** 
 commands if the order they are associated with has already expired. 
+
+### Reducing the number of round-trips to the database
+
+The identified a number of locations in the 
+**PricedOrderViewModelGenerator** class where they could optimize the 
+code. Previously, the system made two calls to the SQL Azure instance 
+when this class handled an order being placed or expired, now the system 
+only makes a single call. 
 
 # Impact on testing 
 
