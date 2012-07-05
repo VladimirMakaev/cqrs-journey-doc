@@ -35,8 +35,16 @@ are a few important points to note about our use of this terminology:
   us explain the CQRS pattern and related concepts, not to provide
   guidance on how to use the DDD approach. 
 
-To learn more about DDD, you should read the book "Domain-Driven Design: 
-Tackling Complexity in the Heart of Software" by Eric Evans.
+To learn more about the foundational principles of DDD, you should read 
+the book "Domain-Driven Design: Tackling Complexity in the Heart of 
+Software" by Eric Evans (2003) and to see how these principles apply to 
+a concrete development project on the .NET platform, along with insights 
+and experimentation, you should read the book "Applying Domain Driven 
+Design and Patterns" by Jimmy Nillson (2006). 
+
+In addition, to see how Evans's understanding of what works and what 
+doesn't in DDD, and for his view on how it all changed over the previous 
+five years, we recommend his talk at [QCon London 2009][evansqcon]. 
 
 For a summary of the key points in Eric Evans' book, you should read the
 free book, "[Domain-Driven Design Quickly][dddquickly]" by Abel Avram
@@ -57,6 +65,9 @@ suited to designing solutions for large and complex domains. DDD also
 extends its influence to other aspects of the software development 
 process as a part of the attempt to help you manage complexity: 
 
+> "Every effective DDD person is a Hands-on Modeller, including me."  
+> Eric Evans
+
 - In focusing on the domain, DDD focuses on the area where the business
   and the development team must be able to communicate with each other
   clearly, but where in practice they often misunderstand each other. 
@@ -70,6 +81,10 @@ process as a part of the attempt to help you manage complexity:
   divided up, enabling multiple teams to work in parallel, and enabling
   you to target appropriate resources to those parts of the system with
   the greatest business value. 
+  
+> "Focus relentlessly on the core domain! Find the differentiator in
+> your software - something significant!"  
+> Eric Evans
 
 The DDD approach is appropriate for large, complex systems that are 
 expected to have a long life span. You are unlikely to see a return on 
@@ -87,7 +102,7 @@ working definitions for the purposes of this guide.
 
 ## Domain model 
 
-At the heart of DDD lies the concept of the domain model. This model is 
+At the heart of DDD lies the concept of the _domain model_. This model is 
 built by the team responsible for developing the system in question, and 
 that team consists of both domain experts from the business and software 
 developers. The domain model serves several functions: 
@@ -258,12 +273,25 @@ requirements and the constraints on your project:
 >
 >   Eric Evans, "Domain-Driven Design," p383. 
 
+## Anti-corruption layers
+
+Different bounded contexts have different domain models. When your 
+bounded contexts communicate with each other, you need to ensure that 
+concepts specific to one domain model do not leak into another domain 
+model. An _anti-corruption layer_ functions as a gatekeeper between 
+bounded contexts and help you to keep your domain models clean. 
+
 ## Context Maps
 
 A large complex system can have multiple bounded contexts that interact 
 with one another in various ways. A **Context Map** is the documentation 
 that describes the relationships between these bounded contexts. It 
-might might be in the form of diagrams or tables or text. 
+might might be in the form of diagrams or tables or text.
+
+> "I think context mapping is perhaps one thing in there that should be
+> done on every project. The context map helps you keep track of all the
+> models you are using."  
+> Eric Evans
 
 A **Context Map** helps to visualize the system at a high level, showing 
 how some of the key parts relate to each other. It also helps to clarify 
@@ -386,6 +414,7 @@ CQRS pattern, but in practice they do often go together.
 
 
 [dddquickly]:      http://www.infoq.com/minibooks/domain-driven-design-quickly 
+[evansqcon]:       http://domaindrivendesign.org/library/evans_2009_1
 
 [fig1]:           images/Reference_01_BCs.png?raw=true
 [fig2]:           images/Reference_01_Archs.png?raw=true

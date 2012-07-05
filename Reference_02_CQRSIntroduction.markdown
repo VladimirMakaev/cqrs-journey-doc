@@ -58,6 +58,51 @@ managing changing business rules in some portions of your system.
 > up to.  
 > Clemens Vasters (CQRS Advisors Mail List)
 
+The following conversation between Greg Young and Udi Dahan highlights some of the important aspects of the CQRS pattern:
+
+> **Udi Dahan:** If you are going to be looking at applying CQRS, it
+> should be done within a specific bounded context, rather than at the
+> whole system level, unless you are in a special case, when your entire
+> system is just one single bounded context. 
+> 
+> **Greg Young:** I would absolutely agree to that statement. CQRS is
+> not a top-level architecture. CQRS is something that happens at a much
+> lower level, where your top level architecture is probably going to
+> look more like SOA and EDA. 
+> 
+> **Udi Dahan:** That's an important distinction. And that's something
+> that a lot of people who are looking to apply CQRS don't give enough
+> attention to: just how important on the one hand, and how difficult on
+> the other, it is to identify the correct bounded contexts or services,
+> or whatever you call that top-level decomposition and the event-based
+> synchronization between them. A lot of times, when discussing CQRS
+> with clients, when I tell them "You don't need CQRS for that," their
+> interpretation of that statement is that, in essence, they think that
+> I'm telling them that they need to go back to N-tier type of
+> architecture, when primarily I mean a 2-tier style of architecture is
+> sufficient. And even when I say 2-tier, I don't necessarily mean that
+> the second tier needs to be a relational database. To a large extent,
+> for a lot of systems, a NoSQL, document-style database would probably
+> be sufficient with a single data management type tier operated on the
+> client side. As an alternative to CQRS, it's important to lay out a
+> bunch of other design styles or approaches, rather than it's been
+> either you are doing N-tier object relational mapping or CQRS. 
+> 
+> **Question:** Do you consider CQRS to be an approach or a pattern? If
+> it's a pattern, what problem does it specifically solve? 
+> 
+> **Greg Young:** If we were to go by the definition that we have set up
+> for CQRS a number of years ago, it's going to be a very simple
+> low-level pattern. It's not even that interesting as a pattern; it's
+> more just pretty conceptual stuff, you just separate. What's more
+> interesting about it is what it enables. It's the enabling that the
+> pattern provides that's interesting. Everybody gets really caught up
+> in systems and they talk about how complicated CQRS is with service
+> bus and all the other stuff they are doing, and in actuality, none of
+> that is necessary. If you go with the simplest possible definition, it
+> would be a pattern. But it's more what happens once you apply that
+> pattern; the opportunities that you get.
+
 ## Read and write sides
 
 Figure 1 shows a typical application of the CQRS pattern to a portion of 
@@ -388,9 +433,17 @@ pattern in specific scenarios, you may find it difficult in practice to
 convice your stakeholders that these benefits warrant the additional 
 complexity of the solution. 
 
-Quote 3 goes here
+> In my experience, the most important disadvantage of using CQRS/ES
+> and DDD is the "fear of change". This model is not similar to the
+> famous 3-tier layered architecture that many of our stakeholders
+> are used to.  
+> Pawel Wilkosz (Customer Advisory Council)
 
-Quote 4 goes here
+> The learning curve of the developers team is steep. Usually they
+> thinks in terms of relational database development. From my
+> experience, the lack of business, and therefore domain rules and
+> specifications became the biggest hurdle.  
+> Jose Miguel ??? (Customer Advisory Council)
 
 # When should I use CQRS?
 
