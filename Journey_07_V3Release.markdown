@@ -485,18 +485,6 @@ This optimization caches several read models that the public conference web site
 > authority to ensure we have accurate data at the cost of reduced
 > performance in this particular circumstance.
 
-## Optimizing read-models
-
-During this stage of the journey, the team also revisited the implementation of the read-models in the orders and registrations bounded context. The motivation was two-fold: these read-models were originally implemented using SQL Database tables and the team encountered throttling behavior in the SQL Database instance during some of the high-volume performance tests; also, these read-models were implemented when the bounded context used SQL Database tables for all persistenece and before it started to use event sourcing. Accessing some of the read-models (such as the priced-order and draft-order read-models) is done just by aggregate Id, so a SQL-based implmentation is possibly more complex than this feature warrants. The team considered three approaches to improving the scalability of the application by modifying the implementation of these read-models.
-
-1. Partition the SQL Database instance into several instances. This would be a relatively simple change because the application already uses different connection strings in different bounded contexts. However, the team were unsure about the improvements in scalability that this option would bring. It also continues to use SQL Database tables to store these read-models, which as has already been mentioned may be more complex than necessary.
-2. Migrate the read-model storage from the SQL Database instance to Windows Azure blob storage. This would be a slightly more complex approach, but the team thought that this would be more likely to enhance the scalability of the application than the first option. It is also a solution that better fits the requirements for these read-models.
-3. Implement batching behavior for calls to the SQL Azure instance. The team thought that this would have the most significant impact on the scalability of the application of the three options. It also by far the most complex option because it would affect the already complex areas of code that currently make the reliable, asynchronous calls to the database.
-
-Given the time constraints during this stage of the journey, we opted for the second option rather than the third as the best way to address the limits on the scalability of the application.
-
-**PoePersona:** The team also has to take into account the migration of data from the V2 to the V3 release when planning this optimization.
-
 ## Other optimizations
 
 The team performed some additional optimizations that are listed in the 
@@ -1456,44 +1444,6 @@ if (timeToCache > TimeSpan.Zero)
     this.cache.Set(key, seatTypes, new CacheItemPolicy { AbsoluteExpiration = DateTimeOffset.UtcNow.Add(timeToCache) });
 }
 ```
-
-## Storing read-model data in Windows Azure blob storage
-
-Previously, the system stored the **DraftOrder** and **PricedOrder** view model data in SQL Database tables. During this stage of the journey, the team decided to store this data in Windows Azure blob storage. This required changes to the view model generator classes to enable them to save and find order information in blob storage. The following code sample shows the **Find** and **Save** methods from the **DraftOrderViewModelGenerator** class.
-
-```Cs
-private readonly IBlobStorage blobStorage;
-
-...
-
-private T Find<T>(string id)
-    where T : class
-{
-    var dto = this.blobStorage.Find(id);
-    if (dto == null)
-    {
-        return null;
-    }
-
-    using (var stream = new MemoryStream(dto))
-    using (var reader = new StreamReader(stream, Encoding.UTF8))
-    {
-        return (T)this.serializer.Deserialize(reader);
-    }
-}
-
-private void Save<T>(T dto, string id)
-    where T : class
-{
-    using (var writer = new StringWriter())
-    {
-        this.serializer.Serialize(writer, dto);
-        this.blobStorage.Save(id, "text/plain", Encoding.UTF8.GetBytes(writer.ToString()));
-    }
-}
-```
-
-For more details of how the system uses Windows Azure blob storage, see the **CloudBlobStorage** class that implements the **IBlobStorage** interface.
 
 ## Other optimizing and hardening changes
 
