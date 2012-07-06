@@ -389,6 +389,11 @@ encountered when using the Service Bus.
 > Fault Handling Block is complex: we would benefit from some of the new
 > simplifying syntax in C# 4.5!
 
+> **JanaPersona:** For other proven practices to help you optimize
+> performance when using the Windows Azure Service Bus, see this guide:
+> [Best Practices for Performance Improvements Using Service Bus Brokered
+> Messaging][sbscale].
+
 ## Optimizing command processing 
 
 The current implementation uses the same messaging infrastructure, the 
@@ -526,13 +531,16 @@ In addition to the changes we made during this last stage of the journey to impr
 * We could improve the cached snapshot implementation that we have for the **SeatsAvailability** aggregate. The current implementation is described in detail later in this chapter, and is designed to always check the event store for events that arrived after the system created the latest cached snapshot. If we could check that we are still using the same Service Bus session as we were when the system created the latest cached snapshot when we receive a new comand to process, then we would know if they could be other events in the event store. If the session hasn't changed, then we know we are the only writer so there is no need to check the event store. If the session has changed, then potentially someone else has written events associated with the aggregate to the store, and we need to check.
 * The application currently listens for all messages on all Service Bus subscriptions using the same priority. In practice, some messages are more important then others; therefore, when the application is under stress we should prioritize some message processing to minimize the impact on core application functionality. For example, we could identify certain read-models where we are willing to accept more latency.
 
-> **PoePersona:** We could also use autoscaling to scale out the application when load increases, but adding new instances takes time. By prioritizing certain message types, we can continue to deliver performance in key areas of the application while the autoscaler adds resources.
+> **PoePersona:** We could also use autoscaling to scale out the application when load increases (for example by using the [Autoscaling Application Block][aab]), but adding new instances takes time. By prioritizing certain message types, we can continue to deliver performance in key areas of the application while the autoscaler adds resources.
 
 * The current implementation uses randomly generated Guids as keys for all of the entities stored in out SQL Database instance. When the system is under heavy load, it may perform better if we use sequential Guids especially in relation to clustered indexes. For a discussion of sequential Guids, see [The Cost of GUIDs as Primary Keys][combguids].
 * As part of our optimizations to the system, we now process some commands in-process instead of sending them through the Service Bus. We could extend this to other commands and potentially the process manager.
 * In the current implementation, the process manager processes incoming messages and then the repository tries to send the outgoing messages synchronously (it uses the [Transient Fault Handling Application Block][tfhab] to retry sending commands if the Service Bus throws any exceptions due to throttling behavior). We could instead use a mechanism similar to that used by the **EventStoreBusPublisher** class so that the process manager saves a list of messages that must be sent along with its state in a single transaction, and then notifies a separate part of the system, that is responsible for sending the messages, that there are some new messages ready to send.
 
-**MarkusPersona:** The part of the system that is reponsible for sending the messages can do so asynchronously. It could also implement dynamic throttling for sending the messages and dynamically control how many parallel senders to use.
+> **MarkusPersona:** The part of the system that is reponsible for
+> sending the messages can do so asynchronously. It could also implement
+> dynamic throttling for sending the messages and dynamically control
+> how many parallel senders to use.
 
 ## Further changes that would enhance scalability
 
@@ -540,24 +548,53 @@ The Contoso Conference Management System is designed to allow you to deploy mult
 
 * **Partition the Service Bus:** We could partition the Service Bus to avoid throttling when the volume of messages that the system is sending approaches the maximum throughput that the Service Bus can handle. Possible partitioning schemes include; using separate topics for different message types, or using multiple, similar topics and listening to them all on a round-robin to spread the load. For a detailed discussion of this issue, see Chapter 11, "Asynchronous Communication and Message Buses" in _Scalability Rules: 50 Principles for Scaling Web Sites_ by Abbott and Fisher (Addison-Wesley 2011).
 
-**GaryPersona:** Not all messages have the same importance. You could also use seprate, prioritized message buses to handle different messge types or even consider not using a message bus for some messages.
+> **GaryPersona:** Not all messages have the same importance. You could
+> also use seprate, prioritized message buses to handle different messge
+> types or even consider not using a message bus for some messages.
+
+> **JanaPersona:** Treat the Service Bus just like any other critical
+> component of your system. This means you should ensure that you
+> service bus can be scaled. Also, remember, not all data has equivalent
+> value to your business. Just because you have a Service Bus, doesn't
+> mean everything has to go through it. It's prudent to eliminate low
+> value, high cost traffic.
 
 * **Partition the data:** The system stores different types of data in different partitions. You can see in the bootstrapping code how the different bounded contexts use different connection strings to connect to the SQL Database instance. However, the system currently uses a single SQL Database instance and we could change this to use multiple different instances, each holding a specific set of data that the system uses. For example the the orders and registrations bounded context could use different SQL Database instances for the different read-models. We could also consider using the Federations feature to use sharding to scale out some of the SQL Database instances.
 
-**JanaPersona:** Where the system stores data in Windows Azure table storage, we chose keys to partition the data for scalability. As an alternative to using SQL Database federations to shard the data we could move some of the read-model data currently in the SQL Database instance to either Windows Azure table storage or blob storage.
+> "Data persistence is the hardest technical problem most scalable SaaS
+> businesses face."  
+> Evan Cooke, CTO, Twilio
+
+> **JanaPersona:** Where the system stores data in Windows Azure table
+> storage, we chose keys to partition the data for scalability. As an
+> alternative to using SQL Database federations to shard the data we
+> could move some of the read-model data currently in the SQL Database
+> instance to either Windows Azure table storage or blob storage.
 
 * **Store and forward:** We introduced the store and forward design in the previous section that discuss performance improvement. By batching multiple operations, you not only reduce the number of round-trips to the data store and reduce the latency in the system, you also enhace the scalability of the system because fewer requests reduces the stress on the data store.
 
 * **Listen for and react to throttling indicators:** Currently, the system uses the [Transient Fault Handling Application Block][tfhab] to detect transient error conditions such as throttling indicators from the Windows Azure Service Bus, the SQL Database instance, and Windows Azure table storage. The system uses the block to implement retries in these scenarios, typically by using an exponential back-off strategy. However, a single worker role instance might be processing a large number of messages in parallel which results in throttling errors on all the threads. In this case, we would like to dynamically reduce the degree of parallelism as a way to proactively avoid encountering throttling behavior and having to make multiple retries.
 
-**JanaPersona:** For an example of implementing dynamic throttling within the application to avoid throttling from the service, see the way that the **Start ** method in the **EventStoreBusPublisher** class manages the degree of parallelism that it uses to send messages. Ideally, you should design your application to avoid reaching the point where it starts being throttled by a service.
+> **JanaPersona:** For an example of implementing dynamic throttling
+> within the application to avoid throttling from the service, see the
+> way that the **Start ** method in the **EventStoreBusPublisher** class
+> manages the degree of parallelism that it uses to send messages.
+> Ideally, you should design your application to avoid reaching the
+> point where it starts being throttled by a service.
 
-**PoePersona:** Each service (Windows Azure Service Bus, SQL Database, Windows Azure storage) has its own particular way of implementing throttling behavior and notifying you when it is placed under heavy load. For example, see [SQL Azure Throttling][sqlthrottle]. It's important to be aware of all the throttling that your application may be subject in different services that your application uses.
+> **PoePersona:** Each service (Windows Azure Service Bus, SQL Database,
+> Windows Azure storage) has its own particular way of implementing
+> throttling behavior and notifying you when it is placed under heavy
+> load. For example, see [SQL Azure Throttling][sqlthrottle]. It's
+> important to be aware of all the throttling that your application may
+> be subject in different services that your application uses.
 
 For some additional information relating to scalability, see:
 
 * [Windows Azure Storage Abstractions and their Scalability Targets][wascale]
 * [Best Practices for Performance Improvements Using Service Bus Brokered Messaging][sbscale]
+
+It's important not to get the false sense of optimism when it comes to scalability and high availability. While with many of the suggested practices, the applications tend to scale more efficiently and become more resilient to failure, they are still prone to high demand bottlenecks. Make sure to allocate sufficient time for performance testing and for meeting your performance goals.
 
 # No downtime migration
 
@@ -1640,4 +1677,5 @@ use [WatiN][watin] to drive the system through its UI.
 [combguids]:         http://www.informit.com/articles/article.aspx?p=25862
 [sqlthrottle]:       http://social.technet.microsoft.com/wiki/contents/articles/sql-azure-performance-and-elasticity-guide.aspx#SQL_Azure_Throttling
 [wascale]:           http://blogs.msdn.com/b/windowsazurestorage/archive/2010/05/10/windows-azure-storage-abstractions-and-their-scalability-targets.aspx
-[sbscale]:           http://msdn.microsoft.com/en-us/library/windowsazure/hh528527.aspx
+[sbscale]:           http://aka.ms/SBperf
+[aab]:               http://aka.ms/autoscaling
