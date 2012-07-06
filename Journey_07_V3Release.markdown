@@ -4,9 +4,9 @@ _Reaching the end of our journey: the final tasks_
 
 > "You cannot fly like an eagle with the wings of a wren," Henry Hudson
 
-The two primary goals for this last stage in our journey are to make the 
-system more resilient to failures and to improve the responsiveness of 
-the UI. The effort to harden the system focuses on the 
+The three primary goals for this last stage in our journey are to make the 
+system more resilient to failures, to improve the responsiveness of 
+the UI, and to ensure that our design is scalable. The effort to harden the system focuses on the 
 **RegistrationProcessManager** class in the Orders and Registrations 
 bounded context. The focus on performance is on the way the UI interacts 
 with the domain-model during the order creation process. 
@@ -371,8 +371,9 @@ Registrant screen than in the V2 release.
 # Optimizing the infrastructure
 
 The second set of optimizations that the team added in this stage of the 
-journey related to the infrastructure in the system. The following 
-sections describe the most significant changes we made here. 
+journey related to the infrastructure in the system. These changes 
+addressed both the performance and the scalability of the system. The 
+following sections describe the most significant changes we made here. 
 
 ## Sending and receiving commands and events asynchronously
 
@@ -485,6 +486,19 @@ This optimization caches several read models that the public conference web site
 > authority to ensure we have accurate data at the cost of reduced
 > performance in this particular circumstance.
 
+## Partitioning the Service Bus
+
+The team also partitioned the Service Bus to make the application more scalable and to avoid throttling when the volume of messages that the system dends approaches the maximum throughput that the Service Bus can handle. Each Service Bus topic may be handled by a different node in Windows Azure, so by using multiple topics we can increase our potential throughput. We considered the following partitioning schemes:
+
+* Use separate topics for different message types.
+* Use multiple, similar topics and listen to them all on a round-robin to spread the load.
+
+For a detailed discussion of these partitioning schemes, see Chapter 11, "Asynchronous Communication and Message Buses" in _Scalability Rules: 50 Principles for Scaling Web Sites_ by Abbott and Fisher (Addison-Wesley 2011).
+
+We decided to use separate topics for the events that the **Order** aggregates publish and that the **SeatAvailability** aggregates publish because these aggregates are responsible for the majority of events flowing through the service bus.
+
+**GaryPersona:** Not all messages have the same importance. You could also use seprate, prioritized message buses to handle different messge types or even consider not using a message bus for some messages.
+
 ## Other optimizations
 
 The team performed some additional optimizations that are listed in the 
@@ -500,6 +514,7 @@ generator instance must handle the events published by the write-side by
 creating a subscription the the Windows Azure Service Bus topics.
 
 ## Results of the optimization work
+[To do if we want to publish any details]
 
 ## Further changes that would improve performance
 
@@ -511,12 +526,10 @@ In addition to the changes we made during this last stage of the journey to impr
 > **MarkusPersona:** By accepting a Service Bus session you have a single writer and listener for that session for as long as you keep the lock: this reduces the chances of an optimistic concurrency exception. This design would fit particularly well in the **SeatsAvailability** read and write models. For the read-models associated with the **Order** aggregates, which have very small partitions, you could acquire multiple small sessions from the Service Bus and use the store and forward approach on each session. Although both the read and write models in the system could benefit from this approach, it's easier to implement in the read-models where we expect the data to be eventually consistent and not fully consistent.
 
 * The website already caches some frequently accessed read-model data, but we could extend the use of caching to other areas of the system. The CQRS pattern means that we can regard a cache as part of the eventually consistent read-model, and if necessary provide  access to read-model data from different parts of the system using different caches or no caching at all.
-* We could improve the cached snapshot implementation that we have for the **SeatsAvailability** aggregate. The current implementation is described in detail later in this chapter, and is designed to always check the event store for events that arrived after the system created the latest cached snapshot. If we could check that we are still using the same Service Bus session as we were when the system created the latest cached snapshot when we receive a new comand to process, then we would know if they could be other events in the event store. If the session hasn't changed, then we know we are the only writer so there is no need to check the event store. If the session has changed, then potentially someone else has written events associated with the aggregate to the store, and we need to check.
 * The application currently listens for all messages on all Service Bus subscriptions using the same priority. In practice, some messages are more important then others; therefore, when the application is under stress we should prioritize some message processing to minimize the impact on core application functionality. For example, we could identify certain read-models where we are willing to accept more latency.
 
 > **PoePersona:** We could also use autoscaling to scale out the application when load increases, but adding new instances takes time. By prioritizing certain message types, we can continue to deliver performance in key areas of the application while the autoscaler adds resources.
 
-* The current implementation uses randomly generated Guids as keys for all of the entities stored in out SQL Database instance. When the system is under heavy load, it may perform better if we use sequential Guids especially in relation to clustered indexes. For a discussion of sequential Guids, see [The Cost of GUIDs as Primary Keys][combguids].
 * As part of our optimizations to the system, we now process some commands in-process instead of sending them through the Service Bus. We could extend this to other commands and potentially the process manager.
 * In the current implementation, the process manager processes incoming messages and then the repository tries to send the outgoing messages synchronously (it uses the [Transient Fault Handling Application Block][tfhab] to retry sending commands if the Service Bus throws any exceptions due to throttling behavior). We could instead use a mechanism similar to that used by the **EventStoreBusPublisher** class so that the process manager saves a list of messages that must be sent along with its state in a single transaction, and then notifies a separate part of the system, that is responsible for sending the messages, that there are some new messages ready to send.
 
@@ -525,10 +538,6 @@ In addition to the changes we made during this last stage of the journey to impr
 ## Further changes that would enhance scalability
 
 The Contoso Conference Management System is designed to allow you to deploy multiple instances of the web and worker roles to scale out the application to handle larger loads. However, the design is not fully scalable because some of the other elements of the system such as the messages buses and data stores place constraints on the maximum achievable throughput. This section outlines some changes that we could make to the system to remove some of these constraints and significantly enhance the scalability of the system. The available time for this journey was limited so it was not possible to make these changes in the V3 release.
-
-* **Partition the Service Bus:** We could partition the Service Bus to avoid throttling when the volume of messages that the system is sending approaches the maximum throughput that the Service Bus can handle. Possible partitioning schemes include; using separate topics for different message types, or using multiple, similar topics and listening to them all on a round-robin to spread the load. For a detailed discussion of this issue, see Chapter 11, "Asynchronous Communication and Message Buses" in _Scalability Rules: 50 Principles for Scaling Web Sites_ by Abbott and Fisher (Addison-Wesley 2011).
-
-**GaryPersona:** Not all messages have the same importance. You could also use seprate, prioritized message buses to handle different messge types or even consider not using a message bus for some messages.
 
 * **Partition the data:** The system stores different types of data in different partitions. You can see in the bootstrapping code how the different bounded contexts use different connection strings to connect to the SQL Database instance. However, the system currently uses a single SQL Database instance and we could change this to use multiple different instances, each holding a specific set of data that the system uses. For example the the orders and registrations bounded context could use different SQL Database instances for the different read-models. We could also consider using the Federations feature to use sharding to scale out some of the SQL Database instances.
 
@@ -542,7 +551,7 @@ The Contoso Conference Management System is designed to allow you to deploy mult
 
 **PoePersona:** Each service (Windows Azure Service Bus, SQL Database, Windows Azure storage) has its own particular way of implementing throttling behavior and notifying you when it is placed under heavy load. For example, see [SQL Azure Throttling][sqlthrottle]. It's important to be aware of all the throttling that your application may be subject in different services that your application uses.
 
-**PoePersona:** The team also considered using the SQL Azure Business edition instead of the SQL Azure Web edition, but on investigation we determined that at present, the only difference between the editions is the maximum database size. They are not tuned to support different types of workload, and both editions implement the same throttling behavior.
+**PoePersona:** The team also considered using the SQL Azure Business edition instead of the SQL Azure Web edition, but on investigation we determined that at present, the only difference between the editions is the maximum database size. The different editions are not tuned to support different types of workload, and both editions implement the same throttling behavior.
 
 For some additional information relating to scalability, see:
 
@@ -1461,6 +1470,45 @@ if (timeToCache > TimeSpan.Zero)
 
 The system now also uses a cache to hold seat type descriptions in the **PricedOrderViewModelGenerator** class.
 
+## Using multiple topics to partitioin the service bus
+
+To reduce the number of messages flowing through the service bus topics, we created two additional topics to transport events published by the *Order** and **SeatAvailability** aggregates. The following snippet from the Settings.xml file shows the definitions of these new topics:
+
+```XML
+<Topic Path="conference/orderevents" IsEventBus="true">
+  <Subscription Name="logOrders" RequiresSession="false"/>
+  <Subscription Name="Registration.RegistrationPMOrderPlacedOrders" RequiresSession="false"
+    SqlFilter="TypeName IN ('OrderPlaced')"/>
+  <Subscription Name="Registration.RegistrationPMNextStepsOrders" RequiresSession="false"
+    SqlFilter="TypeName IN ('OrderUpdated','SeatsReserved','PaymentCompleted','OrderConfirmed')"/>
+  <Subscription Name="Registration.OrderViewModelGeneratorOrders" RequiresSession="true"
+    SqlFilter="TypeName IN ('OrderPlaced','OrderUpdated','OrderPartiallyReserved','OrderReservationCompleted',
+    'OrderRegistrantAssigned','OrderConfirmed','OrderPaymentConfirmed')"/>
+  <Subscription Name="Registration.PricedOrderViewModelOrders" RequiresSession="true"
+    SqlFilter="TypeName IN ('OrderPlaced','OrderTotalsCalculated','OrderConfirmed',
+    'OrderExpired','SeatAssignmentsCreated','SeatCreated','SeatUpdated')"/>
+  <Subscription Name="Registration.SeatAssignmentsViewModelOrders" RequiresSession="true"
+    SqlFilter="TypeName IN ('SeatAssignmentsCreated','SeatAssigned','SeatUnassigned','SeatAssignmentUpdated')"/>
+  <Subscription Name="Registration.SeatAssignmentsHandlerOrders" RequiresSession="true"
+    SqlFilter="TypeName IN ('OrderConfirmed','OrderPaymentConfirmed')"/>
+  <Subscription Name="Conference.OrderEventHandlerOrders" RequiresSession="true"
+    SqlFilter="TypeName IN ('OrderPlaced','OrderRegistrantAssigned','OrderTotalsCalculated',
+    'OrderConfirmed','OrderExpired','SeatAssignmentsCreated','SeatAssigned','SeatAssignmentUpdated','SeatUnassigned')"/>
+</Topic>
+<Topic Path="conference/availabilityevents" IsEventBus="true">
+  <Subscription Name="logAvail" RequiresSession="false"/>
+  <Subscription Name="Registration.RegistrationPMNextStepsAvail" RequiresSession="false"
+    SqlFilter="TypeName IN ('OrderUpdated','SeatsReserved','PaymentCompleted','OrderConfirmed')"/>
+  <Subscription Name="Registration.PricedOrderViewModelAvail" RequiresSession="true"
+    SqlFilter="TypeName IN ('OrderPlaced','OrderTotalsCalculated','OrderConfirmed',
+    'OrderExpired','SeatAssignmentsCreated','SeatCreated','SeatUpdated')"/>
+  <Subscription Name="Registration.ConferenceViewModelAvail" RequiresSession="true"
+    SqlFilter="TypeName IN ('ConferenceCreated','ConferenceUpdated','ConferencePublished',
+    'ConferenceUnpublished','SeatCreated','SeatUpdated','AvailableSeatsChanged',
+    'SeatsReserved','SeatsReservationCancelled')"/>
+</Topic>
+```
+
 ## Other optimizing and hardening changes
 
 This section outlines some of the additional ways that the team optimized the performance of the application and improved its resilience: 
@@ -1512,7 +1560,7 @@ public static class GuidUtil
 }
 ```
 
-For further information, see [Good Page Splits and Sequential GUID Key Generation][seqguids].
+For further information, see [The Cost of GUIDs as Primary Keys][combguids] and [Good Page Splits and Sequential GUID Key Generation][seqguids].
 
 ### Asynchronous ASP.NET MVC controllers.
 
