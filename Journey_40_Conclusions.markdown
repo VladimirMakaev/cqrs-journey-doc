@@ -136,7 +136,7 @@ Although the cloud brings many benefits such as reliable, scalable, off-the-shel
 
 A complex cloud environment can make it harder to run quick tests during 
 development. A local test environment may not mimic the behavior of the 
-cloud exactly, especially in relation to performance. 
+cloud exactly, especially in relation to performance and throttling. 
 
 > **Note:** The multiple build configurations in our Visual Studio
 > solution were partially designed to address this, but also to help
