@@ -586,7 +586,12 @@ The Contoso Conference Management System is designed to allow you to deploy mult
 > important to be aware of all the throttling that your application may
 > be subject in different services that your application uses.
 
-**PoePersona:** The team also considered using the SQL Azure Business edition instead of the SQL Azure Web edition, but on investigation we determined that at present, the only difference between the editions is the maximum database size. The different editions are not tuned to support different types of workload, and both editions implement the same throttling behavior.
+> **PoePersona:** The team also considered using the SQL Azure Business
+> edition instead of the SQL Azure Web edition, but on investigation we
+> determined that at present, the only difference between the editions
+> is the maximum database size. The different editions are not tuned to
+> support different types of workload, and both editions implement the
+> same throttling behavior.
 
 For some additional information relating to scalability, see:
 
@@ -1349,12 +1354,9 @@ public T Find(Guid id)
 }
 ```
 
-If the cache entry was updated in the last few seconds, there is a high 
-probability that it is not stale because we have a single writer for 
-high-contention aggregates. Therefore, we optimistically avoid checking 
-for new events in the event store since the memento was created. 
-Otherwise, we check in the event store for events that arrived after the 
-memento was created. 
+If the cache entry was updated in the last few seconds, there is a high probability that it is not stale because we have a single writer for high-contention aggregates. Therefore, we optimistically avoid checking for new events in the event store since the memento was created. Otherwise, we check in the event store for events that arrived after the memento was created. 
+
+ 
 
 The following code sample shows how the **SeatsAvailability** class adds 
 a snapshot of its state data to the memento object to be cached: 
@@ -1507,9 +1509,9 @@ if (timeToCache > TimeSpan.Zero)
 
 The system now also uses a cache to hold seat type descriptions in the **PricedOrderViewModelGenerator** class.
 
-## Using multiple topics to partitioin the service bus
+## Using multiple topics to partition the service bus
 
-To reduce the number of messages flowing through the service bus topics, we created two additional topics to transport events published by the *Order** and **SeatAvailability** aggregates. The following snippet from the Settings.xml file shows the definitions of these new topics:
+To reduce the number of messages flowing through the service bus topics, we created two additional topics to transport events published by the **Order** and **SeatAvailability** aggregates. The following snippet from the Settings.xml file shows the definitions of these new topics:
 
 ```XML
 <Topic Path="conference/orderevents" IsEventBus="true">
@@ -1678,8 +1680,8 @@ commands if the order they are associated with has already expired.
 
 ### Reducing the number of round-trips to the database
 
-The identified a number of locations in the 
-**PricedOrderViewModelGenerator** class where they could optimize the 
+We identified a number of locations in the 
+**PricedOrderViewModelGenerator** class where we could optimize the 
 code. Previously, the system made two calls to the SQL Azure instance 
 when this class handled an order being placed or expired, now the system 
 only makes a single call. 
