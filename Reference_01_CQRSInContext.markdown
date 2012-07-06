@@ -141,9 +141,16 @@ think, "if the domain expert talks about a delegate, he is really
 talking about an attendee in the software," then eventually something 
 will go wrong as a result of a misunderstanding or mistranslation. 
 
+> **JanaPersona:** In our journey, we used SpecFlow to express business
+> rules as acceptance tests. They helped us to communicate information
+> about our domain with clarity and brevity, and formulate a ubiquitous
+> language in the process. For more information, see Chapter 4,
+> "[Extending and Enhancing the Orders and Registrations Bounded
+> Context][j_chapter4]," in the journey.
+
 ## Entities, Value Objects, and Services 
 
-DDD uses these terms to identify some of the internal artifacts that 
+DDD uses these terms to identify some of the internal artifacts (or "building blocks" as Evans calls them) that 
 will make up the domain model. 
 
 ### Entities 
@@ -165,7 +172,11 @@ conference management system we do not need to assign an identity to
 every attendee's address (for a start all of the attendees from a 
 particular organization may share the same address). All we are 
 concerned with are the values of the attributes of an address: street, 
-city, state, etc. Value objects are usually immutable. 
+city, state, etc. Value objects are usually immutable.
+
+> **JanaPersona:** The following video is a good refresher on using
+> value objects properly, especially if you are confusing them with
+> DTOs: [Power Use of Value Objects in DDD][valueobjects].
 
 ### Services 
 
@@ -185,7 +196,14 @@ service is that it is stateless (unlike entities and value objects).
 Whereas entities, value objects, and services are terms for the elements 
 that DDD uses to describe things in the domain model, the terms 
 aggregate and aggregate root relate specifically to the life cycle and 
-grouping of those elements. 
+grouping of those elements.
+
+> An aggregate is like grapes - in the sense that you have something you
+> think of as a conceptual whole, which is also made up of smaller
+> parts. You have rules that apply to the whole thing. So every one of
+> those grapes is part of a grape bunch. Aggregates are super important.
+> It is one of those things that helps you to enforce the real rules.  
+> Eric Evans, [What I've learned about DDD since the book][evans_2009_1]
 
 When you design a system that allows multiple users to work on shared 
 data, you will have to evaluate the trade-off between consistency and 
@@ -273,6 +291,26 @@ requirements and the constraints on your project:
 >
 >   Eric Evans, "Domain-Driven Design," p383. 
 
+You decide which patterns and approaches to apply (for example, whether 
+to use the CQRS pattern or not) within a bounded context, not for the 
+entire system. 
+
+> **JanaPersona:** BC is often used as an acronym for bounded contexts
+> (in DDD) and business components (in SOA). Do not confuse them. In our
+> guidance, BC means "bounded context."
+
+> A given Bounded Context should be divided into Business Components,
+> where these Business Components have full UI through DB code, and are
+> ultimately put together in composite UI’s and other physical pipelines
+> to fulfill the system’s functionality. A Business Component can exist
+> in only one Bounded Context.  
+> Udi Dahan, [Udi & Greg Reach CQRS Agreement][udigreg]
+> 
+> For me a bounded context is an abstract concept (and it's still an
+> important one!) but it comes to technical details, the business
+> component is far more important than the bounded context.  
+> Greg Young, conversation with the patterns &amp; practices team
+
 ## Anti-corruption layers
 
 Different bounded contexts have different domain models. When your 
@@ -292,6 +330,10 @@ might might be in the form of diagrams or tables or text.
 > done on every project. The context map helps you keep track of all the
 > models you are using."  
 > Eric Evans
+
+> Sometimes the process of gathering information to draw the context map
+> is more important than the map itself.  
+> Alberto Brandolini
 
 A **Context Map** helps to visualize the system at a high level, showing 
 how some of the key parts relate to each other. It also helps to clarify 
@@ -411,10 +453,12 @@ used the DDD approach for the domain analysis and model design.
 In summary, the DDD approach is not a pre-requisite for implementing the 
 CQRS pattern, but in practice they do often go together. 
 
-
+[j_chapter4]:     Journey_04_ExtendingEnhancing.markdown
 
 [dddquickly]:      http://www.infoq.com/minibooks/domain-driven-design-quickly 
 [evansqcon]:       http://domaindrivendesign.org/library/evans_2009_1
+[valueobjects]:    http://www.infoq.com/presentations/Value-Objects-Dan-Bergh-Johnsson
+[udigreg]:         http://www.udidahan.com/2012/02/10/udi-greg-reach-cqrs-agreement
 
 [fig1]:           images/Reference_01_BCs.png?raw=true
 [fig2]:           images/Reference_01_Archs.png?raw=true
