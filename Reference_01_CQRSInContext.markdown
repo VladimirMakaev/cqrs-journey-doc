@@ -289,7 +289,7 @@ requirements and the constraints on your project:
 >   of specialized groups of users, along with specialized dialects of
 >   the Ubiquitous Language. 
 >
->   Eric Evans, "Domain-Driven Design," p383. 
+>   Taken from Eric Evans, "Domain-Driven Design," p383. 
 
 You decide which patterns and approaches to apply (for example, whether 
 to use the CQRS pattern or not) within a bounded context, not for the 
@@ -317,7 +317,7 @@ Different bounded contexts have different domain models. When your
 bounded contexts communicate with each other, you need to ensure that 
 concepts specific to one domain model do not leak into another domain 
 model. An _anti-corruption layer_ functions as a gatekeeper between 
-bounded contexts and help you to keep your domain models clean. 
+bounded contexts and helps you to keep your domain models clean. 
 
 ## Context Maps
 
@@ -331,8 +331,8 @@ might might be in the form of diagrams or tables or text.
 > models you are using."  
 > Eric Evans
 
-> Sometimes the process of gathering information to draw the context map
-> is more important than the map itself.  
+> "Sometimes the process of gathering information to draw the context map
+> is more important than the map itself."  
 > Alberto Brandolini
 
 A **Context Map** helps to visualize the system at a high level, showing 
@@ -342,7 +342,7 @@ bounded contexts exchange data and share data, and also where you must
 translate data as it moves from one domain model to another.
 
 A business entity such as a customer might exist in several 
-bounded contexts. However it may may need to expose different facets or 
+bounded contexts. However, it may need to expose different facets or 
 properties that are relevant to a particular bounded context. As a 
 customer entity moves from one bounded context to another you may need 
 to translate it so that it exposes the relevant facets or properties for 
@@ -442,13 +442,26 @@ implementation of the CQRS pattern.
 Some experts consider the DDD approach to be an essential pre-requisite
 for implementing the CQRS pattern.
 
-[Quote 1 goes here]
+> "It is essential to write the whole Domain Model, ubiquitous language,
+> including use cases, domain and user intention specifications, and to
+> identify both context boundaries and autonomous components. In my
+> experience, those are absolutely mandatory." 
+> Jose Miguel Torres (Customer Advisory Council)
 
 However, many people can point to projects where they have seen real 
 benefits from implementing the CQRS pattern, but where they have not 
 used the DDD approach for the domain analysis and model design. 
 
-[Quote 2 goes here]
+> "It is something of a tradition to connect both paradigms because using
+> DDD can lead naturally into CQRS, and also the available literature
+> about CQRS tends to use DDD terminology. However, DDD is mostly
+> appropriate for very large and complex projects. On the other hand,
+> there is no reason why a small and simple project can not benefit from
+> CQRS. For example, a relatively small project that would otherwise use
+> distributed transactions could be split into a "write side" and a
+> "read side" with CQRS to avoid the distributed transaction, but it may
+> be simple enough that applying DDD would be overkill."  
+> Alberto Poblacion (Customer Advisory Council)
 
 In summary, the DDD approach is not a pre-requisite for implementing the 
 CQRS pattern, but in practice they do often go together. 
