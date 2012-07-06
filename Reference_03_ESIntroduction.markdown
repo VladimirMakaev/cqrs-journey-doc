@@ -1,4 +1,4 @@
-# Chapter 3: Introducing Event Sourcing
+# Reference 3: Introducing Event Sourcing
 
 Event sourcing (ES) and Command Query Responsibility Segregation (CQRS) are 
 frequently mentioned together. Although neither one necessarily implies 

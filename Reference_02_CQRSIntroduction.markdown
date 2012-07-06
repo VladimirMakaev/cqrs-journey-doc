@@ -1,4 +1,4 @@
-# Chapter 2: Introducing the Command Query Responsibility Segregation Pattern
+# Reference 2: Introducing the Command Query Responsibility Segregation Pattern
 
 This chapter introduces the topic of Command Query Responsibility 
 Segregation (CQRS): it describes the CQRS pattern that lies at the heart 

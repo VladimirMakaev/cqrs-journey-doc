@@ -1,4 +1,4 @@
-# Chapter 7: Technologies Used in the Reference Implementation (Chapter Title)
+# Reference 7: Technologies Used in the Reference Implementation (Chapter Title)
 
 # Windows Azure Service Bus  
 

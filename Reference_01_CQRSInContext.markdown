@@ -1,4 +1,4 @@
-# Chapter 1: CQRS in Context
+# Reference 1: CQRS in Context
 
 This chapter is intended to provide some context for the main subject of 
 this guide: a discussion of the Command Query Responsibility Segregation 
