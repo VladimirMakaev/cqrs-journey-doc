@@ -433,17 +433,17 @@ pattern in specific scenarios, you may find it difficult in practice to
 convice your stakeholders that these benefits warrant the additional 
 complexity of the solution. 
 
-> In my experience, the most important disadvantage of using CQRS/ES
-> and DDD is the "fear of change". This model is not similar to the
-> famous 3-tier layered architecture that many of our stakeholders
-> are used to.  
+> "In my experience, the most important disadvantage of using CQRS/event
+> sourcing and DDD is the fear of change. This model is different from
+> the well-known three-tier layered architecture that many of our
+> stakeholders are accustomed to."
 > Pawel Wilkosz (Customer Advisory Council)
 
-> The learning curve of the developers team is steep. Usually they
-> thinks in terms of relational database development. From my
-> experience, the lack of business, and therefore domain rules and
-> specifications became the biggest hurdle.  
-> Jose Miguel ??? (Customer Advisory Council)
+> "The learning curve of developer teams is steep. Developers usually
+> think in terms of relational database development. From my experience,
+> the lack of business, and therefore domain rules and specifications,
+> became the biggest hurdle."
+> Jose Miguel Torres  (Customer Advisory Council)
 
 # When should I use CQRS?
 
@@ -453,7 +453,7 @@ it is helpful to have some rules of thumb to help identify the bounded
 contexts that might benefit from applying the CQRS pattern. 
 
 In general, applying the CQRS pattern may provide most value in those 
-bounded contexts that are complex, include ever changing business rules, 
+bounded contexts that are collaborative, complex, include ever changing business rules, 
 and deliver a significant competitive advantage to the business. 
 Analyzing the business requirements, building a useful model, expressing 
 it in code, and implementing it using the CQRS pattern for such a 
