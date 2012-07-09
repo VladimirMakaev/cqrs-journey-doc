@@ -100,6 +100,14 @@ In summary, many of the issues we met along the way were not related
 specifically to the CQRS pattern, but were more related to the 
 distributed, message-driven nature of our solution. 
 
+> **JanaPersona:** We found that partitioning our service bus by using
+> different topics to transport events published by different aggregates
+> helped us to achieve scalability. For more information, see Chapter 7,
+> "[Adding Resilience and Optimizing Performance][j_chapter7]." Also, see these blog
+> posts: [Windows Azure Storage Abstractions and their Scalability
+> Targets][wascale], and [Best Practices for Performance Improvements
+> Using Service Bus Brokered Messaging][sbscale].
+
 ## The cloud has challenges
 
 Although the cloud provides many benefits, such as reliable, scalable, off-the-shelf services that you can provision with just a few mouse clicks, cloud environments also introduce some challenges: 
@@ -458,4 +466,6 @@ of the journey describing your experiences.
 [jolivereventstore]: https://github.com/joliver/EventStore
 [backlog]:           https://github.com/mspnp/cqrs-journey-code/issues?labels=Type.Story%2CStat.Pending&page=1&state=open
 [streaminsight]:     http://www.microsoft.com/sqlserver/en/us/solutions-technologies/business-intelligence/complex-event-processing.aspx
+[wascale]:           http://blogs.msdn.com/b/windowsazurestorage/archive/2010/05/10/windows-azure-storage-abstractions-and-their-scalability-targets.aspx
+[sbscale]:           http://aka.ms/SBperf
 
