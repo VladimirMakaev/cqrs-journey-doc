@@ -55,7 +55,7 @@ terminology in this guide.
 
 # What is Event Sourcing? 
 
-Event sourcing is a way of storing your application's state by storing 
+Event sourcing is a way of persisting your application's state by storing 
 the history that determines the current state of your application. For 
 example, a conference management system needs to track the number of 
 completed bookings for a conference so it can check whether there are 
@@ -121,6 +121,8 @@ of an ORM layer and an RDMS.
 RDBMS. The relational schema will be much simpler than the schema used by the ORM layer in the first 
 approach. You can also use a custom event store. 
 
+**JanaPersona:** CQRS/ES makes it easy to change your technologies. For example, you could start with a file-based event store for proto-typing and development, and later switch to a Windows Azure table-based store for production.
+
 The following list of steps corresponds to the numbers in the diagram. 
 Note that steps one, two, and four are the same. 
 
@@ -150,7 +152,7 @@ to the store, but the impact of these optimizations on reliability and
 consistency should be much easier to understand. 
 
 > **Note:** Some optimizations to consider are using snapshots so you 
-  don't need to query the full list of events to obtain the current
+  don't need to query and replay the full list of events to obtain the current
   state of the aggregate, and maintaining cached copies of aggregates in
   memory. 
 
@@ -159,7 +161,10 @@ to rebuild its state by querying for its list of historical events.
 
 What you have also gained with the second approach is a complete 
 history, or audit trail, of the bookings and cancellations for a 
-conference. 
+conference. Therefore, the event stream becomes your only source of 
+truth. There's no need to persist aggregates in any other form or shape 
+since you can easily replay the events and restore the state of the 
+system to any point in time. 
 
 In some domains, such as accounting, event sourcing is the natural, 
 well-established approach: accounting systems store individual 

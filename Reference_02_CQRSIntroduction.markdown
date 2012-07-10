@@ -20,7 +20,7 @@ CQRS pattern and other related patterns to your implementation.
 # What is CQRS?
 
 In his book "[Object Oriented Software Construction][meyerbook]," 
-Betrand Meyer introduced the term "[command query separation][cqsterm]" 
+Betrand Meyer introduced the term "[Command Query Separation][cqsterm]" 
 to describe the principle that an object's methods should be either 
 commands, or queries. A query returns data and does not alter the state 
 of the object, a command changes the state of an object but does not 
@@ -141,7 +141,9 @@ There are several motivations for this segregation including:
 > **Note:** Although figure 1 shows two data stores, applying the CQRS 
   pattern does not mandate that you split the data store, or that you use any 
   particular persistence technology such as a relational database, NoSQL store, or 
-  event store. You should view CQRS as a pattern that facilitates 
+  event store (which in turn could be implemented on top of a
+  relational database, NoSQL store, file storage, blob storage etc.).
+  You should view CQRS as a pattern that facilitates 
   splitting the data store and enabling you to select from a range of 
   storage mechanisms.
   
@@ -325,7 +327,8 @@ because it is the default pattern that you consider.
 
 The most common business benefits that you might gain from applying the 
 CQRS pattern are scalability, simplifying a complex aspect of your 
-domain, and adding flexibility to your solution. 
+domain, adding flexibility to your solution, and greater adaptability to 
+changing business requirements. 
 
 ## Scalability
 
@@ -553,9 +556,14 @@ In most systems, the majority of bounded contexts will probably not
 benefit from using the CQRS pattern. You should only use the pattern 
 when you can identify clear business benefits from so doing.
 
-> Most people using CQRS (and Event Sourcing too) shouldn't have done
-> so.  
+> "Most people using CQRS (and Event Sourcing too) shouldn't have done
+> so."  
 > Udi Dahan: [When to avoid CQRS][dahanavoid]
+
+> "It's important to note though, that these are things you can do, not
+> necessarily things you should do. Separating the read and write models
+> can be quite costly."  
+> Greg Young: [CQRS and CAP Theorem][cqrscap]
 
 # Summary
 
@@ -586,6 +594,6 @@ read-side, and describing different options for storing data.
 [dahanclarify]:   http://www.udidahan.com/2009/12/09/clarified-cqrs/
 [dahanavoid]:     http://www.udidahan.com/2011/04/22/when-to-avoid-cqrs/
 [udigreg]:        http://www.udidahan.com/2012/02/10/udi-greg-reach-cqrs-agreement/
-
+[cqrscap]:        http://codebetter.com/gregyoung/2010/02/20/cqrs-and-cap-theorem/
 [fig1]:           images/Reference_02_Arch_01.png?raw=true
 [fig2]:           images/Reference_02_Messages.png?raw=true
