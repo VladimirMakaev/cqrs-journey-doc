@@ -207,7 +207,8 @@ simulate different numbers of virtual users.
 > **GaryPersona:** Although in this journey the team did their
 > performance testing and optimization work at the end of the project,
 > it typically makes sense to do this work as you go, addressing
-> performance issues and adding hardening as soon as possible.
+> performance issues and adding hardening as soon as possible. This is
+> especially true if you are building your own infrastructure.
 
 > **MarkusPersona:** Because implementing the CQRS pattern leads to a
 > very clear separation of responsibities for the many different parts
