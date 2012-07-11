@@ -411,6 +411,14 @@ journey. For a detailed discussion of the issues we found and how we
 addressed them, see chapter 7 "[Adding Resilience and Optimizing 
 Performance][j_chapter7]." 
 
+During the last stage of our journey, we introduced some partitioning on 
+the Service Bus to improve the throughput of events. This partitioning 
+is done based on the publisher of the event, so events published by one 
+aggregate type go to one topic. We'd like to extend this to use multiple 
+topics where we currently have one, perhaps partitioning based on a hash 
+of the order ID in the message. This would enable greater scale out for 
+the application. 
+
 ## Think about the UI differently
 
 We felt that the way our UI interacts with the write and read models, 
