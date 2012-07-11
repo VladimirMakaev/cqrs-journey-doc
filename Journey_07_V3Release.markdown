@@ -372,7 +372,7 @@ Registrant screen than in the V2 release.
 # Optimizing the infrastructure
 
 The second set of optimizations that the team added in this stage of the 
-journey related to the infrastructure in the system. These changes 
+journey related to the infrastructure of the system. These changes 
 addressed both the performance and the scalability of the system. The 
 following sections describe the most significant changes we made here. 
 
@@ -494,23 +494,23 @@ This optimization caches several read models that the public conference web site
 
 ## Partitioning the Service Bus
 
-The team also partitioned the Service Bus to make the application more scalable and to avoid throttling when the volume of messages that the system dends approaches the maximum throughput that the Service Bus can handle. Each Service Bus topic may be handled by a different node in Windows Azure, so by using multiple topics we can increase our potential throughput. We considered the following partitioning schemes:
+The team also partitioned the Service Bus to make the application more scalable and to avoid throttling when the volume of messages that the system sends approaches the maximum throughput that the Service Bus can handle. Each Service Bus topic may be handled by a different node in Windows Azure, so by using multiple topics we can increase our potential throughput. We considered the following partitioning schemes:
 
 * Use separate topics for different message types.
 * Use multiple, similar topics and listen to them all on a round-robin to spread the load.
 
-For a detailed discussion of these partitioning schemes, see Chapter 11, "Asynchronous Communication and Message Buses" in _Scalability Rules: 50 Principles for Scaling Web Sites_ by Abbott and Fisher (Addison-Wesley 2011).
+For a detailed discussion of these partitioning schemes, see Chapter 11, "Asynchronous Communication and Message Buses" in "Scalability Rules: 50 Principles for Scaling Web Sites" by Martin L. Abbott and Michael T. Fisher (Addison-Wesley, 2011).
 
-We decided to use separate topics for the events that the **Order** aggregates publish and that the **SeatAvailability** aggregates publish because these aggregates are responsible for the majority of events flowing through the service bus.
+We decided to use separate topics for the events published by the **Order** aggregates and the **SeatAvailability** aggregates because these aggregates are responsible for the majority of events flowing through the service bus.
 
-> **GaryPersona:** Not all messages have the same importance. You could also use seprate, prioritized message buses to handle different messge types or even consider not using a message bus for some messages.
+> **GaryPersona:** Not all messages have the same importance. You could also use separate, prioritized message buses to handle different message types or even consider not using a message bus for some messages.
 
 > **JanaPersona:** Treat the Service Bus just like any other critical
-> component of your system. This means you should ensure that you
-> service bus can be scaled. Also, remember, not all data has equivalent
+> component of your system. This means you should ensure that your
+> service bus can be scaled. Also, remember that not all data has the same
 > value to your business. Just because you have a Service Bus, doesn't
-> mean everything has to go through it. It's prudent to eliminate low
-> value, high cost traffic.
+> mean everything has to go through it. It's prudent to eliminate
+> low-value, high-cost traffic.
 
 
 
@@ -599,7 +599,7 @@ For some additional information relating to scalability, see:
 * [Windows Azure Storage Abstractions and their Scalability Targets][wascale]
 * [Best Practices for Performance Improvements Using Service Bus Brokered Messaging][sbscale]
 
-It's important not to get the false sense of optimism when it comes to scalability and high availability. While with many of the suggested practices, the applications tend to scale more efficiently and become more resilient to failure, they are still prone to high demand bottlenecks. Make sure to allocate sufficient time for performance testing and for meeting your performance goals.
+It's important not to get a false sense of optimism when it comes to scalability and high availability. While with many of the suggested practices the applications tend to scale more efficiently and become more resilient to failure, they are still prone to high-demand bottlenecks. Make sure to allocate sufficient time for performance testing and for meeting your performance goals.
 
 # No downtime migration
 
@@ -1413,7 +1413,7 @@ Task.Factory.StartNew(
     TaskCreationOptions.LongRunning);
 ```
 
-The **SubscriptionReceiver** and **SessionSubscriptionReceiver** classes use the same **DynamicThrottling** class to dynamically throttle retrieving messages from the service bus.
+The **SubscriptionReceiver** and **SessionSubscriptionReceiver** classes use the same **DynamicThrottling** class to dynamically throttle the retrieval of messages from the service bus.
 
 ## Filtering messages in subscriptions
 
@@ -1561,7 +1561,7 @@ This section outlines some of the additional ways that the team optimized the pe
 
 ### Sequential GUIDs
 
-Previously, the system generated the GUIDs that it used for the IDs of aggregates such as orders and reservations using the **Guid.NewGuid** method which generates random GUIDs. If these GUIDs are used as primary key values in a SQL Azure instance, this causes frequent page splits in the indexes which has a negative impact on the performance of the database. In the V3 release, the team added a utility class that generates sequential GUIDs. This ensures that new entries in the SQL Database instance tables are always appends, and therefore improves the overall performance of the database. The following code sample shows the new **GuidUtil** class:
+Previously, the system generated the GUIDs that it used for the IDs of aggregates such as orders and reservations using the **Guid.NewGuid** method, which generates random GUIDs. If these GUIDs are used as primary key values in a SQL Database instance, this causes frequent page splits in the indexes, which has a negative impact on the performance of the database. In the V3 release, the team added a utility class that generates sequential GUIDs. This ensures that new entries in the SQL Database tables are always appends; this improves the overall performance of the database. The following code sample shows the new **GuidUtil** class:
 
 ```Cs
 public static class GuidUtil
@@ -1683,8 +1683,8 @@ commands if the order they are associated with has already expired.
 
 We identified a number of locations in the 
 **PricedOrderViewModelGenerator** class where we could optimize the 
-code. Previously, the system made two calls to the SQL Azure instance 
-when this class handled an order being placed or expired, now the system 
+code. Previously, the system made two calls to the SQL Database instance 
+when this class handled an order being placed or expired; now the system 
 only makes a single call. 
 
 # Impact on testing 
