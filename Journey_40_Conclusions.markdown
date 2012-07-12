@@ -408,7 +408,7 @@ particular, we would:
 
 We didn't do any performance testing until the last stage of our 
 journey. For a detailed discussion of the issues we found and how we 
-addressed them, see chapter 7 "[Adding Resilience and Optimizing 
+addressed them, see Chapter 7 "[Adding Resilience and Optimizing 
 Performance][j_chapter7]." 
 
 During the last stage of our journey, we introduced some partitioning on 
@@ -423,7 +423,12 @@ the application.
 
 We felt that the way our UI interacts with the write and read models, 
 and how it handles eventual consistency worked well and met the business 
-requirements. 
+requirements. In particular, the way that the UI checks whether a 
+reservation is likely to succeed and modifies its behavior accordingly 
+and the way that the UI allows the user to continue entering data while 
+it waits for the read model to be updated. For more details about how 
+the current solution works, see the section "Optimizing the UI" in 
+Chapter 7, "[Adding Resilience and Optimizing Performance][j_chapter7]."
 
 We'd like to investigate other ways to avoid waiting in the UI unless 
 it's absolutely necessary, perhaps by using browser push techniques. The 
