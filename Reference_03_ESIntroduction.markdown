@@ -451,12 +451,13 @@ own event store is how to achieve this consistency. For example, an
 event store built on top of Windows Azure table storage could take the 
 following approach to maintain consistency between persisting and 
 publishing events: use a transaction to write copies of the event to two 
-tables in the same partition; one table stores the immutable events that 
-constitute the event stream of the aggregate; the other table stores a 
-list of events pending publication. You can then have a process that 
-reads the list of events pending publication, that guarantees to publish 
-those events at least once, and that after publication removes the event 
-from the pending list. 
+entities in the same partition in the same table; one entity stores an 
+immutable event that constitutes part of the event stream of the 
+aggregate; the other entity stores an event that is part of a list of 
+events pending publication. You can then have a process that reads the 
+list of events pending publication, that guarantees to publish those 
+events at least once, and that after publication removes the event from 
+the pending list. 
 
 An additional set of problems related to consistency occur if you plan 
 to scale out your event store across multiple storage nodes, or use 

@@ -25,10 +25,10 @@ are a few important points to note about our use of this terminology:
   use this terminology, and it is used in much of the existing CQRS 
   literature. 
 
-- While it is clear that using a DDD approach sometimes leads naturally 
-  to an adoption of the CQRS pattern, we are not saying that the DDD
-  approach always leads to the use of the CQRS pattern, or that the DDD 
-  approach is a prerequisite for using the CQRS pattern. 
+- Using a DDD approach can lead naturally 
+  to an adoption of the CQRS pattern. However the DDD
+  approach does not always lead to the use of the CQRS pattern, nor is the DDD 
+  approach a prerequisite for using the CQRS pattern. 
 
 - You may question our interpretation of some of the concepts of DDD. 
   The intention of this guide is to take what is useful from DDD to help
@@ -93,7 +93,7 @@ projects.
 
 # Domain-Driven Design: Concepts and terminology 
 
-As previously stated, this guide is not intended to provide guidance on 
+This guide is not intended to provide guidance on 
 using the DDD approach. However, it is useful to understand some of 
 the concepts and terminology from DDD because they are useful when we 
 describe some aspects of CQRS pattern implementations. These are not 

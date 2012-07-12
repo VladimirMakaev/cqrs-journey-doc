@@ -1321,6 +1321,12 @@ There are two things to note about this code sample:
 2. This example uses a retry policy to handle transient faults and to
    improve the reliability of the save operation. See [The Transient
    Fault Handling Application Block][topaz].
+   
+> **JanaPersona:** The [Transient Fault Handling Application
+> Block][topaz] provides extensible retry functionality over and above
+> that included in the **Microsoft.WindowsAzure.StorageClient** namespace.
+> The block also includes retry policies for Windows Azure SQL Database,
+> and Windows Azure Service Bus.
 
 
 ### Retrieving events

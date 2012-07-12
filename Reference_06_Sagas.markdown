@@ -15,11 +15,45 @@ refer to this type of code artefact. There are two reasons for this:
    relation to CQRS.
 2. The term **Process Manager** is a better description of the
    role performed by this type of code artefact.
+   
+> **Make this a sidebar**
+> Although the term Saga is often used in the context of the CQRS
+> pattern, it has a pre-existing definition. We have chosen to use the
+> term process manager in this guidance to avoid confusion with this
+> pre-existing definition. 
+> 
+> The term saga, in relation to distributed systems, was originally
+> defined in the paper [Sagas](sagapaper) by Hector Garcia-Molina and
+> Kenneth Salem. This paper proposes a mechanism that it calls a saga as
+> an alternative to using a distributed transaction for managing a
+> long-running business process. The paper recognizes that business
+> processes are often comprised of multiple steps, each one of which
+> involves a transaction, and that overall consistency can be achieved
+> by grouping these individual transactions into a distributed
+> transaction. However, in long-running business processes, using
+> distributed transactions can impact on the performance and concurrency
+> of the system because of the locks that must be held for the duration
+> of the distributed transaction. 
+> 
+> The saga concept removes the need for a distributed transaction by
+> ensuring that the transaction at each step of the business process has
+> a defined compensating transaction. In this way, if the business
+> process encounters an error condition and is unable to continue, it
+> can execute the compensating transactions for the steps that have
+> already completed. This undoes the work completed so far in the
+> business process and maintains the consistency of the system. 
 
-The following section describes what we mean by the term **Process
-Manager** and the section after that provides some information about 
-the pre-existing definition of the term **Saga** from the paper 
-[Sagas](sagapaper) by Hector Garcia-Molina and Kenneth Salem.
+Although we have chosen to use the term process manager, Sagas (as 
+defined in the [paper][sagapaper] by Hector Garcia-Molina and Kenneth 
+Salem) may still have a part to play in a system that implements the 
+CQRS pattern in some of its bounded contexts. Typically, you would 
+expect to see a process manager routing messages between aggregates 
+within a bounded context, and you would expect to see a saga managing a 
+long-running business process that spans multiple bounded contexts. 
+
+The following section describes what we mean by the term **Process 
+Manager**. This is the working definition we used during our CQRS 
+journey project. 
 
 > **Note:** For a time the team developing the Reference Implementation
 > used the term **Coordinating Workflow** before settling on the term
@@ -83,11 +117,13 @@ In the example shown in Figure 1, each aggregate sends the appropriate
 command to the aggregate that performs the next step in the process. The 
 **Order** aggregate first sends a **MakeReservation** command to the 
 **Reservation** aggregate to reserve the seats requested by the 
-customer. After the seats have been reserved, the **Order** aggregate 
-sends a **MakePayment** command to the **Payment** aggregate. If the 
-payment is successful, the **Order** aggregate notifies the 
-**Reservation** aggregate so that it can confirm the seat reservation, 
-and notifies the customer that the order is now complete. 
+customer. After the seats have been reserved, the **Reservation** 
+aggregate raises a **SeatsReserved** event to notify the **Order** 
+aggregate, and the **Order** aggregate sends a **MakePayment** command 
+to the **Payment** aggregate. If the payment is successful, the 
+**Order** aggregate raises an **OrderConfirmed** event to notify the 
+**Reservation** aggregate that it can confirm the seat reservation, and 
+the customer that the order is now complete. 
 
 ![Figure 2][fig2]
 
@@ -160,34 +196,6 @@ The following list identifies reasons not to use a Process Manager:
 * You should not use a Process Manager to implement any business
   logic in your domain. Business logic belongs in the aggregate types.
  
-
-# Sagas
-
-Although the term Saga is often used in the context of the CQRS pattern, 
-it has a pre-existing definition. We have chosen to use the term 
-process manager in this guidance to avoid confusion with this 
-pre-existing definition. 
-
-The term saga, in relation to distributed systems, was originally 
-defined in the paper [Sagas](sagapaper) by Hector Garcia-Molina and 
-Kenneth Salem. This paper proposes a mechanism that it calls a saga as 
-an alternative to using a distributed transaction for managing a 
-long-running business process. The paper recognizes that business 
-processes are often comprised of multiple steps, each one of which 
-involves a transaction, and that overall consistency can be achieved by 
-grouping these individual transactions into a distributed transaction. 
-However, in long-running business processes, using distributed 
-transactions can impact on the performance and concurrency of the system 
-because of the locks that must be held for the duration of the 
-distributed transaction. 
-
-The saga concept removes the need for a distributed transaction by 
-ensuring that the transaction at each step of the business process has a 
-defined compensating transaction. In this way, if the business process 
-encounters an error condition and is unable to continue, it can execute 
-the compensating transactions for the steps that have already completed. 
-This undoes the work completed so far in the business process and 
-maintains the consistency of the system. 
 
 ## Sagas and CQRS
 
