@@ -596,6 +596,8 @@ It's important not to get a false sense of optimism when it comes to scalability
 
 # No downtime migration
 
+_"Preparation, I have often said, is rightly two-thirds of any venture." Amelia Earhart_
+
 The team planned to have a no downtime migration from the V2 to the V3 release in Windows Azure. To achieve this, 
 the migration process uses an ad hoc processor running in a Windows Azure worker role to perform many of the migration steps. 
 

@@ -2,6 +2,8 @@
 
 *Adding functionality and refactoring in preparation for the V1 release.*
 
+_"Most people, after accomplishing something, use it over and over again like a gramophone record till it cracks, forgetting that the past is just the stuff with which to make more future." Freya Stark_
+
 # A description of the Contoso Conference Management V1 release
 
 This chapter describes the changes made by the team to prepare for the 
