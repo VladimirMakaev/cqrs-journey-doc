@@ -474,6 +474,16 @@ This change is faster than changing the value of the **MaintenanceMode** propert
 
 # Known Issues
 
+## No error handling in web front ends
+
+You will see an unhandled error in your browser for some error conditions. For example, you will see an unhandled error if the database you are using is offline.
+
+## It is possible to access an unpublished conference
+
+If you create a conference, such as "myconf," publish it, and then subsequently unpublish it, you can access the unpublished conference at the URL it was available at when it was in the published state.
+
+In this scenario, the user should be redirected to an error page, but instead is able to register on the unpublished conference.
+
 ## Running the acceptance tests using the xUnit console
 
 If you want to run the acceptance tests in the **Conference.AcceptanceTests** solution, you must add the following to the console configuration file:
@@ -537,15 +547,16 @@ configuration to another.
 ## Other Known Issues
 
 * No security features have been implemented yet. 
-* No performance or localizability tests have been performed yet.
+* No localizability tests have been performed yet.
 * The UI is still a work in progress.
 * Validation in the UI is not yet complete. 
-* You see a list of outstanding issues for the V2 release [here][v2outstanding].
-
+* You can see a list of outstanding issues for the V2 release [here][v2outstanding].
+* You can see a list of outstanding issues for the V3 release [here][v3outstanding].
 
 [source]:          https://github.com/mspnp/cqrs-journey-code
 [xunit]:           http://xunit.codeplex.com/
 [specflow]:        http://www.specflow.org/
 [connectionerror]: http://blogs.msdn.com/b/narahari/archive/2011/12/21/azure-a-connection-attempt-failed-because-the-connected-party-did-not-properly-respond-after-a-period-of-time-or-established-connection-failed-because-connected-host-has-failed-to-respond-x-x-x-x-x-quot.aspx
 [v2outstanding]:   https://github.com/mspnp/cqrs-journey-code/issues/search?utf8=%E2%9C%93&q=v2
+[v3outstanding]:   https://github.com/mspnp/cqrs-journey-code/issues/search?utf8=%E2%9C%93&q=v3
 [azurerdp]:        http://msdn.microsoft.com/en-us/library/windowsazure/gg443832.aspx
