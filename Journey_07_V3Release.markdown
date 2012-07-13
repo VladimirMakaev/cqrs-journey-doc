@@ -52,17 +52,19 @@ instead of replaying all of the persisted events associated with an
 aggregate when it is re-hydrated, you load a recent copy of the state of 
 the aggregate and then replay only the events that were persisted after 
 saving the snapshot. In this way you can reduce the amount of data that 
-you must load from the event store. 
+you must load from the event store.
+
+## Idempotency
+
+_Idempotency_ is a characteristic of an operation that means the operation can be applied multiple times without changing the result. For example, the operation "set the value x to ten" is idempotent, while the operation "add one to the value of x" is not. In a messaging environment, a message is idempotent if it can be delivered multiple times without changing the result: either because of the nature of the message itself, or because of the way the system handles the message.
+
+## Eventual consistency
+
+_Eventual consistency_ is a consistency model that does not guarantee immediate access to updated values. After an update to a data object, the storage system does not guarantee that subsequent accesses to that object will return the updated value. However, the storage system does guarantee that if no new updates are made to the object during a sufficiently long period of time, then eventually all accesses can be expected to return the last updated value.
 
 # Architecture 
 
-The application is designed to deploy to Windows Azure. At this stage in 
-the journey, the application consists of web roles that contains the 
-ASP.NET MVC web applications and a worker role that contains the message 
-handlers and domain objects. The application uses SQL Database databases 
-for data storage, both on the write-side and the read-side. The 
-application uses the Windows Azure Service Bus to provide its messaging 
-infrastructure. Figure 1 shows this high-level architecture.
+The application is designed to deploy to Windows Azure. At this stage in the journey, the application consists of web roles that contain the ASP.NET MVC web applications and a worker role that contains the message handlers and domain objects. The application uses Windows Azure SQL Database (SQL Database) instances for data storage, both on the write side and the read side. The application also uses Windows Azure table storage on the write side and blob storage on the read side in some places. The application uses the Windows Azure Service Bus to provide its messaging infrastructure. Figure 1 shows this high-level architecture.
 
 ![Figure 1][fig1]
 
@@ -176,7 +178,7 @@ this issue.
 To ensure that the system always sends commands when the 
 **RegistrationProcessManager** class saves its state requires 
 transactional behavior. This requires the team to implement a 
-pseudo-transaction because it is not possible to enlist the Windows 
+pseudo-transaction because it is neither advisable nor possible to enlist the Windows 
 Azure Service Bus and a SQL Database table together in a distributed
 transcation. 
 
@@ -207,8 +209,8 @@ simulate different numbers of virtual users.
 > **GaryPersona:** Although in this journey the team did their
 > performance testing and optimization work at the end of the project,
 > it typically makes sense to do this work as you go, addressing
-> performance issues and adding hardening as soon as possible. This is
-> especially true if you are building your own infrastructure.
+> scalability issues and adding hardening as soon as possible. This is
+> especially true if you are building your own infrastructure and need to be able to handle high volumes of throughput.
 
 > **MarkusPersona:** Because implementing the CQRS pattern leads to a
 > very clear separation of responsibities for the many different parts
@@ -229,10 +231,10 @@ When a Registrant creates an order, she visits the following sequence of
 screens in the UI. 
 
 1. The Register screen. This screen displays the ticket types for the
-   conference, the number of seats currently available. The Registrant
+   conference, the number of seats currently available according to the eventually consistent read model. The Registrant
    selects the quantities of each seat type that she would like to
    purchase.
-2. The Registrant screen. This screen displays a summary of the order
+2. The Checkout screen. This screen displays a summary of the order
    that includes a total price and a countdown timer that tells the
    Registrant how long the seats will remain reserved. The Registrant
    enters her details and preferred payment method.
@@ -247,7 +249,7 @@ Release][j_chapter5] for more information about the screens and flow in
 the UI.
    
 In the V2 release, the system must process the following commands and 
-events between the Register screen and the Registrant screen: 
+events between the Register screen and the Checkout screen: 
 
 * RegisterToConference
 * OrderPlaced
@@ -258,7 +260,7 @@ events between the Register screen and the Registrant screen:
 * OrderTotalsCalculated
 
 In addition, the MVC controller is also validating that there are 
-sufficient seats available to fulfill the order before it sends the 
+sufficient seats available by querying the read model to fulfill the order before it sends the 
 initial **RegisterToConference** command. 
 
 The team load tested the application using Visual Studio Load Test with 
@@ -333,9 +335,9 @@ If there are plenty of available seats for the conference then there is
 a minimal risk that a Registrant will get as far as the Payment screen 
 only to find that the system could not reserve the seats. In this case, 
 some of the processing that the V2 release performs before getting to 
-the Registrant screen can be allowed to happen asynchronously while the 
-Registrant is entering information on the Registrant screen. This 
-reduces the chance that the Registrant experiences a delay before seeing 
+the Checkout screen can be allowed to happen asynchronously while the 
+Registrant is entering information on the Checkout screen. This 
+reduces the chance that the Checkout experiences a delay before seeing 
 the Registrant screen. 
 
 > **JanaPersona:** Essentially we are relying on the fact that a
@@ -357,17 +359,17 @@ availability.
 
 ### UI optimization 2
 
-In the V2 release, the MVC controller cannot display the Registrant 
+In the V2 release, the MVC controller cannot display the Checkout 
 screen until the domain publishes the **OrderTotalsCalculated** event 
 and the system updates the priced order view model. This event is the 
 last event that occurs before the controller can display the screen. 
 
 If the system calculates the total and updates the priced order view 
-model earlier, the controller can display the Registrant screen sooner. 
+model earlier, the controller can display the Checkout screen sooner. 
 The team determined that the **Order** aggregate could calculate the 
 total when the order is placed instead of when the reservation is 
 complete. This will enable the UI flow to move more quickly to the 
-Registrant screen than in the V2 release.
+Checkout screen than in the V2 release.
 
 # Optimizing the infrastructure
 
@@ -383,7 +385,7 @@ ensure that all messages sent on the Service Bus are sent
 asynchronously. This optimization is intended to improve the overall 
 responsiveness of the application and improve the throughput of 
 messages. As part of this change, the team also used the [Transient 
-Fault Handling Application Block][tfhab] to handle an transient errors 
+Fault Handling Application Block][tfhab] to handle any transient errors 
 encountered when using the Service Bus.
 
 > **MarkusPersona:** This optimization resulted in major changes to the
@@ -398,16 +400,13 @@ encountered when using the Service Bus.
 
 ## Optimizing command processing 
 
-The current implementation uses the same messaging infrastructure, the 
-Windows Azure Service Bus, for both commands and events. The team plans 
-to evaluated whether the Contoso Conference Management System needs to 
-send all its command messages using the same infrastructure. 
+The V2 release used the same messaging infrastructure, the Windows Azure Service Bus, for both commands and events. The team evaluated whether the Contoso Conference Management System needs to send all its command messages using the same infrastructure.
 
 There are a number of factors that we considered when we 
 determined whether to continue using the Windows Azure Service Bus for 
 transporting all command messages. 
 
-* Which commands, if any, can be handles in-process?
+* Which commands, if any, can be handled in-process?
 * Will the system lose any resilience if it handles some commands in-process?
 * Will there be any significant performance gains if it handles some commands in-process?
 
@@ -464,7 +463,7 @@ This optimization proved to be one of the most significant in terms of improving
 
 * Iteration 1: This approach used the [Parallel.ForEach][pforeach] method with a custom partitioning scheme to assign messages to partitions and to set an upper bound on the degree of parallelism. This approach used synchronous Windows Azure Service Bus API calls to publish the messages.
 * Iteration 2: This approach used some asynchronous API calls. This approach required the use of custom semaphore-based throttling to handle the asynchronous callbacks correctly.
-* Iteration 3: This approach uses dynamic throttling that takes into account the transient failures that indicate to many messages are being sent in a partition. This approach uses more asynchronous Windows Azure Service Bus API calls.
+* Iteration 3: This approach uses dynamic throttling that takes into account the transient failures that indicate too many messages are being sent to a specific topic. This approach uses more asynchronous Windows Azure Service Bus API calls.
 
 > **JanaPersona:** We adopted the same dynamic throttling approach in
 > the SubscriptionReceiver and SessionSubscriptionReceiver classes when
@@ -479,18 +478,13 @@ This optimization adds filters to the Windows Azure Service Bus topic subscripti
 
 ## Creating a dedicated receiver for the **SeatsAvailability** aggregate
 
-This enables the receiver for the **SeatsAvailability** aggreagte to use a session Id in the command messages to use sessions to guarantee the ordering of the messages. This avoids a potential bottleneck in the session if the system is scaled out horizontally and there are multiple, active conferences.
+This enables the receiver for the **SeatsAvailability** aggregate to use a subscription that supports sessions. The reason for this is to guarantee a single writer per aggregate instance because the **SeatsAvailability** aggregate is a high contention aggregate. This prevents receiving a large number of concurrency exceptions when we scale out.
+
+**JanaPersona:** Elsewhere, we subscriptions with sessions to guarantee the ordering of events. In this case we are using sessions for a different reason; to guarantee that we have a single writer for each aggregate instance.
 
 ## Caching conference information
 
 This optimization caches several read models that the public conference web site uses extensively. It includes logic to determine how to keep the data in the cache based on the number of available seats for a particular conference: if there are plenty of seats available the system can cache the data for a long period of time, but if there are very few seats available the data is not cached.
-
-> **GaryPersona:** Here we are switching between autonomy and authority
-> based on the number of remaining seats. When there are lots of
-> available seats, favoring autonomy enables us to improve performance
-> by using the cache. When there are very few seats available we favor
-> authority to ensure we have accurate data at the cost of reduced
-> performance in this particular circumstance.
 
 ## Partitioning the Service Bus
 
@@ -553,11 +547,13 @@ In addition to the changes we made during this last stage of the journey to impr
 > dynamic throttling for sending the messages and dynamically control
 > how many parallel senders to use.
 
+* Our current event store implementation publishes a single, small message on on the service bus for every event that's saved in the event store. We could group some of these messages together to reduce the total number of I/O operations on the service bus. For example, a **SeatsAvailability** aggregate instance for a large conference publishes a large number of events, and the **Order** aggregate publishes events in bursts (when an **Order** aggregate is created it publishes both an **OrderPlaced** event and an **OrderTotalsCalculated** event). This will also help to reduce the latency in the system because currently, in those scenarios where ordering is important, we must wait for a confirmation that one event has been sent before sending the next one. Grouping sequences of events in a single message would mean that we don't need to wait for the confirmation between publishing individual events.
+
 ## Further changes that would enhance scalability
 
 The Contoso Conference Management System is designed to allow you to deploy multiple instances of the web and worker roles to scale out the application to handle larger loads. However, the design is not fully scalable because some of the other elements of the system such as the messages buses and data stores place constraints on the maximum achievable throughput. This section outlines some changes that we could make to the system to remove some of these constraints and significantly enhance the scalability of the system. The available time for this journey was limited so it was not possible to make these changes in the V3 release.
 
-* **Partition the data:** The system stores different types of data in different partitions. You can see in the bootstrapping code how the different bounded contexts use different connection strings to connect to the SQL Database instance. However, the system currently uses a single SQL Database instance and we could change this to use multiple different instances, each holding a specific set of data that the system uses. For example the the orders and registrations bounded context could use different SQL Database instances for the different read-models. We could also consider using the Federations feature to use sharding to scale out some of the SQL Database instances.
+* **Partition the data:** The system stores different types of data in different partitions. You can see in the bootstrapping code how the different bounded contexts use different connection strings to connect to the SQL Database instance. However, each bounded context currently uses a single SQL Database instance and we could change this to use multiple different instances, each holding a specific set of data that the system uses. For example the the orders and registrations bounded context could use different SQL Database instances for the different read-models. We could also consider using the Federations feature to use sharding to scale out some of the SQL Database instances.
 
 > "Data persistence is the hardest technical problem most scalable SaaS
 > businesses face."  
@@ -573,14 +569,9 @@ The Contoso Conference Management System is designed to allow you to deploy mult
 
 * **Store and forward:** We introduced the store and forward design in the previous section that discuss performance improvement. By batching multiple operations, you not only reduce the number of round-trips to the data store and reduce the latency in the system, you also enhace the scalability of the system because fewer requests reduces the stress on the data store.
 
-* **Listen for and react to throttling indicators:** Currently, the system uses the [Transient Fault Handling Application Block][tfhab] to detect transient error conditions such as throttling indicators from the Windows Azure Service Bus, the SQL Database instance, and Windows Azure table storage. The system uses the block to implement retries in these scenarios, typically by using an exponential back-off strategy. However, a single worker role instance might be processing a large number of messages in parallel which results in throttling errors on all the threads. In this case, we would like to dynamically reduce the degree of parallelism as a way to proactively avoid encountering throttling behavior and having to make multiple retries.
+* **Listen for and react to throttling indicators:** Currently, the system uses the [Transient Fault Handling Application Block][tfhab] to detect transient error conditions such as throttling indicators from the Windows Azure Service Bus, the SQL Database instance, and Windows Azure table storage. The system uses the block to implement retries in these scenarios, typically by using an exponential back-off strategy. At present, we use dynamic throttling at the level of an individual subscription, however we'd like to modify this to perform the dynamic throttling for all of the subscriptions to a specific topic. Similarly, we'd like to implement dynamic throttling at the level of the SQL database instance, and at the level of the Windows Azure storage account.
 
-> **JanaPersona:** For an example of implementing dynamic throttling
-> within the application to avoid throttling from the service, see the
-> way that the **Start ** method in the **EventStoreBusPublisher** class
-> manages the degree of parallelism that it uses to send messages.
-> Ideally, you should design your application to avoid reaching the
-> point where it starts being throttled by a service.
+**JanaPersona:** For an example of implementing dynamic throttling within the application to avoid throttling from the service, see the way the **EventStoreBusPublisher**, **SubscriptionReceiver**, and **SessionSubscriptionReceiver** classes use the **DynamicThrottling** class to manages the degree of parallelism that they use to send or receive messages.
 
 > **PoePersona:** Each service (Windows Azure Service Bus, SQL Database,
 > Windows Azure storage) has its own particular way of implementing
@@ -589,8 +580,8 @@ The Contoso Conference Management System is designed to allow you to deploy mult
 > important to be aware of all the throttling that your application may
 > be subject in different services that your application uses.
 
-> **PoePersona:** The team also considered using the SQL Azure Business
-> edition instead of the SQL Azure Web edition, but on investigation we
+> **PoePersona:** The team also considered using the Windows Azure SQL Database Business
+> edition instead of the Windows Azure SQL Database Web edition, but on investigation we
 > determined that at present, the only difference between the editions
 > is the maximum database size. The different editions are not tuned to
 > support different types of workload, and both editions implement the
@@ -605,52 +596,42 @@ It's important not to get a false sense of optimism when it comes to scalability
 
 # No downtime migration
 
-The team planned to have a no downtime migration from the V2 to the V3 
-release in Windows Azure. Although the web roles continue to run during 
-the migration, it is still necessary for this migration to pause the 
-worker role: this means that during the migration process, any 
-Registrants in the middle of creating an order will see the message 
-"Cannot determine the state of the registration" until the migration 
-completes. 
-
-The following list summarizes the steps of the migration:
-
-1. Deploy the V3 release to the staging slot in Windows Azure.
-2. Deactivate the V2 worker role using the **MaintenanceMode** mode flag
-   and activate the V3 worker role. The V3 worker role now handles
-   messages from the V2 web role running in the production slot. While
-   this is taking place, registrants continue to use the V2 web
-   roles and see the "Cannot determine the state of the registration"
-   message because, for a while, no worker role instance is available.
-2. Switch the deployments by performing a VIP swap. The V3 web roles now
-   start serving requests.
+The team planned to have a no downtime migration from the V2 to the V3 release in Windows Azure. To achieve this, 
+the migration process uses an ad hoc processor running in a Windows Azure worker role to perform many of the migration steps. 
 
 For details of these steps, see Appendix 1,
 "[Building and Running the Sample Code][appendix]."
 
-The reason that the worker role is unavailable for a period of time is 
-that the V2 release worker role must have its **MaintenanceMode** 
-property set to **true** before it is safe to enable the V3 worker role, 
-and setting this property requires Windows Azure to recycle the worker 
-role. 
-
-> **JanaPersona:** A possible solution to make this a true no-downtime
-> migration is to use a message-based approach that uses a configuration
-> bus.
-
 > **PoePersona:** You should always rehearse the migration in a test
 > environment before performing it in your production environment.
 
-## Data migration
+## Rebuilding the read models
 
-The V3 release uses one additional table called 
-**UndispatchedMessages**, and requires an additional column called 
-**ReservationExpirationDate** in the **PricedOrders** table. 
+During the migration from V2 to V3, one of the steps we must perform is to rebuild the **DraftOrder** and **PricedOrder** view models by replaying events from the event log to populate the new V3 read-model tables. We can do this asynchronously. However, at some point in time, we need to start sending events from the live application to these read models. Furthermore, we need to keep both the V2 and V3 versions of these read models up to date until the migration process is complete because the V2 front-end web role will need the V2 read model data to be available until we switch to the V3 front-end web role. At the point that we switch to the V3 front-end, we must ensure that the V3 read-models are completely up to date.
 
-The system creates these if they don't already exist when the V3 release 
-worker starts up by using Entity Framework database initializers. See 
-the **MigrationToV3** project in the **Conference** solution for more 
-details. 
+To handle keeping these read models up to date, we created an ad-hoc processor as a Windows Azure worker role that runs just while the migration is taking place. See the **MigrationToV3** project in the **Conference** solution for more details. The steps that this processor performs are:
+
+* Create a new set of topic subscriptions that will receive the live
+  events that will be used to populate the new V3 read models. These
+  subscriptions will start accumulating the events that will be handled
+  when the V3 application is deployed.
+* Replay the events from the event log to populate the new V3 read
+  models with historical data.
+* Handle the live events and keep the V2 read models up to date until
+  the V3 front-end is live, at which point we no longer need
+  the V2 read models.
+
+The migration process first replays the events from the event store to populate the new V3 read models. When this is complete, we stop the V2 processor that contains the event handlers, and start the new handlers in their V3 processor. While these are running and catching up on the events that were accumulated in the new topic subscriptions, the ad-hoc processor is also keeping the V2 read models up to date because at this point we still have the V2 front-end. When the V3 worker roles are ready, we can perform a VIP switch to bring the new V3 front-end into use. After the V3 front-end is running, we no longer have any need for the V2 read models.
+
+One of the issues to address with this approach is how to determine when the new V3 processor should switch from processing archived events in the event log to the live stream of events. There is some latency in the process that writes events to the event log, so an instantaneous switch could result in the loss of some events. The team decided to allow the V3 processor to temporarily handle both archived events and the live stream which means there is a possibility that there will be duplicate events; the same event exists in the event store and in the list of events accumulated by the new subscription. However, we can detect these duplicates and handle them accordingly.
+
+**MarkusPersona:** Typically, we rely on the infrastructure to detect duplicate messages. In this particular scenario where duplicate events may come from different sources, we cannot rely on the infrastructure and must add the duplicate detection logic into our code explicitly.
+
+An alternative approach that we considered was to include both V2 and V3 handling in the V3 processor. With this approach there is no need for an ad-hoc worker role to process the V2 events during the migration. However, we decided to keep the migration specific code in a separate project to avoid bloating the V3 release with functionality that is only needed during the migration.
+
+**JanaPersona:** The migration process would be slightly easier if we adopted the approach of including both V2 and V3 handling in the V3 processor. We decided that this benefit was outweighed by the benefit of avoiding having to maintain duplicate functionality in the V3 processor.
+
+**Note:** The intervals between each step of the migration take some time to complete, so the migration is really 'no downtime, but things might take a while to move forward for the user'. We would have benefited from some faster mechanisms to deal with the toggle switches such as stopping the V2 processor, and starting the V3 processor).
 
 # Implementation details 
 
