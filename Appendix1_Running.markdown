@@ -457,14 +457,15 @@ release in Windows Azure.
 
 1. Deploy the V3 release to your Windows Azure staging environment. In the
    V3 release, the command processor worker role has a **MaintenanceMode** property that is
-   initially set to **true**. 
-2. Change the **MaintenanceMode** property of the command processor worker role in the V2 release (running in the production slot) to **true**.  
+   initially set to **true**.
+2. Start the ad hoc MigrationToV3.InHouseProcessor utility to rebuild the read models for the V3 deployment.
+3. Change the **MaintenanceMode** property of the command processor worker role in the V2 release (running in the production slot) to **true**.  
 At this point, the application is still running, but the registrations cannot progress. You should wait until the status of the worker role instance shows as **Ready** in the Windows Azure portal (this may take some time).
-2. Change the **MaintenanceMode** property of the command processor worker role in the V3 release (running in the staging slot) to **false**.  
+4. Change the **MaintenanceMode** property of the command processor worker role in the V3 release (running in the staging slot) to **false** and allow the MigrationToV3.InHouseProcessor utility to start handling the V2 events. The migration utility prompts you to start handling these V2 events when you are ready. 
 This change is faster than changing the value of the **MaintenanceMode** property in the V2 release. When this change is complete, the V2 release web roles are using the V3 release worker role. This configuration change also triggers the database migration.
-3. In the Windows Azure portal, perform a VIP swap to make the V3 web roles visible externally.
-4. Shutdown the V2 deployment that is now running in the staging slot.
-5. The V3 release is now live in Windows Azure.
+5. In the Windows Azure portal, perform a VIP swap to make the V3 web roles visible externally.
+6. Shutdown the V2 deployment that is now running in the staging slot.
+7. The V3 release is now live in Windows Azure.
 
 > **Note:** You can change the value of the **MaintenanceMode** property
 > in the Windows Azure management portal.

@@ -599,7 +599,9 @@ It's important not to get a false sense of optimism when it comes to scalability
 _"Preparation, I have often said, is rightly two-thirds of any venture." Amelia Earhart_
 
 The team planned to have a no downtime migration from the V2 to the V3 release in Windows Azure. To achieve this, 
-the migration process uses an ad hoc processor running in a Windows Azure worker role to perform many of the migration steps. 
+the migration process uses an ad hoc processor running in a Windows Azure worker role to perform some of the migration steps. 
+
+The migration process still requires you to complete a configuration step to switch off the V2 processor and switch on the V3 processor. In retrospect, we would have used a different mechanism to streamline the transition from the V2 to the V3 processor based on feedback from the handlers themselves to indicate when they have finished their processing.
 
 For details of these steps, see Appendix 1,
 "[Building and Running the Sample Code][appendix]."
