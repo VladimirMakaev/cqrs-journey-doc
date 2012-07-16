@@ -1512,7 +1512,7 @@ Let's take an example of this and work out some heuristics involved in
 answering these questions. We'll use as an example the 
 **RegistrationProcessManager**. 
 
-1. Open the RegistrationProcess.cs file, noting that, like many
+1. Open the RegistrationProcessManager.cs file, noting that, like many
    process managers it has a 
    **ProcessState** enumeration. We take note of the beginning state for
    the process, **NotStarted**. Next, we want to find code that does one
@@ -1524,7 +1524,7 @@ answering these questions. We'll use as an example the
 
 2. Locate the first location in source code where either or both of the
    above occur. In this case, it's the **Handle** method in the 
-   **RegistrationProcessRouter** class. **Important:** this does NOT
+   **RegistrationProcessManagerRouter** class. **Important:** this does NOT
    necessarily mean that the Process is a Command Handler! Process
    managers are responsible for creating/retrieving Aggregate Roots (AR)
    from storage for the purpose of routing messages to the AR, so while

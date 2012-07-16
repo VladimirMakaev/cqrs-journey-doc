@@ -222,11 +222,11 @@ In the V1, the following behavior _could_ occur:
 1. The **EventProcessor**  instance receives an **OrderPlaced** event
    from the **all** subscription in the service bus. 
 2. The **EventProcessor** instance has two registered handlers, the
-   **RegistrationProcessRouter** and **OrderViewModelGenerator** handler
+   **RegistrationProcessManagerRouter** and **OrderViewModelGenerator** handler
    classes, so it invokes the **Handle** method on each of them.
 3. The **Handle** method in the **OrderViewModelGenerator** class
    completes successfully.
-4. The **Handle** method in the **RegistrationProcessRouter** class
+4. The **Handle** method in the **RegistrationProcessManagerRouter** class
    throws an exception.
 5. The **EventProcessor** instances catches the exception and abandons
    the event message. The message is automatically put back into the
@@ -234,10 +234,10 @@ In the V1, the following behavior _could_ occur:
 6. The **EventProcessor** instance receives the **OrderPlaced** event
    from the **all** subscription for a second time.
 7. It invokes the two Handle methods, causing the
-   **RegistrationProcessRouter** class to retry the message, and the
+   **RegistrationProcessManagerRouter** class to retry the message, and the
    **OrderViewModelGenerator** class to process the message for a second
    time.
-8. Every time the **RegistrationProcessRouter** class throws an
+8. Every time the **RegistrationProcessManagerRouter** class throws an
    exception, the **OrderViewModelGenerator** class processes the event.
 
 In the V2 model, if a handler class throws an exception, the 

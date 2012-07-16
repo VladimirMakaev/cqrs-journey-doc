@@ -931,7 +931,7 @@ public void Handle(ReservationAccepted @event)
 	{
         lock (lockObject)
         {
-            var process = repo.Find<RegistrationProcess>(@event.ReservationId);
+            var process = repo.Find<RegistrationProcessManager>(@event.ReservationId);
             process.Handle(@event);
 
             repo.Save(process);

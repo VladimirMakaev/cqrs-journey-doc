@@ -655,18 +655,20 @@ This section describes how the team hardened the **RegistrationProcessManager**
 process manager by checking for duplicate instances of the **SeatsReserved** 
 and **OrderPlaced** messages. 
 
-### Detecting duplicate SeatsReserved events
+### Detecting out of order SeatsReserved events
 
 Typically, the **RegistrationProcessManager** class sends a 
 **MakeSeatReservation** command to the **SeatAvailability** aggregate, 
 the **SeatAvailability** aggregate publishes a **SeatsReserved** event 
 when it has made the reservation, and the **RegistrationProcessManager** 
-receives this notification. In the V2 release, the **SeatsReserved** 
-event is not idempotent and the **RegistrationProcessManager** could, 
-potentially, receive multiple copies of this event. The solution 
-described in this section enables the **RegistrationProcessManager** to 
-identify any duplicate **SeatsReserved** messages and then ignore them 
-instead of re-processing them. 
+receives this notification. The **RegistrationProcessManager** sends a 
+**MakeSeatReservation** command both when the order is created and when 
+it is updated. It is possible that the **SeatsReserved** events could 
+arrive out of order, however the system should honor the event 
+related to the last command that was sent. The solution described in 
+this section enables the **RegistrationProcessManager** to identify the 
+most recent **SeatsReserved** message and then ignore any earlier 
+messages instead of re-processing them. 
 
 Before the **RegistrationProcessManager** class sends the 
 **MakeSeatReservation** command, it saves the **Id** of the command in 
@@ -770,7 +772,7 @@ public void Handle(Envelope<SeatsReserved> envelope)
 
 ### Detecting duplicate OrderPlaced events
 
-To achieve this, the **RegistrationProcessRouter** class now performs a 
+To achieve this, the **RegistrationProcessManagerRouter** class now performs a 
 check to see of the event is has already been processed. The new V3 
 version of the code is shown in the following code sample: 
 
@@ -779,19 +781,14 @@ public void Handle(OrderPlaced @event)
 {
     using (var context = this.contextFactory.Invoke())
     {
-        lock (lockObject)
+        var pm = context.Find(x => x.OrderId == @event.SourceId);
+        if (pm == null)
         {
-            var process = context.Find(x => x.OrderId == @event.SourceId && x.Completed == false);
-            if (process == null)
-            {
-                // If the process already exists, it means that the OrderPlaced event is being reprocessed because the message 
-                // could not be completed. No need to handle it again.
-                process = new RegistrationProcess();
-                process.Handle(@event);
-
-                context.Save(process);
-            }
+            pm = new RegistrationProcessManager();
         }
+
+        pm.Handle(@event);
+        context.Save(pm);
     }
 }
 ```
@@ -801,8 +798,9 @@ public void Handle(OrderPlaced @event)
 It is not possible to have a transaction in Windows Azure that spans 
 persisting the **RegistrationProcessManager** to storage and sending the 
 command. Therefore the team decided to save all the commands that the 
-process manager generates, and to use another process to handle sending
-the commands reliably. 
+process manager generates so that if the process crashes the commands 
+are not lost and can be sent later. We use another process to handle 
+sending the commands reliably. 
 
 > **MarkusPersona:** The migration utility for moving to the V3 release
 > updates the database schema to accomodate the new storage requirement.
@@ -1100,55 +1098,15 @@ method in the **SessionSubscriptionReceiver** class.
 > [Transient Fault Handling Application Block][tfhab] to reliably
 > receive messages asynchronously from the Service Bus topic. The
 > asynchronous loops make the code much harder to read, but much more
-> efficient. This is recommended best practice.
+> efficient. This is recommended best practice. This code would benefit
+> from the new **async** keywords in C# 4.
 
 ### Completing messages asynchronously
 
 The system uses the peek/lock mechanism to retrieve messages from the 
-Service Bus topic subscriptions. The **BrokeredMessageExtensions** class 
-now includes three new methods to support completing messages 
-asynchronously: 
-
-* **SafeCompleteAsync**
-* **SafeAbandonAsync**
-* **SafeDeadLetterAsync**
-
-The **SubscriptionReceiver** and **SessionSubscriptionReceiver** invoke 
-one of these methods based on the result of processing a message as 
-shown in the following code sample from the **ReceiveMessages** method 
-in the **SubscriptionReceiver** class: 
-
-```Cs
-var releaseAction = MessageReleaseAction.AbandonMessage;
-
-try
-{
-    // Make sure we are not told to stop receiving while we were waiting for a new message.
-    if (!cancellationToken.IsCancellationRequested)
-    {
-        try
-        {
-            try
-            {
-                // Process the received message.
-                releaseAction = this.InvokeMessageHandler(msg);
-            }
-            catch
-            {
-                ...
-            }
-        }
-        finally
-        {
-            ...
-        }
-    }
-}
-finally
-{
-    this.ReleaseMessage(msg, releaseAction);
-}
-```
+Service Bus topic subscriptions. To learn how the system performs these
+operations asynchronously, see the **ReceiveMessages** methods in the
+**SubscriptionReceiver** and **SessionSubscriptionReceiver** classes. This provides one example of how the system uses asynchronous APIs.
 
 ### Sending messages asynchronously
 
