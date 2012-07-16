@@ -740,19 +740,28 @@ are relevant to consistency. The CAP theorem states that it is
 impossible for a distributed computer system to provide the following 
 three guarantees simultaneously: 
 
-1. Consistency. A guarantee that all the nodes in the system see the 
+1. Consistency (C). A guarantee that all the nodes in the system see the 
    same data at the same time. 
-2. Availability. A guarantee that the system can continue to operate
+2. Availability (A). A guarantee that the system can continue to operate
    even if a node is unavailable. 
-3. Partition tolerance. A guarantee that the system continues to operate
-   despite the nodes being unable to communicate. 
+3. Partition tolerance (P). A guarantee that the system continues to operate
+   despite the nodes being unable to communicate.
+   
+> **GaryPersona:** Cloud providers have broadened the interpretation of
+> the CAP theorem in the sense that they consider a system to be
+> unavailable if the response time exceeds the latency limit.
+
+> "In larger distributed-scale systems, network partitions are a given;
+> therefore, consistency and availability cannot be achieved at the same
+> time."  
+> Werner Vogels, CTO, Amazon - Vogels, E. Eventually Consistent, Communications of ACM, 52(1): 40-44, Jan 2009.
 
 For more information about the CAP theorem, see [CAP 
 theorem][captheorem] on Wikipedia and the article [CAP Twelve Years
 Later: How the "Rules" Have Changed][capinfoq] by Eric Brewer on the
 InfoQ website.
 
-The concept of *eventual consistency* offers to way to make it appear 
+The concept of *eventual consistency* offers a way to make it appear 
 from the outside that we are meeting these three guarantees. In the CAP 
 theorem, the consistency guarantee specifies that all the nodes should 
 see the same data *at the same time*; instead, with *eventual 
@@ -774,8 +783,8 @@ rule.
 > Very often people attempting to introduce eventual consistency into a 
 > system run into problems from the business side. A very large part of 
 > the reason of this is that they use the word consistent or consistency 
-> when talking with domain experts / business stakeholders. 
-> ...
+> when talking with domain experts / business stakeholders.  
+> ...  
 > Business users hear 'Consistency' and they tend to think it means that 
 > the data will be wrong. That the data will be incoherent and 
 > contradictory. This is not actually the case. Instead try using the 
@@ -784,7 +793,17 @@ rule.
 > have changed the data, that they may not have the latest copy of it.  
 > Greg Young: [Quick Thoughts on Eventual Consistency][youngeventual] 
 
+> **PoePersona:** Domain Name Servers (DNS) use the eventual consistency
+> model to refresh themselves, and that's why DNS propagation delay can
+> occur that results in some, but not other, users being able to
+> navigate to a new or updated domain name. The propagation delay is
+> acceptable considering that a coordinated atomic update across all DNS
+> servers globally would not be feasible. Eventually, however, all DNS
+> servers get updated and domain names get resolved properly.
 
+> **Note:** To better understand the tradeoffs described by the CAP
+> theorem, check out the special issue of IEEE Computer magazine
+> dedicated to it (Vol.45(no.2), Feb 2012).
 
 # Eventual consistency and CQRS 
 
@@ -797,9 +816,9 @@ synchronization task because all of the changes take place on the
 write-side, so the synchronization process only needs to push changes 
 from the write-side to the read-side. 
 
-If you decide that the two sides must always be consistent, then you 
-will need to introduce a distributed transaction that spans both sides 
-as shown in figure 1. 
+If you decide that the two sides must always be consistent (the case of 
+strong consistency), then you will need to introduce a distributed 
+transaction that spans both sides as shown in figure 1. 
 
 ![Figure 1][fig1]
 
@@ -834,6 +853,10 @@ scope of this transaction includes saving the changes to the data store
 on the write-side, and placing a copy of the change onto the queue that 
 pushes the change to the read-side. 
 
+> **GaryPersona:** This eventual consistency might not be able to
+> guarantee the same order of updates in the read side as in the write
+> side.
+
 This solution does not suffer from the potential performance problems 
 that you saw in the original solution if you assume that the messaging 
 infrastructure allows you to quickly add messages to a queue. This 
@@ -865,7 +888,7 @@ consistent by using this infrastructure feature.
 There are four goals to keep in mind when optimizing the read-side.
 You typically want:
 
-* Fast responses to queries for data.
+* Very fast responses to queries for data.
 * To minimize resource utilization.
 * To minimize latency.
 * To minimize costs.
@@ -881,14 +904,18 @@ resource-intensive operations on the data.
 For a discussion of how to discourage any unnecessary operations on the 
 data, see the section, "Querying the Read-side" in [Extending and 
 Enhancing the Orders and Registrations Bounded Contexts][j_chapter4] in 
-the Journey Guidance. 
+the Journey Guide. 
 
 If your system needs to accommodate high volumes of read operations, you 
 can scale out the read-side. For example, in Windows Azure by adding 
 additional role instances. You can also easily scale out your data store 
 on the read-side because it is read-only. You should also consider the 
 benefits of caching data on the read-side to further speed up response 
-times and reduce processing resource utilization. 
+times and reduce processing resource utilization.
+
+For a description of how the team designed the reference implementation 
+for scalability, see Chapter 7, "[Adding Resilience and Optimizing 
+Performance][j_chapter7]," in the Journey Guide. 
 
 In the section "Embracing Eventual Consistency" earlier in this chapter, 
 you saw how when you implement the CQRS pattern that you must accept 
@@ -1205,6 +1232,13 @@ the write-side. The commands should map very closely onto the mental
 model that your users have of the domain, and should not require any 
 translation before the domain-model receieves and processes them. 
 
+> "Every Human-Computer Interaction (HCI) professional I have worked
+> with has been in favor of task-based UIs. Every user that I have met
+> that has used both styles of UI, task based and 'grid' based, has
+> reported that they were more productive when using the task based UI
+> for 'interactive work'. Data entry is not interactive work."  
+> Udi Dahan - [Tasks, Messages, & Transactions][uditmt]
+
 In many applications, especially where the domain is relatively simple, 
 the costs of implementing the CQRS pattern and adding a task-based UI 
 will outweigh any benefits. Task-based UIs are particularly useful in 
@@ -1212,7 +1246,12 @@ complex domains.
 
 There is no requirement to use a task-based UI when you implement the 
 CQRS pattern. In some scenarios a simple CRUD-style UI is all that's 
-needed. 
+needed.
+
+> "The concept of a task based UI is more often than not assumed to be
+> part of CQRS, it is not, it is there so the domain can have verbs but
+> also capturing the intent of the user is important in general."  
+> Greg Young - [CQRS, Task Based UIs, Event Sourcing agh!][gregaah]
 
 # Taking advantage of Windows Azure
 
@@ -1542,6 +1581,8 @@ transaction.
 [capinfoq]:       http://www.infoq.com/articles/cap-twelve-years-later-how-the-rules-have-changed
 [idempotency]:    http://queue.acm.org/detail.cfm?id=2187821
 [dtodataset]:     http://msdn.microsoft.com/en-us/library/ff649325.aspx
+[uditmt]:         http://www.udidahan.com/2007/03/31/tasks-messages-transactions-%E2%80%93-the-holy-trinity/
+[gregaah]:        http://codebetter.com/gregyoung/2010/02/16/cqrs-task-based-uis-event-sourcing-agh/
 
 [fig1]:           images/Reference_04_Consistency_01.png?raw=true
 [fig2]:           images/Reference_04_Consistency_02.png?raw=true

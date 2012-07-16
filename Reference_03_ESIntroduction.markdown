@@ -172,6 +172,8 @@ transactions from which it always possible to reconstruct the current
 state of the system. Event sourcing can bring similar benefits to 
 other domains. 
 
+> **GaryPersona:** For additional insights into using events as a storage mechanism see [Events as a Storage Mechanism][eventstorage] by Greg Young.
+
 # Why should I use Event Sourcing? 
 
 So far, the only justification we have offered for event sourcing is the 
@@ -200,7 +202,11 @@ benefits will vary depending on the domain you are working in.
 - **Simplification.** Events are simple objects that describe what has
   happened in the system. By simply saving events, you are avoiding the
   complications associated with saving complex domain objects to a
-  relational store: the object-relational impedance mismatch. 
+  relational store: the object-relational impedance mismatch.
+  
+> "Another problem with the having of two models is that it is necessarily more work. One must create the code to save the current state of the objects and one must write the code to generate and publish the events. No matter how go about doing these things it cannot possibly be easier than only publishing events, even if you had something that made storing current state completely trivial to say a document storage, there is still the effort of bringing that into the project."  
+> Greg Young [Why use Event Sourcing?][whyevent]
+
 - **Audit Trail.** Events are immutable and store the full history of
   the state of the system. As such, they can provide a detailed audit
   trail of what has taken place within the system. 
@@ -230,14 +236,29 @@ benefits will vary depending on the domain you are working in.
   of data, you can fix the coding error and replay the event stream so
   that the system calculates the value correctly based on the new
   version of the code. 
+- **Testing.** All of the state changes in your aggregates are recorded
+  as events. Therefore, you can test that a command had the expected
+  effect on an aggregate by simply checking for the event.
   
-> Event sourcing can also help with complex testing scenarios where you
+> "Event sourcing can also help with complex testing scenarios where you
 > need to verify that a given action triggered a specific result. This
 > is especially relevant for negative results, where you need to verify
 > that an action did _not_ trigger a result; this is frequently not
 > verified when writing tests, but can easily be instrumented when the
-> changes are being recorded through events.
+> changes are being recorded through events."  
 > Alberto Poblacion  (Customer Advisory Council)
+
+- **Flexibility.** A sequence of events can be projected to any desired
+  structural representation.
+  
+> "As long as you have a steam of events, you can project it to any form,
+> even a conventional SQL database. For instance, my favorite approach
+> is to project event streams into JSON documents stored in a cloud
+> storage."  
+> Rinat Abdullin [Why Event Sourcing?][rinatwhy]
+
+
+
 
 
 The chapter "[A CQRS and ES Deep Dive][r_chapter4]" discusses these benefits 
@@ -287,6 +308,8 @@ to use event sourcing in your system:
   are specifically designed to answer such questions.
   
 # CQRS/ES
+
+The CQRS pattern and event sourcing are frequently combined; each adding benefit to the other.
 
 The chapter "[Introducing Command Query Responsibility Segregation][r_chapter2]" 
 suggested that events can form the basis of the push synchronization of 
@@ -371,6 +394,9 @@ You may choose to implement your own event store, or use a third-party
 event store such as Jonathan Oliver's [EventStore][jolivereventstore]. 
 Although you can implement a small-scale event store relatively easily, 
 a production quality, scalable event store is more of a challenge. 
+
+Chapter 8, "[Epilogue: Lessons Learned][j_chapter40]," summarizes the 
+experiences that our team had implementing our own event store. 
 
 ## Basic requirements
 
@@ -470,11 +496,15 @@ Dive][r_chapter4]".
 
 [jolivereventstore]: https://github.com/joliver/EventStore
 [coffee]:            http://eaipatterns.com/docs/IEEE_Software_Design_2PC.pdf
+[eventstorage]:      http://cqrs.wordpress.com/documents/events-as-storage-mechanism/
+[whyevent]:          http://codebetter.com/gregyoung/2010/02/20/why-use-event-sourcing/
+[rinatwhy]:          http://bliki.abdullin.com/event-sourcing/why
 
 [r_chapter1]:     Reference_01_CQRSContext.markdown
 [r_chapter2]:     Reference_02_CQRSIntroduction.markdown
 [r_chapter4]:     Reference_04_DeepDive.markdown
 [r_chapter6]:     Reference_06_Sagas.markdown
+[j_chapter40]:    Journey_40_Conclusions.markdown
 
 [fig1]:           images/Reference_03_ORM.png?raw=true
 [fig2]:           images/Reference_03_ES.png?raw=true
