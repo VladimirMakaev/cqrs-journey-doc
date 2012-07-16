@@ -478,9 +478,9 @@ This optimization adds filters to the Windows Azure Service Bus topic subscripti
 
 ## Creating a dedicated receiver for the **SeatsAvailability** aggregate
 
-This enables the receiver for the **SeatsAvailability** aggregate to use a subscription that supports sessions. The reason for this is to guarantee a single writer per aggregate instance because the **SeatsAvailability** aggregate is a high contention aggregate. This prevents receiving a large number of concurrency exceptions when we scale out.
+This enables the receiver for the **SeatsAvailability** aggregate to use a subscription that supports sessions. This is to guarantee that we have a single writer per aggregate instance because the **SeatsAvailability** aggregate is a high-contention aggregate. This prevents us from receiving a large number of concurrency exceptions when we scale out.
 
-**JanaPersona:** Elsewhere, we subscriptions with sessions to guarantee the ordering of events. In this case we are using sessions for a different reason; to guarantee that we have a single writer for each aggregate instance.
+> **JanaPersona:** Elsewhere, we use subscriptions with sessions to guarantee the ordering of events. In this case we are using sessions for a different reason &mdash; to guarantee that we have a single writer for each aggregate instance.
 
 ## Caching conference information
 
@@ -522,9 +522,6 @@ read-models in the system. Every web-role that hosts a view model
 generator instance must handle the events published by the write-side by 
 creating a subscription the the Windows Azure Service Bus topics.
 
-## Results of the optimization work
-[To do if we want to publish any details]
-
 ## Further changes that would improve performance
 
 In addition to the changes we made during this last stage of the journey to improve the performance of the application, the team identified a number of other changes that would result in further improvements. However, the available time for this journey was limited so it was not possible to make these changes in the V3 release.
@@ -547,7 +544,7 @@ In addition to the changes we made during this last stage of the journey to impr
 > dynamic throttling for sending the messages and dynamically control
 > how many parallel senders to use.
 
-* Our current event store implementation publishes a single, small message on on the service bus for every event that's saved in the event store. We could group some of these messages together to reduce the total number of I/O operations on the service bus. For example, a **SeatsAvailability** aggregate instance for a large conference publishes a large number of events, and the **Order** aggregate publishes events in bursts (when an **Order** aggregate is created it publishes both an **OrderPlaced** event and an **OrderTotalsCalculated** event). This will also help to reduce the latency in the system because currently, in those scenarios where ordering is important, we must wait for a confirmation that one event has been sent before sending the next one. Grouping sequences of events in a single message would mean that we don't need to wait for the confirmation between publishing individual events.
+* Our current event store implementation publishes a single, small message on the service bus for every event that's saved in the event store. We could group some of these messages together to reduce the total number of I/O operations on the service bus. For example, a **SeatsAvailability** aggregate instance for a large conference publishes a large number of events, and the **Order** aggregate publishes events in bursts (when an **Order** aggregate is created it publishes both an **OrderPlaced** event and an **OrderTotalsCalculated** event). This will also help to reduce the latency in the system because currently, in those scenarios in which ordering is important, we must wait for a confirmation that one event has been sent before sending the next one. Grouping sequences of events in a single message would mean that we don't need to wait for the confirmation between publishing individual events.
 
 ## Further changes that would enhance scalability
 
@@ -565,13 +562,13 @@ The Contoso Conference Management System is designed to allow you to deploy mult
 > could move some of the read-model data currently in the SQL Database
 > instance to either Windows Azure table storage or blob storage.
 
-* **Further partition the Service Bus:** We already partition the Service Bus to avoid throttling when the volume of messages that the system is sending approaches the maximum throughput that the Service Bus can handle by using different topics for different event publishers. We could further partition the topics by using multiple, similar topics and listening to them all on a round-robin to spread the load. For a detailed description of this approach, see Chapter 11, "Asynchronous Communication and Message Buses" in _Scalability Rules: 50 Principles for Scaling Web Sites_ by Abbott and Fisher (Addison-Wesley 2011).
+* **Further partition the Service Bus:** We already partition the Service Bus, by using different topics for different event publishers, to avoid throttling when the volume of messages that the system is sending approaches the maximum throughput that the Service Bus can handle. We could further partition the topics by using multiple, similar topics and listening to them all on a round-robin to spread the load. For a detailed description of this approach, see Chapter 11, "Asynchronous Communication and Message Buses" in _Scalability Rules: 50 Principles for Scaling Web Sites_, by Abbott and Fisher (Addison-Wesley, 2011).
 
 * **Store and forward:** We introduced the store and forward design in the previous section that discuss performance improvement. By batching multiple operations, you not only reduce the number of round-trips to the data store and reduce the latency in the system, you also enhace the scalability of the system because fewer requests reduces the stress on the data store.
 
-* **Listen for and react to throttling indicators:** Currently, the system uses the [Transient Fault Handling Application Block][tfhab] to detect transient error conditions such as throttling indicators from the Windows Azure Service Bus, the SQL Database instance, and Windows Azure table storage. The system uses the block to implement retries in these scenarios, typically by using an exponential back-off strategy. At present, we use dynamic throttling at the level of an individual subscription, however we'd like to modify this to perform the dynamic throttling for all of the subscriptions to a specific topic. Similarly, we'd like to implement dynamic throttling at the level of the SQL database instance, and at the level of the Windows Azure storage account.
+* **Listen for and react to throttling indicators:** Currently, the system uses the [Transient Fault Handling Application Block][tfhab] to detect transient error conditions such as throttling indicators from the Windows Azure Service Bus, the SQL Database instance, and Windows Azure table storage. The system uses the block to implement retries in these scenarios, typically by using an exponential back-off strategy. At present, we use dynamic throttling at the level of an individual subscription; however, we'd like to modify this to perform the dynamic throttling for all of the subscriptions to a specific topic. Similarly, we'd like to implement dynamic throttling at the level of the SQL Database instance, and at the level of the Windows Azure storage account.
 
-**JanaPersona:** For an example of implementing dynamic throttling within the application to avoid throttling from the service, see the way the **EventStoreBusPublisher**, **SubscriptionReceiver**, and **SessionSubscriptionReceiver** classes use the **DynamicThrottling** class to manages the degree of parallelism that they use to send or receive messages.
+> **JanaPersona:** For an example of implementing dynamic throttling within the application to avoid throttling from the service, see how the **EventStoreBusPublisher**, **SubscriptionReceiver**, and **SessionSubscriptionReceiver** classes use the **DynamicThrottling** class to manage the degree of parallelism they use to send or receive messages.
 
 > **PoePersona:** Each service (Windows Azure Service Bus, SQL Database,
 > Windows Azure storage) has its own particular way of implementing
@@ -581,7 +578,7 @@ The Contoso Conference Management System is designed to allow you to deploy mult
 > be subject in different services that your application uses.
 
 > **PoePersona:** The team also considered using the Windows Azure SQL Database Business
-> edition instead of the Windows Azure SQL Database Web edition, but on investigation we
+> edition instead of the Windows Azure SQL Database Web edition but, upon investigation, we
 > determined that at present, the only difference between the editions
 > is the maximum database size. The different editions are not tuned to
 > support different types of workload, and both editions implement the
@@ -598,8 +595,8 @@ It's important not to get a false sense of optimism when it comes to scalability
 
 _"Preparation, I have often said, is rightly two-thirds of any venture." Amelia Earhart_
 
-The team planned to have a no downtime migration from the V2 to the V3 release in Windows Azure. To achieve this, 
-the migration process uses an ad hoc processor running in a Windows Azure worker role to perform some of the migration steps. 
+The team planned to have a no-downtime migration from the V2 to the V3 release in Windows Azure. To achieve this, 
+the migration process uses an ad-hoc processor running in a Windows Azure worker role to perform some of the migration steps. 
 
 The migration process still requires you to complete a configuration step to switch off the V2 processor and switch on the V3 processor. In retrospect, we would have used a different mechanism to streamline the transition from the V2 to the V3 processor based on feedback from the handlers themselves to indicate when they have finished their processing.
 
@@ -611,9 +608,9 @@ For details of these steps, see Appendix 1,
 
 ## Rebuilding the read models
 
-During the migration from V2 to V3, one of the steps we must perform is to rebuild the **DraftOrder** and **PricedOrder** view models by replaying events from the event log to populate the new V3 read-model tables. We can do this asynchronously. However, at some point in time, we need to start sending events from the live application to these read models. Furthermore, we need to keep both the V2 and V3 versions of these read models up to date until the migration process is complete because the V2 front-end web role will need the V2 read model data to be available until we switch to the V3 front-end web role. At the point that we switch to the V3 front-end, we must ensure that the V3 read-models are completely up to date.
+During the migration from V2 to V3, one of the steps we must perform is to rebuild the **DraftOrder** and **PricedOrder** view models by replaying events from the event log to populate the new V3 read-model tables. We can do this asynchronously. However, at some point in time, we need to start sending events from the live application to these read models. Furthermore, we need to keep both the V2 and V3 versions of these read models up to date until the migration process is complete because the V2 front-end web role will need the V2 read-model data to be available until we switch to the V3 front-end web role. At the point at which we switch to the V3 front end, we must ensure that the V3 read models are completely up to date.
 
-To handle keeping these read models up to date, we created an ad-hoc processor as a Windows Azure worker role that runs just while the migration is taking place. See the **MigrationToV3** project in the **Conference** solution for more details. The steps that this processor performs are:
+To keep these read models up to date, we created an ad-hoc processor as a Windows Azure worker role that runs just while the migration is taking place. See the MigrationToV3 project in the Conference solution for more details. The steps that this processor performs are to:
 
 * Create a new set of topic subscriptions that will receive the live
   events that will be used to populate the new V3 read models. These
@@ -622,20 +619,20 @@ To handle keeping these read models up to date, we created an ad-hoc processor a
 * Replay the events from the event log to populate the new V3 read
   models with historical data.
 * Handle the live events and keep the V2 read models up to date until
-  the V3 front-end is live, at which point we no longer need
-  the V2 read models.
+  the V3 front end is live, at which point we no longer need the V2 read
+  models.
 
-The migration process first replays the events from the event store to populate the new V3 read models. When this is complete, we stop the V2 processor that contains the event handlers, and start the new handlers in their V3 processor. While these are running and catching up on the events that were accumulated in the new topic subscriptions, the ad-hoc processor is also keeping the V2 read models up to date because at this point we still have the V2 front-end. When the V3 worker roles are ready, we can perform a VIP switch to bring the new V3 front-end into use. After the V3 front-end is running, we no longer have any need for the V2 read models.
+The migration process first replays the events from the event store to populate the new V3 read models. When this is complete, we stop the V2 processor that contains the event handlers, and start the new handlers in their V3 processor. While these are running and catching up on the events that were accumulated in the new topic subscriptions, the ad-hoc processor is also keeping the V2 read models up to date because at this point we still have the V2 front end. When the V3 worker roles are ready, we can perform a VIP switch to bring the new V3 front end into use. After the V3 front end is running, we no longer have any need for the V2 read models.
 
 One of the issues to address with this approach is how to determine when the new V3 processor should switch from processing archived events in the event log to the live stream of events. There is some latency in the process that writes events to the event log, so an instantaneous switch could result in the loss of some events. The team decided to allow the V3 processor to temporarily handle both archived events and the live stream which means there is a possibility that there will be duplicate events; the same event exists in the event store and in the list of events accumulated by the new subscription. However, we can detect these duplicates and handle them accordingly.
 
-**MarkusPersona:** Typically, we rely on the infrastructure to detect duplicate messages. In this particular scenario where duplicate events may come from different sources, we cannot rely on the infrastructure and must add the duplicate detection logic into our code explicitly.
+> **MarkusPersona:** Typically, we rely on the infrastructure to detect duplicate messages. In this particular scenario where duplicate events may come from different sources, we cannot rely on the infrastructure and must add the duplicate detection logic into our code explicitly.
 
-An alternative approach that we considered was to include both V2 and V3 handling in the V3 processor. With this approach there is no need for an ad-hoc worker role to process the V2 events during the migration. However, we decided to keep the migration specific code in a separate project to avoid bloating the V3 release with functionality that is only needed during the migration.
+An alternative approach that we considered was to include both V2 and V3 handling in the V3 processor. With this approach there is no need for an ad-hoc worker role to process the V2 events during the migration. However, we decided to keep the migration-specific code in a separate project to avoid bloating the V3 release with functionality that is only needed during the migration.
 
-**JanaPersona:** The migration process would be slightly easier if we adopted the approach of including both V2 and V3 handling in the V3 processor. We decided that this benefit was outweighed by the benefit of avoiding having to maintain duplicate functionality in the V3 processor.
+> **JanaPersona:** The migration process would be slightly easier if we included both V2 and V3 handling in the V3 processor. We decided that the benefit of such an approach was outweighed by the benefit of not having to maintain duplicate functionality in the V3 processor.
 
-**Note:** The intervals between each step of the migration take some time to complete, so the migration is really 'no downtime, but things might take a while to move forward for the user'. We would have benefited from some faster mechanisms to deal with the toggle switches such as stopping the V2 processor, and starting the V3 processor).
+> **Note:** TThe intervals between each step of the migration take some time to complete, so the migration achieves no downtime, but the user does experience delays. We would have benefited from some faster mechanisms to deal with the toggle switches, such as stopping the V2 processor and starting the V3 processor.
 
 # Implementation details 
 
