@@ -216,7 +216,7 @@ need to use a service bus for the bounded contexts to communicate with each
 other. 
 
 Implementing the CQRS pattern is more complex than implementing a 
-traditional (create, read, update, delete) CRUD-style system. Our experiences during the journey have 
+traditional (create, read, update, delete) CRUD-style system. For this project, there was also the overhead of learning about CQRS for the first time, and creating a distributed, asynchronous messaging infrastructure. Our experiences during the journey have 
 clearly confirmed to us why the CQRS pattern is not a top-level 
 architecture. You must be sure that the costs associated with 
 implementing a CQRS-based bounded context with this level of complexity 
@@ -375,10 +375,9 @@ was not optimal, and in the last stage of the journey, Chapter 7
 some major changes to this architecture as part of the performance 
 optimization effort. 
 
-As a part of this reorganization in the last stage of the journey we 
-introduced synchronous command processing alongside the pre-existing 
-asynchronous command processing. We would try to use either synchronous 
-or asynchronous command processing in the system; not both. 
+For example, as a part of this reorganization in the last stage of the journey, we 
+introduced synchronous command processing in the web application alongside the pre-existing 
+asynchronous command processing.
 
 ## Organize the development team differently
 
@@ -416,7 +415,7 @@ the Service Bus to improve the throughput of events. This partitioning
 is done based on the publisher of the event, so events published by one 
 aggregate type go to one topic. We'd like to extend this to use multiple 
 topics where we currently have one, perhaps partitioning based on a hash 
-of the order ID in the message. This would enable greater scale out for 
+of the order ID in the message (this approach is often referred to as sharding). This would enable greater scale out for 
 the application. 
 
 ## Think about the UI differently
