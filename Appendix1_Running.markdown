@@ -14,7 +14,7 @@ Contoso Conference Management System.
 
 This appendix describes how to obtain, build, and run the RI.
 
-These instructions describe five different scenarios for running the RI:
+These instructions describe five different scenarios for running the RI using the **Conference** solution:
 
 1. Running the application on a local web server and using a local
    message bus and event store.
@@ -39,6 +39,11 @@ These instructions describe five different scenarios for running the RI:
 > storage requirements. Scenario 5 requires you to use SQL Database instead
 > of SQL Express.
 
+> **Note 3:** The source code download also includes a **Conference.NoAzureSDK**
+> solution that enables you to build and run the sample application
+> without installing the Windows Azure SDK. This solution supports
+> scenarios 1 and 2 only.
+
 # Prerequisites
 
 Before you begin, you should install the following pre-requisites:
@@ -55,6 +60,9 @@ Before you begin, you should install the following pre-requisites:
 > **Note:** The V1 and V2 releases of the sample application used
 > ASP.NET MVC 3 in addition to ASP.NET MVC 4. As of the V3 release all
 > of the web applications in the project use ASP.NET MVC 4.
+
+> **Note:** The Windows Azure SDK is **not** a pre-requisite if you plan to
+> use the **Conference.NoAzureSDK** solution.
 
 You can download and install all of these except for Visual Studio by
 using the Microsoft Web Platform Installer 4.0. 
