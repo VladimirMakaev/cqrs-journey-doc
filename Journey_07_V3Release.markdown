@@ -170,7 +170,7 @@ In the V1 release, most message handling is already either idempotent,
 or the system detects duplicate messages and sends them to a dead-letter 
 queue. The exceptions are the **OrderPlaced** event and the 
 **SeatsReserved** event, so the team modified the way that the V3
-release of the system processes these two commands in order to address
+release of the system processes these two events in order to address
 this issue.
 
 ## Ensuring that commands are always sent
@@ -1227,13 +1227,14 @@ public bool ProcessMessage(string traceIdentifier, ICommand payload, string mess
 }
 ```
 
-> **MarkusPersona:** Notice how we use the **dynamic** keyword when we
-> dispatch the command to its registered handler.
+> **MarkusPersona:** Ideally, we would replace the **dynamic** keyword
+  with a compiled lambda expression, but we did not have time to
+  complete this.
 
 ## Implementing snapshots with the memento pattern
 
-In the Contoso Conference Management System, the only event-sources 
-aggregate that is likely to have a significant number of events and 
+In the Contoso Conference Management System, the only event-sourced 
+aggregate that is likely to have a significant number of events per instance and 
 benefit from snapshots is the **SeatAvailability** aggregate. 
 
 > **MarkusPersona:** Because we chose to use the memento pattern, the
@@ -1380,6 +1381,8 @@ The team added filters to the Windows Azure Service Bus subscriptions to restric
 
 ## Creating a dedicated **SessionSubscriptionReciever** instance for the **SeatsAvailability** aggregate
 
+In the V2 release, the system did not use sessions for commands because we do not require ordering guarantees for commands. However, we now want to use sessions for commands to guarantee a single listener for each **SeatsAvailability** aggregate instance, which will help us to scale out without getting a large number of concurrency exceptions from this high-contention aggregate.
+
 The following code sample from the Conference.Processor.Azure.cs file shows how the system creates a dedicated **SessionSubscriptionReceiver** instance to receive messages destined for the **SeatsAvailability** aggregate:
 
 ```Cs
@@ -1450,11 +1453,13 @@ if (timeToCache > TimeSpan.Zero)
 }
 ```
 
+> **JanaPersona:** You can see how we manage the risks associated with displaying stale data by adjusting the caching duration, or even deciding not to cache the data at all.
+
 The system now also uses a cache to hold seat type descriptions in the **PricedOrderViewModelGenerator** class.
 
 ## Using multiple topics to partition the service bus
 
-To reduce the number of messages flowing through the service bus topics, we created two additional topics to transport events published by the **Order** and **SeatAvailability** aggregates. The following snippet from the Settings.xml file shows the definitions of these new topics:
+To reduce the number of messages flowing through the service bus topics, we partitioned the service bus by creating two additional topics to transport events published by the **Order** and **SeatAvailability** aggregates. This helps us to avoid being throttled by the service bus when the application is experiencing very high loads. The following snippet from the Settings.xml file shows the definitions of these new topics:
 
 ```XML
 <Topic Path="conference/orderevents" IsEventBus="true">
@@ -1562,18 +1567,26 @@ The following code sample from the **SubscriptionReceiver** class ahows
 how to enable this option. 
 
 ```Cs
-protected SubscriptionReceiver(ServiceBusSettings settings, string topic, string subscription, RetryStrategy backgroundRetryStrategy)
+protected SubscriptionReceiver(ServiceBusSettings settings, string topic, string subscription, bool processInParallel, ISubscriptionReceiverInstrumentation instrumentation, RetryStrategy backgroundRetryStrategy)
 {
     this.settings = settings;
     this.topic = topic;
     this.subscription = subscription;
+    this.processInParallel = processInParallel;
 
     this.tokenProvider = TokenProvider.CreateSharedSecretTokenProvider(settings.TokenIssuer, settings.TokenAccessKey);
     this.serviceUri = ServiceBusEnvironment.CreateServiceUri(settings.ServiceUriScheme, settings.ServiceNamespace, settings.ServicePath);
 
     var messagingFactory = MessagingFactory.Create(this.serviceUri, tokenProvider);
     this.client = messagingFactory.CreateSubscriptionClient(topic, subscription);
-    this.client.PrefetchCount = 50;
+    if (this.processInParallel)
+    {
+        this.client.PrefetchCount = 18;
+    }
+    else
+    {
+        this.client.PrefetchCount = 14;
+    }
 
     ...
 }
@@ -1595,7 +1608,9 @@ For details, see the **AcceptSession** method in the
 > **MarkusPersona:** The **AcceptSession** method uses the Transient
 > Fault Handling Application Block to reliably accept sessions.
 
-Because of this change, the team also added an optimistic concurrency 
+### Adding an optimistic concurrency check
+
+The team also added an optimistic concurrency 
 check when the system saves the **RegistrationProcessManager** class by 
 adding a timestamp property to the **RegistrationProcessManager** class 
 as shown in the following code sample: 

@@ -216,7 +216,7 @@ need to use a service bus for the bounded contexts to communicate with each
 other. 
 
 Implementing the CQRS pattern is more complex than implementing a 
-traditional (create, read, update, delete) CRUD-style system. Our experiences during the journey have 
+traditional (create, read, update, delete) CRUD-style system. For this project, there was also the overhead of learning about CQRS for the first time, and creating a distributed, asynchronous messaging infrastructure. Our experiences during the journey have 
 clearly confirmed to us why the CQRS pattern is not a top-level 
 architecture. You must be sure that the costs associated with 
 implementing a CQRS-based bounded context with this level of complexity 
@@ -375,10 +375,9 @@ was not optimal, and in the last stage of the journey, Chapter 7
 some major changes to this architecture as part of the performance 
 optimization effort. 
 
-As a part of this reorganization in the last stage of the journey we 
-introduced synchronous command processing alongside the pre-existing 
-asynchronous command processing. We would try to use either synchronous 
-or asynchronous command processing in the system; not both. 
+For example, as a part of this reorganization in the last stage of the journey, we 
+introduced synchronous command processing in the web application alongside the pre-existing 
+asynchronous command processing.
 
 ## Organize the development team differently
 
