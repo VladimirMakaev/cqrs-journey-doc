@@ -14,7 +14,7 @@ Contoso Conference Management System.
 
 This appendix describes how to obtain, build, and run the RI.
 
-These instructions describe five different scenarios for running the RI using the **Conference** solution:
+These instructions describe five different scenarios for running the RI using the **Conference** Visual Studio solution:
 
 1. Running the application on a local web server and using a local
    message bus and event store.
@@ -503,6 +503,10 @@ If you want to run the acceptance tests in the **Conference.AcceptanceTests** so
 </startup>
 ```
 
+## Acceptance tests browser support
+
+Internet Explorer 9 is the only supported browser for the SpecFlow acceptance tests.
+
 ## Localizability is not in scope
 
 The RI is not designed with localizability in mind. For example, it 
@@ -556,7 +560,6 @@ configuration to another.
 ## Other Known Issues
 
 * No security features have been implemented yet. 
-* No localizability tests have been performed yet.
 * The UI is still a work in progress.
 * Validation in the UI is not yet complete. 
 * You can see a list of outstanding issues for the V2 release [here][v2outstanding].
