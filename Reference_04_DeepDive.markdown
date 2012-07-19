@@ -1389,6 +1389,7 @@ public IEnumerable<EventData> Load(string partitionKey, int version)
                                 });
 }
 ```
+
 The events are returned in the correct order because the version number 
 is used as the row key. 
 
@@ -1512,6 +1513,7 @@ private void ProcessNewPartition(CancellationToken cancellationToken)
     }
 }
 ```
+
 There are three points to note about this sample implementation:
 
 1. It is not optimized.
