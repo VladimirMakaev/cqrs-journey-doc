@@ -39,7 +39,7 @@ These instructions describe five different scenarios for running the RI using th
 > storage requirements. Scenario 5 requires you to use SQL Database instead
 > of SQL Express.
 
-> **Note 3:** The source code download also includes a **Conference.NoAzureSDK**
+> **Note 3:** The source code download for the V3 release also includes a **Conference.NoAzureSDK**
 > solution that enables you to build and run the sample application
 > without installing the Windows Azure SDK. This solution supports
 > scenarios 1 and 2 only.
@@ -50,12 +50,14 @@ Before you begin, you should install the following pre-requisites:
 
 * Visual Studio 2010 or later
 * SQL Server 2008 Express or later
-* ASP.NET MVC 4 Installer (Visual Studio 2010)
-* Windows Azure SDK for .NET - June 2012 or later
+* ASP.NET MVC 3 and MVC 4 for the V1 and V2 releases
+* ASP.NET MVC 4 Installer (Visual Studio 2010) for the V3 release
+* Windows Azure SDK for .NET - November 2011 for the V1 and V2 releases
+* Windows Azure SDK for .NET - June 2012 or later for the V3 release
 
 > **Note:** Currently the RI requires the Windows Azure runtime
-> libraries in order to compile. This is true even for scenario 1. The
-> Windows Azure SDK includes these libraries. 
+> libraries in order to compile. The
+> Windows Azure SDK includes these libraries. Scenario 1 does not require the client libraries.
 
 > **Note:** The V1 and V2 releases of the sample application used
 > ASP.NET MVC 3 in addition to ASP.NET MVC 4. As of the V3 release all
@@ -70,9 +72,9 @@ using the Microsoft Web Platform Installer 4.0.
 You can install the remaining dependencies from NuGet by running the
 script **install-packages.ps1** included with the downloadable source.
 
-If you plan to deploy the RI to Windows Azure, you must have a Windows 
+If you plan to deploy any part of the RI to Windows Azure (scenarios 2, 4, 5), you must have a Windows 
 Azure subscription. You will need to configure a Windows Azure storage 
-account, a Windows Azure Service Bus namespace, and a SQL Database
+account (for blob storage), a Windows Azure Service Bus namespace, and a SQL Database
 database (they do not necessarily need to be in the same Windows Azure 
 subscription). You should be aware, that depending on your Windows Azure 
 subscription type, you may incur usage charges when you use the Windows 
@@ -84,9 +86,6 @@ that enables you to run the RI in Windows Azure.
 
 > **Note:** Scenario 1 enables you to run the RI locally without using
 > the Windows Azure compute and storage emulators. 
-
-If you want to run the SpecFlow acceptance tests, you should also 
-install [SpecFlow][specflow]. 
 
 
 # Obtaining the Code
@@ -363,7 +362,9 @@ configurations as the **Conference** solution to control whether you run
 the acceptance tests against either the local SQL-based messaging 
 infrastructure and event store or the Windows Azure Service Bus 
 messaging infrastructure and Windows Azure table storage based event 
-store. 
+store.
+
+You can use the xUnit console runner or a third-party tool with Visual Studio integration and xUnit support (for example TDD.net) to run the tests. The xUnit GUI tool is not supported.
 
 # Migrating from the V1 to the V2 Release
 
@@ -560,7 +561,6 @@ configuration to another.
 ## Other Known Issues
 
 * No security features have been implemented yet. 
-* The UI is still a work in progress.
 * Validation in the UI is not yet complete. 
 * You can see a list of outstanding issues for the V2 release [here][v2outstanding].
 * You can see a list of outstanding issues for the V3 release [here][v3outstanding].
@@ -570,5 +570,5 @@ configuration to another.
 [specflow]:        http://www.specflow.org/
 [connectionerror]: http://blogs.msdn.com/b/narahari/archive/2011/12/21/azure-a-connection-attempt-failed-because-the-connected-party-did-not-properly-respond-after-a-period-of-time-or-established-connection-failed-because-connected-host-has-failed-to-respond-x-x-x-x-x-quot.aspx
 [v2outstanding]:   https://github.com/mspnp/cqrs-journey-code/issues/search?utf8=%E2%9C%93&q=v2
-[v3outstanding]:   https://github.com/mspnp/cqrs-journey-code/issues/search?utf8=%E2%9C%93&q=v3
+[v3outstanding]:   https://github.com/mspnp/cqrs-journey-code/issues?page=1&state=open
 [azurerdp]:        http://msdn.microsoft.com/en-us/library/windowsazure/gg443832.aspx
