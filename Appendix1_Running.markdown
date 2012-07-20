@@ -523,7 +523,7 @@ Activation error occured while trying to get instance of type IControllerFactory
 ```
 
 Click in the **Continue** button and the application will run as
-expected.
+expected. You may see the error multiple times.
 
 ## Server Error in '/' Application
 
