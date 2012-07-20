@@ -48,12 +48,7 @@ There are two closely related parts to this guidance:
   describing how it works, what decisions were made during its 
   development, and what trade-offs were considered. 
 
-This written guidance is itself split into two distinct sections that 
-you can read independently: a description of the journey we took as we 
-learned about CQRS, and a collection of CQRS reference materials. The 
-map in Figure 1 illustrates the relationship between the two sections: a 
-journey with some defined stopping points that enables us to explore a 
-space. 
+This written guidance is itself split into three distinct sections that you can read independently: a description of the journey we took as we learned about CQRS, and a collection of CQRS reference materials, and a collection of case studies that describe the experiences other teams have had with the CQRS pattern. The map in Figure 1 illustrates the relationship between the first two sections: a journey with some defined stopping points that enables us to explore a space. 
 
 ![Figure 1][fig1]
 
@@ -96,7 +91,11 @@ of the concepts or patterns in more detail.
 The second section of the written guidance is a collection of reference 
 material collated from many sources. It is not the definitive 
 collection, but should contain enough material to help you to understand 
-the core patterns, concepts, and language of CQRS. 
+the core patterns, concepts, and language of CQRS.
+
+## Tales from the trenches
+
+This section of the written guidance is a collection of case studies from other teams that describe their experiences of implementing the CQRS pattern and event sourcing in the real world. These case studies are not as detailed as the journey section of the guidance and are intended to give an overview of these projects and to summarize some of the key lessons learned.
 
 The following is a list of the chapters that comprise both sections of 
 the written guidance: 
