@@ -44,11 +44,12 @@ Twilio identified a trade-off in how to effectively instrument their systems to 
 ## References
 
 For further information relating to Twilio, see:
+
 * [Twilio.com][twilio]
 * [High-Availability Infrastructure in the Cloud][highavail]
 * [Scaling Twilio][scaletwilio]
 * [Asynchronous Architectures for Implementing Scalable Cloud Services][async]
-* [Why Twilio Wasn’t Affected by Today’s AWS Issues][awsissues]
+* [Why Twilio Wasn't Affected by Today's AWS Issues][awsissues]
 
 Originally told by Evan Cooke, CTO, Twilio
 

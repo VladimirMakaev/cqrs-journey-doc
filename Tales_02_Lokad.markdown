@@ -4,14 +4,15 @@
 
 Lokad Hub is an infrastructure element that unifies the metered, pay-as-you-go, forecasting subscription offered by Lokad. It also provides an intelligent, self-managing, business backend for Lokad's internal teams.
 Lokad requires this piece of infrastructure to be extremely flexible, focused, self-managing, and capable of surviving cloud outages. Key features of Lokad Hub include:
-•	Multi-tenancy
-•	Scalability
-•	Instant data replication to multiple locations
-•	Deployable to any cloud
-•	Supports multiple production deployments daily
-•	Full audit logs and the ability to roll back to any point in time
-•	Integration with other systems
-	
+
+* Multi-tenancy
+* Scalability
+* Instant data replication to multiple locations
+* Deployable to any cloud
+* Supports multiple production deployments daily
+* Full audit logs and the ability to roll back to any point in time
+* Integration with other systems
+
 The current version was developed using the domain-driven design (DDD) approach, implements the CQRS pattern, and uses event sourcing (ES). It is a replacement for a legacy, CRUD-style system.
 For Lokad, the two key benefits of the new system are the low development friction that makes it possible to perform multiple deployments per day, and the ability to respond quickly to changes in the system's complex business requirements.
 
@@ -72,6 +73,7 @@ Once you have over 100,000 events to keep and replay, simple file-based or blob-
 ## References
 
 For further information relating to Lokad Hub, see:
+
 * [Case: Lokad Hub][lokadhub]
 * [Lokad.com][lokadcom]
 * [Lokad Team][lokadteam]
