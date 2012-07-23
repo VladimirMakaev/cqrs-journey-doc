@@ -5,7 +5,7 @@ http://cqrsjourney.github.com
 
 # Contribution Guidelines Overview
 
-If you would like to become involved in the development of the CQRS Journey referenceimplementation and guidance, you can contribute in many different ways:
+If you would like to become involved in the development of the CQRS Journey reference implementation and guidance, you can contribute in many different ways:
 
 * We strongly value user feedback and appreciate your questions, bug reports, reviews and feature requests. For more details how you can submit these, see the section "[Using the Reference Implmentation, Reading the Documentation, and Providing Feedback](#sampleapp)" below. 
 * **You can provide review comments to the draft guide. See the section "[Simple Document Review](#simplereview)" below.**
