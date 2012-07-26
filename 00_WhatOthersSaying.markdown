@@ -55,4 +55,5 @@
 ----------
 
 
-If you would like to provide your feedback on the guide, feel free to comment on this page.
+If you would like to provide your feedback on the guide, feel free to comment on this page or send an email to 
+the CQRS Journey Commander, Grigori Melnik at grigori dot melnik at microsoft dot com.
