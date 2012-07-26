@@ -20,7 +20,7 @@ One of our challenges with CQRS has been physically separating our bounded conte
 
 It is important to start thinking about how your bounded contexts will communicate with each other. Events and event sourcing are often associated with CQRS for good reason. The DMS uses events to keep an auditable change history which results in a very obvious integration strategy of eventing.
 
-At this point the DMS is modular, injectable, testable (not necessarily fully tested), and beginning to be divided by bounded context but we have yet to talk about CQRS. All of this ground work is necessary to change the architecture of a large application–don’t be tempted to skip it.
+At this point the DMS is modular, injectable, testable (not necessarily fully tested), and beginning to be divided by bounded context but we have yet to talk about CQRS. All of this ground work is necessary to change the architecture of a large application--don’t be tempted to skip it.
 
 The first piece of CQRS we started with was the commands and queries. This might seem obtusely obvious but I point it out because we did not start with eventing, event sourcing, caching, or even a bus. We created some commands and a bit of wiring to map them to command handlers. If you took our advice earlier and you are using an Inversion of Control (IoC) container, the mapping of command to command handler can be done in less than a day. Since the DMS is now modular and injectable our container can create the command handler dependencies with minimal effort which allowed us to wire our commands into our existing middleware code. Most applications already have a remoting or gateway layer that performs this function of translating UI calls into middleware / BO functions. In the DMS, the commands and queries replaced that layer.
 
@@ -32,7 +32,7 @@ At this point we also began to run into difficulties accomplishing tasks. We wer
 
 We found that these questions could not be answered by writing more commands and queries but rather by flushing out our CQRS implementation. The next logical choice was either the read or the write model. Starting with the cached read model felt like the best choice since it delivers tangible business value. We chose to use events to keep our read model up to date, but where do the events come from? It became obvious that we were forced to create our write model first.
 
-Choose a strategy for the write model that makes sense in your bounded context. That is, after all, what CQRS allows: separating reads and writes to decouple the requirements of each. For the DMS we use domains that expose behavior. We do not practice DDD, but a domain model fits well with CQRS. Creating a domain model is very hard, we spent a lot of time talking about what our aggregate roots are–do not underestimate how hard this will be. 
+Choose a strategy for the write model that makes sense in your bounded context. That is, after all, what CQRS allows: separating reads and writes to decouple the requirements of each. For the DMS we use domains that expose behavior. We do not practice DDD, but a domain model fits well with CQRS. Creating a domain model is very hard, we spent a lot of time talking about what our aggregate roots are--do not underestimate how hard this will be. 
 
 When creating the write model we were very careful about introducing any dependencies to the domain assembly. This will allow the domain to outlive other application specific technologies, but was not without pain points. Our domain started out with a lot of validation that was eventually moved into command validators; dependencies required for validation were not available from within the domain. In the end, the domain simply translates behavior (methods) into events (class instances). Most of our pain points were centered on saving the events without taking dependencies into the domain assembly. The DMS does not use event sourcing, we were able to translate the domain events into our existing SQL tables with objects we call Event Savers. This allows our domain to focus on translating behavior to events and the command handler can publish and save the events. To prevent the command handler from doing too much, we use a repository pattern to get and save a domain. This allows us to switch to event sourcing in a later refactoring of the application if desired with minimal effect on the domain. The Event Savers are simple classes that map an event to a stored procedure call or table(s). We use RabbitMq to publish the events after saving, it is not transactional but that has been ok so far.
 
@@ -42,12 +42,12 @@ Once our cache was in place we discovered the oldest known theorem of caching: T
 
 ## Single Responsibility of Objects
 
-* Command – carries data
-* Command Authorizer – authorizes user to place a command on the bus 
-* Command Validator – validates a command can be placed on the bus
-* Command Handler – maps command to domain call
-* Repository Factory – retrieves a repository for specified domain type
-* Repository – retrieves/persists domain instance by key
-* Domain – maps behavior to domain event
-* Domain EventSaver – called by the repository and saves domain events to existing database structure
+* Command -- carries data
+* Command Authorizer -- authorizes user to place a command on the bus 
+* Command Validator -- validates a command can be placed on the bus
+* Command Handler -- maps command to domain call
+* Repository Factory -- retrieves a repository for specified domain type
+* Repository -- retrieves/persists domain instance by key
+* Domain -- maps behavior to domain event
+* Domain EventSaver -- called by the repository and saves domain events to existing database structure
 
