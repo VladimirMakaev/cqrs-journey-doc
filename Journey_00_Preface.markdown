@@ -152,7 +152,9 @@ the written guidance:
 
 * Chapter 1, "Twilio," describes a highly available, cloud-hosted, communications platform. Although the team who developed this product did not explicitly use CQRS, many of the architectural concepts they adopted are very closely related to the CQRS pattern.
 * Chapter 2, "Lokad Hub," describes a project that made full use of domain-driven design, CQRS, and event sourcing in an application designed to run on multiple cloud platforms.
-* Chapter 3, "DDD/CQRS for large financial company," describes a project that made full use of domain-driven design and CQRS to build a reference application for a large financial company. It used CQRS to specifically address the issues of performance, scalability, and reliability. 
+* Chapter 3, "DDD/CQRS for large financial company," describes a project that made full use of domain-driven design and CQRS to build a reference application for a large financial company. It used CQRS to specifically address the issues of performance, scalability, and reliability.
+* Chapter 4, "Digital Marketing," describes how an existing application was refactored over time while delivering new features. This project adopted the CQRS pattern for one of its pieces as the project progressed.
+* Chapter 5, "TOPAZ Technologies," describes a project that used the CQRS pattern and event sourcing to simplify the development of an off-the-shelf enterprise application.
 
 
 ## Selecting the domain for the RI
