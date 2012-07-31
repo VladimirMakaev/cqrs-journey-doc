@@ -192,8 +192,8 @@ it loads a **RegistrationProcessManager** instance from storage.
 
 # Optimizing performance
 
-During this stage of the journey we ran performance tests using the 
-[Visual Studio Load Test Feature Pack][loadtest] to analyze response 
+During this stage of the journey we ran performance and stress tests using
+[Visual Studio 2010][loadtest] to analyze response 
 times and identify bottlenecks. The team used Visual Studio Load Test to 
 simulate different numbers of users accessing the application, and added 
 additonal tracing into the code to record timing information for 
@@ -1697,7 +1697,7 @@ use [WatiN][watin] to drive the system through its UI.
 [parallelext]:       http://blogs.msdn.com/b/pfxteam/archive/2010/04/06/9990420.aspx
 [tags]:              https://github.com/mspnp/cqrs-journey-code/tags
 [memento]:           http://www.oodesign.com/memento-pattern.html
-[loadtest]:          http://msdn.microsoft.com/en-gb/library/gg701769.aspx
+[loadtest]:          http://msdn.microsoft.com/en-us/library/dd293540.aspx
 [tfhab]:             http://msdn.microsoft.com/en-us/library/hh680934(PandP.50).aspx
 [storeforward]:      http://social.technet.microsoft.com/wiki/contents/articles/sql-azure-performance-and-elasticity-guide.aspx#SQL_Azure_Performance_Checklist
 [combguids]:         http://www.informit.com/articles/article.aspx?p=25862
