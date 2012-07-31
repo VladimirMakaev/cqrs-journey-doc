@@ -228,6 +228,7 @@ public RegistrationController(ICommandBus commandBus, [Dependency("registration"
     this.repositoryFactory = repositoryFactory;
 }
 ```
+
 ## Further information
 
 For more information about the Unity Application Block, see 
