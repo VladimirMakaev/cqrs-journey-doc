@@ -111,7 +111,7 @@ trying to modify the same data simultaneously on the write-side.
 # Defining aggregates in the domain model  
 
 In Domain-driven Design, an **Aggregate** defines a consistency 
-boundary. Typically, in when you implement the CQRS pattern, the classes 
+boundary. Typically, when you implement the CQRS pattern, the classes 
 in the write-model define your aggregates. Aggregates are the recipients 
 of **Commands**, and are units of persistence. After an aggregate 
 instance has processed a command and its state has changed, the system 
@@ -171,8 +171,6 @@ public struct SeatQuantity
 
 If you are using event sourcing, then your aggregates must create events 
 to record all of the state changes that result from processing commands. 
-This requires slightly more code in your aggregate definitons than if 
-you are using an ORM. 
 
 The following code sample shows an **IEventSourced** interface, an 
 **EventSourced** abstract class, and a set of classes that define an 
@@ -313,7 +311,7 @@ Both the sender and the receiver of a Command should be in the same
 bounded context. You should not send a Command to another bounded 
 context because you would be instructing that other bounded context, 
 which has separate responsibilities in another consistency boundary, to 
-perform some work for you. 
+perform some work for you. However, a process manager may not belong to any particular bounded context in the system but it still sends commands. Some people also take the view that the UI is not a part of the bounded context, but the UI still sends commands.
 
 > I think that in MOST circumstances (if not all), the command should 
 > succeed (and that makes the async story WAY easier and practical). You 
@@ -391,62 +389,61 @@ commands for **Order** instances.
 ```Cs
 public class OrderCommandHandler :
 	ICommandHandler<RegisterToConference>,
-	ICommandHandler<MarkOrderAsBooked>,
+	ICommandHandler<MarkSeatsAsReserved>,
 	ICommandHandler<RejectOrder>,
-	ICommandHandler<AssignRegistrantDetails>
+	ICommandHandler<AssignRegistrantDetails>,
+	ICommandHandler<ConfirmOrder>
 {
-	private Func<IRepository> repositoryFactory;
+	private readonly IEventSourcedRepository<Order> repository;
 
-	public OrderCommandHandler(Func<IRepository> repositoryFactory)
+	public OrderCommandHandler(IEventSourcedRepository<Order> repository)
 	{
-		this.repositoryFactory = repositoryFactory;
+		this.repository = repository;
 	}
 
 	public void Handle(RegisterToConference command)
 	{
-		var repository = this.repositoryFactory();
-
-		using (repository as IDisposable)
+		var items = command.Seats.Select(t => new OrderItem(t.SeatType, t.Quantity)).ToList();
+		var order = repository.Find(command.OrderId);
+		if (order == null)
 		{
-			var tickets = command.Seats.Select(t => new OrderItem(t.SeatTypeId, t.Quantity)).ToList();
-
-			var order = new Order(command.OrderId, command.ConferenceId, tickets);
-
-			repository.Save(order);
+			order = new Order(command.OrderId, command.ConferenceId, items);
 		}
+		else
+		{
+			order.UpdateSeats(items);
+		}
+
+		repository.Save(order, command.Id.ToString());
 	}
 
-	public void Handle(MarkOrderAsBooked command)
+	public void Handle(ConfirmOrder command)
 	{
-		var repository = this.repositoryFactory();
-
-            using (repository as IDisposable)
-            {
-                var order = repository.Find<Order>(command.OrderId);
-
-                if (order != null)
-                {
-                    order.MarkAsBooked(command.Expiration);
-                    repository.Save(order);
-                }
-            }
-	}
-
-	public void Handle(RejectOrder command)
-	{
-		...
+		var order = repository.Get(command.OrderId);
+		order.Confirm();
+		repository.Save(order, command.Id.ToString());
 	}
 
 	public void Handle(AssignRegistrantDetails command)
 	{
 		...
 	}
+
+	public void Handle(MarkSeatsAsReserved command)
+	{
+		...
+	}
+
+	public void Handle(RejectOrder command)
+	{
+		...
+	}
 }
 ```
 
-This handler handles four different commands for the **Order** 
+This handler handles five different commands for the **Order** 
 aggregate. The **RegisterToConference** command is an example of a 
-command that creates a new aggregate instance. The **MarkOrderAsBooked** 
+command that creates a new aggregate instance. The **ConfirmOrder** 
 command is an example of a command that locates an existing aggregate 
 instance. Both examples use the **Save** method to persist the instance. 
 
@@ -666,6 +663,8 @@ public class SeatsAdded : IEvent
 }
 ```
 
+> **Note:** For simplicity, in C# these classes are implemented as DTOs, but they should be treated as being immutable.
+
 The following code sample shows a possible implementation of an event that is used in an event sourcing implementation. It extends the **VersionedEvent** abstract class.
 
 ```Cs
@@ -684,6 +683,8 @@ public class AvailableSeatsChanged : VersionedEvent
 }
 ```
 
+The **Version** property refers to the version of the aggregate. The version is incremented whenever the aggregate receives a new event.
+
 ## EventHandlers
 
 Events are published to multiple recipients, typically an aggregate 
@@ -691,13 +692,12 @@ instances or process managers. The Event Handler performs the following
 tasks: 
 
 1. It receives a Event instance from the messaging infrastructure.
-2. It validates that the Event is a valid Event.
-3. It locates the aggregate or process manager instance that is the
+2. It locates the aggregate or process manager instance that is the
    target of the Event. This may involve creating a new aggregate
    instance or locating an existing instance.
-4. It invokes the appropriate method on the aggregate or process manager
+3. It invokes the appropriate method on the aggregate or process manager
    instance passing in any parameters from the event.
-5. It persists the new state of the aggregate or process manager to storage.
+4. It persists the new state of the aggregate or process manager to storage.
 
 ### Sample code
 
@@ -960,7 +960,7 @@ that occurred after the snapshot was taken. You will need to introduce a
 mechanism that creates snapshots for aggregates on a regular basis. 
 However, given the simplicity of a typical event store schema, loading 
 the state of an aggregate is typically very fast. Using snapshots 
-typically only provides a performance benefit when an agregate has a 
+typically only provides a performance benefit when an aggregate has a 
 very large number of events. 
 
 Instead of snapshots, you may be able to optimize the access to an 
@@ -1200,7 +1200,7 @@ back to the service tier. The service tier is then responsible for
 persisting the changes to the data store. This can be a simple, 
 mechanical process of identifying the CRUD operations that the UI 
 performed on the DTO and applying equivalent CRUD operations to the data 
-store. The are several things to notice about this typical architecture: 
+store. There are several things to notice about this typical architecture: 
 
 * It uses CRUD operations throughout.
 * If you have a domain model you must translate the CRUD operations from
@@ -1223,6 +1223,7 @@ the UI to the write-side:
 * It is easier to capture the user's intent in a command.
 * It is more complex and assumes that you have a domain model in the
   write-side.
+* The behavior is typically in one place: the write model.
 
 A task-based UI is a natural, intuitive UI based on domain concepts that 
 the users of the system already understand. It does not impose the CRUD 
