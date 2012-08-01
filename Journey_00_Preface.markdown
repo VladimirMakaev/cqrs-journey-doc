@@ -147,6 +147,7 @@ the written guidance:
 * Appendix 1, "Building and Running the Sample Code," contains detailed
   instructions for downloading, building, and running the sample
   application and test suites.
+* Appendix 2, "Migrations," contains instructions for performing the code and data migrations between the pseudo-production releases of the Contoso Conference Management System.
 
 ### Tales from the trenches
 
