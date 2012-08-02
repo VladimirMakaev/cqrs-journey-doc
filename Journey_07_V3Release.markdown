@@ -1227,10 +1227,6 @@ public bool ProcessMessage(string traceIdentifier, ICommand payload, string mess
 }
 ```
 
-> **MarkusPersona:** Ideally, we would replace the **dynamic** keyword
-  with a compiled lambda expression, but we did not have time to
-  complete this.
-
 ## Implementing snapshots with the memento pattern
 
 In the Contoso Conference Management System, the only event-sourced 
