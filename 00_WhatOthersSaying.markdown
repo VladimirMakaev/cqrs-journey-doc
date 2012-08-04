@@ -6,11 +6,12 @@
 
 *~ Scott Guthrie, Corporate Vice-President, Azure App Platform, Microsoft*
 
->Having participated and co-authored various guides from patterns & practices, the "CQRS Journey" follows the same walkthrough, scenario-based style, but adding even more fresh empirical content. It's a true testament of a skilled development team without previous CQRS experience, going through the journey of implementing a complex system and documenting their adventures and lessons learnt in this diary. If I had to recommend to someone where to start with CQRS, I would definitely point them to this guide.  
+> Having participated and co-authored various guides from patterns & practices, the "CQRS Journey" follows the same walkthrough, scenario-based style, but adding even more fresh empirical content. It's a true testament of a skilled development team without previous CQRS experience, going through the journey of implementing a complex system and documenting their adventures and lessons learnt in this diary. If I had to recommend to someone where to start with CQRS, I would definitely point them to this guide.  
 
 *~ Matias Woloski, CTO, Auth10 LLC*
 
 > The "CQRS Journey" guide is an excellent resource for developers who want to begin developing a CQRS system or convert their current system. It's a true "trial by fire" approach to the concepts and implementation hurdles that a team would encounter when adopting CQRS. I would recommend reading it twice as I picked up even more lessons the second time through.  
+
 *~ Dan Piessens, Lead Software Architect, Zywave*
 
 > I think it's a really big step in communication with the developer community. You not only share your development experience with a broad audience (which is very valuable by itself) but you're also open for learning from the community. While working on real projects it's difficult to stop, find some time to structure your knowledge, prepare it in the form understandable for others. It's very cool that you found time and resources for such educational effort, I really appreciate this.   
@@ -46,12 +47,17 @@
 *~ Kelly Sommers, Developer*
 
 > Congratulations on getting to what looks to be nice guidance. I know that the announcement that p&p was going to embark on this project caused a twitter firestorm but you seem to have come through it well. I'm a fan of the p&p books and think you've done a great job in sharing good practices with the community.   
+
 *~ Neil Mackenzie, Windows Azure MVP*
 
 > CQRS is as much about architecture community as it is about concrete patterns—thus the project is aptly named "CQRS Journey." The community involvement and engagement in this project is unprecedented for Microsoft and reflects the enthusiasm amongst the many (if may say: young) software architects from across the industry who are rediscovering proven architecture patterns and are recomposing them in new ways to solve today's challenges. For me, one takeaway from this project is that the recipes developed here need to be carefully weighed against their alternatives. As with any software architecture approaches that promise easy scalability or evolvability of solutions, the proof will be in concrete, larger production implementations and how they hold up to changing needs over time. Thus, the results of this Journey project mark a start and not a finish line.  
 
 *~ Clemens Vasters, Principal Technical Lead, Microsoft*
 
+> The experiences and conclusions of the P&P team match up very well with our own real-world experiences. Their conclusions in Chapter 8 are spot on. One of the best aspects of this guidance is that the P&P team exposes more of their thought processes and learning throughout the Journey than most write-ups that you may read. From arguments between Developer 1 and Developer 2 on the team, to discussions with experts such as Greg Young and Udi Dahan, to an excellent post-project review in Chapter 8, the thought process is out there for you to learn from. 
+> Thanks for this great work, guys. I hope you keep this style with your upcoming guidance pieces.
+
+*~ Jon Wagner, SVP & Chief Architect, eMoney Advisor*
 
 ----------
 
