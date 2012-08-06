@@ -156,6 +156,7 @@ the written guidance:
 * Chapter 3, "DDD/CQRS for large financial company," describes a project that made full use of domain-driven design and CQRS to build a reference application for a large financial company. It used CQRS to specifically address the issues of performance, scalability, and reliability.
 * Chapter 4, "Digital Marketing," describes how an existing application was refactored over time while delivering new features. This project adopted the CQRS pattern for one of its pieces as the project progressed.
 * Chapter 5, "TOPAZ Technologies," describes a project that used the CQRS pattern and event sourcing to simplify the development of an off-the-shelf enterprise application.
+* Chapter 6, "eMoney Nexus," describes a project to migrate an application that used legacy three-tier architecture to an architecture that used the CQRS pattern and event sourcing. Many of the conclusions drawn in this project are similar to our own experiences in our CQRS journey.
 
 
 ## Selecting the domain for the RI
