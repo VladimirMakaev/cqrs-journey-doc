@@ -63,6 +63,10 @@
 
 *~ Chris Keyser, VP Engineering, CaseNetwork*
 
+> It's a good read. Lot's to learn from it. 
+
+*~Christian Horsdal Gammelgaard, Lead Software Architect, Mjølner Informatics*
+
 ----------
 
 
