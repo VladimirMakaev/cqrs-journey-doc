@@ -1,3 +1,5 @@
+### This version of this chapter was part of our working repository during the project. The final version of this chapter is now available on MSDN at [http://aka.ms/cqrs](http://aka.ms/cqrs).
+
 # Reference 2: Introducing the Command Query Responsibility Segregation Pattern
 
 In this chapter, we describe the Command Query Responsibility 

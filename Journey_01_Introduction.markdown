@@ -1,3 +1,5 @@
+### This version of this chapter was part of our working repository during the project. The final version of this chapter is now available on MSDN at [http://aka.ms/cqrs](http://aka.ms/cqrs).
+
 # Chapter 1: Our Domain: The Contoso Conference Management System 
 
 _The starting point: Where have we come from, what are we taking, and who is coming with us?_

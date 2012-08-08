@@ -1,3 +1,7 @@
+### This version of this chapter was part of our working repository during the project. The final version of this chapter is now available on MSDN at [http://aka.ms/cqrs](http://aka.ms/cqrs).
+
+### This version of this chapter was part of our working repository during the project. The final version of this chapter is now available on MSDN at [http://aka.ms/cqrs](http://aka.ms/cqrs).
+
 # Reference 7: Technologies Used in the Reference Implementation (Chapter Title)
 
 # Windows Azure Service Bus  

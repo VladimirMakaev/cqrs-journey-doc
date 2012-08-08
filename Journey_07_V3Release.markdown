@@ -1,3 +1,5 @@
+### This version of this chapter was part of our working repository during the project. The final version of this chapter is now available on MSDN at [http://aka.ms/cqrs](http://aka.ms/cqrs).
+
 # Chapter 7: Adding Resilience and Optimizing Performance 
 
 _Reaching the end of our journey: the final tasks_

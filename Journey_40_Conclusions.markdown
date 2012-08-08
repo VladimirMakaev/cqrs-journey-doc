@@ -1,3 +1,5 @@
+### This version of this chapter was part of our working repository during the project. The final version of this chapter is now available on MSDN at [http://aka.ms/cqrs](http://aka.ms/cqrs).
+
 # Chapter 8: Epilogue: Lessons Learned 
 
 _How good was our map? Where did we get to? What did we learn? Did we get lost?_

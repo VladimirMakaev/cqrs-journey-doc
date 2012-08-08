@@ -1,3 +1,5 @@
+### This version of this chapter was part of our working repository during the project. The final version of this chapter is now available on MSDN at [http://aka.ms/cqrs](http://aka.ms/cqrs).
+
 # Chapter 5: Preparing for the V1 Release  
 
 *Adding functionality and refactoring in preparation for the V1 release.*
