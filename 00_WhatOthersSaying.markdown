@@ -59,6 +59,14 @@
 
 *~ Jon Wagner, SVP & Chief Architect, eMoney Advisor*
 
+> The CQRS journey release by patterns and practices provides real world insight into the increasingly popular CQRS pattern used in distributed systems that rely upon asynchronous, message based approaches to achieve very large scale.  The exploration of the issues the team faced throughout the implementation of the pattern is extremely useful for organizations considering CQRS, both to determine where the pattern is appropriate for them, and to go into the design and implementation with a baseline understanding of the complexity it will introduce.  I really enjoyed the candor around the approach taken, the issues encountered, and the early design choices that the team would change in hindsight.  This is a must read for any organization embarking upon CQRS, regardless of what platform they are using. 
+
+*~ Chris Keyser, VP Engineering, CaseNetwork*
+
+> It's a good read. Lot's to learn from it. 
+
+*~Christian Horsdal Gammelgaard, Lead Software Architect, Mjølner Informatics*
+
 ----------
 
 
