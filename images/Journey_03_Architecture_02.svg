@@ -32,12 +32,12 @@
      inkscape:zoom="1.3291323"
      inkscape:cx="408.81128"
      inkscape:cy="372.04724"
-     inkscape:current-layer="layer2"
+     inkscape:current-layer="versionlayer"
      id="namedview3095"
      showgrid="false"
      inkscape:window-width="1600"
      inkscape:window-height="1178"
-     inkscape:window-x="3512"
+     inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1" />
   <metadata
@@ -925,23 +925,23 @@
     <text
        xml:space="preserve"
        style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print"
-       x="740.57629"
-       y="170.77039"
+       x="738.31915"
+       y="229.45529"
        id="text4476-7-1"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
-         x="740.57629"
-         y="170.77039"
+         x="738.31915"
+         y="229.45529"
          id="tspan4482-1-84"
          style="font-size:10px;font-weight:normal;-inkscape-font-specification:Segoe Print">Invalid</tspan><tspan
          sodipodi:role="line"
-         x="740.57629"
-         y="183.27039"
+         x="738.31915"
+         y="241.95529"
          style="font-size:10px;font-weight:normal;-inkscape-font-specification:Segoe Print"
          id="tspan4552-9">Operation</tspan><tspan
          sodipodi:role="line"
-         x="740.57629"
-         y="195.77039"
+         x="738.31915"
+         y="254.45529"
          style="font-size:10px;font-weight:normal;-inkscape-font-specification:Segoe Print"
          id="tspan4550-63">Exception</tspan></text>
     <text
@@ -1074,18 +1074,18 @@
     <text
        xml:space="preserve"
        style="font-size:16px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;font-family:Segoe Print;-inkscape-font-specification:Segoe Print"
-       x="734.76038"
-       y="234.34953"
+       x="737.76984"
+       y="180.17885"
        id="text4735-4-7"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
-         x="734.76038"
-         y="234.34953"
+         x="737.76984"
+         y="180.17885"
          style="font-size:10px;fill:#008000"
          id="tspan4741-9-2">Completed</tspan><tspan
          sodipodi:role="line"
-         x="734.76038"
-         y="246.84953"
+         x="737.76984"
+         y="192.67885"
          style="font-size:10px;fill:#0000ff"
          id="tspan4784-0">RejectOrder</tspan></text>
     <text
@@ -1304,6 +1304,6 @@
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#ff0000;font-family:Courier New;-inkscape-font-specification:Courier New"
        x="10"
        y="10"
-       id="versiontext">Journey_03_Architecture_02.svg (v2)</text>
+       id="versiontext">Journey_03_Architecture_02.svg (v3)</text>
   </g>
 </svg>
